@@ -1,0 +1,303 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		62833D80171E83CF00566B23 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D7F171E83CF00566B23 /* UIKit.framework */; };
+		62833D82171E83CF00566B23 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D81171E83CF00566B23 /* Foundation.framework */; };
+		62833D84171E83CF00566B23 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D83171E83CF00566B23 /* CoreGraphics.framework */; };
+		62833D8A171E83CF00566B23 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 62833D88171E83CF00566B23 /* InfoPlist.strings */; };
+		62833D8C171E83CF00566B23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D8B171E83CF00566B23 /* main.m */; };
+		62833D90171E83CF00566B23 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D8F171E83CF00566B23 /* AppDelegate.m */; };
+		62833D92171E83CF00566B23 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D91171E83CF00566B23 /* Default.png */; };
+		62833D94171E83CF00566B23 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D93171E83CF00566B23 /* Default@2x.png */; };
+		62833D96171E83CF00566B23 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D95171E83CF00566B23 /* Default-568h@2x.png */; };
+		62833D99171E83CF00566B23 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D98171E83CF00566B23 /* ViewController.m */; };
+		62833D9C171E83CF00566B23 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62833D9A171E83CF00566B23 /* ViewController.xib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		62833D7C171E83CF00566B23 /* iVoiceReminder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iVoiceReminder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62833D7F171E83CF00566B23 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		62833D81171E83CF00566B23 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		62833D83171E83CF00566B23 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		62833D87171E83CF00566B23 /* iVoiceReminder-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iVoiceReminder-Info.plist"; sourceTree = "<group>"; };
+		62833D89171E83CF00566B23 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62833D8B171E83CF00566B23 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		62833D8D171E83CF00566B23 /* iVoiceReminder-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iVoiceReminder-Prefix.pch"; sourceTree = "<group>"; };
+		62833D8E171E83CF00566B23 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		62833D8F171E83CF00566B23 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		62833D91171E83CF00566B23 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		62833D93171E83CF00566B23 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		62833D95171E83CF00566B23 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		62833D97171E83CF00566B23 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		62833D98171E83CF00566B23 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		62833D9B171E83CF00566B23 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		62833D79171E83CF00566B23 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				62833D80171E83CF00566B23 /* UIKit.framework in Frameworks */,
+				62833D82171E83CF00566B23 /* Foundation.framework in Frameworks */,
+				62833D84171E83CF00566B23 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		62833D73171E83CF00566B23 = {
+			isa = PBXGroup;
+			children = (
+				62833D85171E83CF00566B23 /* iVoiceReminder */,
+				62833D7E171E83CF00566B23 /* Frameworks */,
+				62833D7D171E83CF00566B23 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		62833D7D171E83CF00566B23 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				62833D7C171E83CF00566B23 /* iVoiceReminder.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		62833D7E171E83CF00566B23 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				62833D7F171E83CF00566B23 /* UIKit.framework */,
+				62833D81171E83CF00566B23 /* Foundation.framework */,
+				62833D83171E83CF00566B23 /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		62833D85171E83CF00566B23 /* iVoiceReminder */ = {
+			isa = PBXGroup;
+			children = (
+				62833D8E171E83CF00566B23 /* AppDelegate.h */,
+				62833D8F171E83CF00566B23 /* AppDelegate.m */,
+				62833D97171E83CF00566B23 /* ViewController.h */,
+				62833D98171E83CF00566B23 /* ViewController.m */,
+				62833D9A171E83CF00566B23 /* ViewController.xib */,
+				62833D86171E83CF00566B23 /* Supporting Files */,
+			);
+			path = iVoiceReminder;
+			sourceTree = "<group>";
+		};
+		62833D86171E83CF00566B23 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				62833D87171E83CF00566B23 /* iVoiceReminder-Info.plist */,
+				62833D88171E83CF00566B23 /* InfoPlist.strings */,
+				62833D8B171E83CF00566B23 /* main.m */,
+				62833D8D171E83CF00566B23 /* iVoiceReminder-Prefix.pch */,
+				62833D91171E83CF00566B23 /* Default.png */,
+				62833D93171E83CF00566B23 /* Default@2x.png */,
+				62833D95171E83CF00566B23 /* Default-568h@2x.png */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		62833D7B171E83CF00566B23 /* iVoiceReminder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 62833D9F171E83CF00566B23 /* Build configuration list for PBXNativeTarget "iVoiceReminder" */;
+			buildPhases = (
+				62833D78171E83CF00566B23 /* Sources */,
+				62833D79171E83CF00566B23 /* Frameworks */,
+				62833D7A171E83CF00566B23 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = iVoiceReminder;
+			productName = iVoiceReminder;
+			productReference = 62833D7C171E83CF00566B23 /* iVoiceReminder.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		62833D74171E83CF00566B23 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = iStig;
+			};
+			buildConfigurationList = 62833D77171E83CF00566B23 /* Build configuration list for PBXProject "iVoiceReminder" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 62833D73171E83CF00566B23;
+			productRefGroup = 62833D7D171E83CF00566B23 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				62833D7B171E83CF00566B23 /* iVoiceReminder */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		62833D7A171E83CF00566B23 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				62833D8A171E83CF00566B23 /* InfoPlist.strings in Resources */,
+				62833D92171E83CF00566B23 /* Default.png in Resources */,
+				62833D94171E83CF00566B23 /* Default@2x.png in Resources */,
+				62833D96171E83CF00566B23 /* Default-568h@2x.png in Resources */,
+				62833D9C171E83CF00566B23 /* ViewController.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		62833D78171E83CF00566B23 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				62833D8C171E83CF00566B23 /* main.m in Sources */,
+				62833D90171E83CF00566B23 /* AppDelegate.m in Sources */,
+				62833D99171E83CF00566B23 /* ViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		62833D88171E83CF00566B23 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				62833D89171E83CF00566B23 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		62833D9A171E83CF00566B23 /* ViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				62833D9B171E83CF00566B23 /* en */,
+			);
+			name = ViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		62833D9D171E83CF00566B23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		62833D9E171E83CF00566B23 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		62833DA0171E83CF00566B23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "iVoiceReminder/iVoiceReminder-Prefix.pch";
+				INFOPLIST_FILE = "iVoiceReminder/iVoiceReminder-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		62833DA1171E83CF00566B23 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "iVoiceReminder/iVoiceReminder-Prefix.pch";
+				INFOPLIST_FILE = "iVoiceReminder/iVoiceReminder-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		62833D77171E83CF00566B23 /* Build configuration list for PBXProject "iVoiceReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				62833D9D171E83CF00566B23 /* Debug */,
+				62833D9E171E83CF00566B23 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		62833D9F171E83CF00566B23 /* Build configuration list for PBXNativeTarget "iVoiceReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				62833DA0171E83CF00566B23 /* Debug */,
+				62833DA1171E83CF00566B23 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 62833D74171E83CF00566B23 /* Project object */;
+}
