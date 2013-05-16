@@ -1,0 +1,92 @@
+//
+//  MMember.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MMember.h"
+
+@implementation MMember
+@synthesize  userID;
+@synthesize userName;
+@synthesize gender;
+@synthesize school;
+@synthesize company;
+@synthesize cityName;
+@synthesize  point;
+@synthesize rank;
+@synthesize email;
+@synthesize mobile;
+@synthesize connectedStatus;
+@synthesize avatarName;
+
+
++ (MMember*)mMemberWithJsonDictionary:(NSDictionary*)dic{
+  return [[[MMember alloc] initWithJsonDictionary:dic] autorelease];
+}
+
+
+- (MMember*)initWithJsonDictionary:(NSDictionary*)dic{
+    if(self = [super init])
+    {
+        userID =  ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        userName= [[dic objectForKey:@"userName"] retain];
+        joinDate= [[dic objectForKey:@"joinDate"] retain];
+        admin=([dic objectForKey:@"admin"]==[NSNull null])?0:[[dic objectForKey:@"admin"] boolValue];
+        apply=([dic objectForKey:@"apply"]==[NSNull null])?0:[[dic objectForKey:@"apply"] boolValue];
+        applyDate = [[dic objectForKey:@"applyDate"] retain];
+        reason = [[dic objectForKey:@"reason"] retain];
+        gender =([dic objectForKey:@"gender"]==[NSNull null])?0:[[dic objectForKey:@"gender"] boolValue];
+        school = [[dic objectForKey:@"school"] retain];
+        company = [[dic objectForKey:@"company"] retain];
+        cityName = [[dic objectForKey:@"cityName"] retain];
+        point = ([dic objectForKey:@"point"]==[NSNull null])?0:[[dic objectForKey:@"point"] intValue];
+        rank = ([dic objectForKey:@"rank"]==[NSNull null])?0:[[dic objectForKey:@"rank"] intValue];
+        email = [[dic objectForKey:@"email"] retain];
+        mobile= [[dic objectForKey:@"mobile"] retain];
+        connectedStatus = ([dic objectForKey:@"connectedStatus"]==[NSNull null])?0:[[dic objectForKey:@"connectedStatus"] intValue];
+        avatarName = [[dic objectForKey:@"avatarName"] retain];
+        
+        if ((id)userName == [NSNull null]) userName = @"";
+        if ((id)school == [NSNull null]) school = @"";
+        if ((id)company == [NSNull null]) company = @"";
+        if ((id)cityName == [NSNull null]) cityName = @"";
+        if ((id)email == [NSNull null]) email = @"";
+        if ((id)mobile == [NSNull null]) mobile = @"";
+        if ((id)avatarName == [NSNull null]) avatarName = @"";
+    }
+    return self;
+}
+-(NSString*)getRank:(int)_rank
+{
+    if(_rank==0)
+    {
+        return @"Beginner";
+    }
+    else if(_rank==1)
+        return @"A";
+    else if(_rank==2)
+        return @"AA";
+    else if(_rank==3)
+        return @"AAA";
+    else
+        return @"";
+}
+- (void)dealloc
+{
+    [userName release];
+    [school release];
+    [company release];
+    [cityName release];
+    [email release];
+    [mobile release];
+    [avatarName release];
+    [super dealloc];
+}
+@end
+
+
+
+

@@ -1,0 +1,867 @@
+//
+//  Edit_My_Info.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Edit_My_Info.h"
+#import "iToast.h"
+
+@implementation Edit_My_Info
+
+@synthesize  table_View;
+@synthesize  statusCell;
+@synthesize  birthdayCell;
+@synthesize  locationCell;
+@synthesize  universityCell;
+@synthesize  companyCell;
+@synthesize  industryCell;
+@synthesize  functionCell;
+@synthesize  informationCell;
+@synthesize  headView;
+@synthesize locationArray;
+@synthesize    selectView;
+@synthesize   pickerView;
+@synthesize  statusArray;
+@synthesize   type;
+@synthesize datePicker;
+@synthesize headIcon;
+@synthesize headImage;
+@synthesize titleCell;
+@synthesize scrollV;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillBeHidden:) name:UIKeyboardWillHideNotification object:nil];
+    active.hidden=NO;
+    [active startAnimating];
+    isSelectImage=NO;
+    UIButton* mbtn=(UIButton*)[headView viewWithTag:3];
+    UIButton* fbtn=(UIButton*)[headView viewWithTag:4];
+    [mbtn setBackgroundImage:[UIImage imageNamed:@"2.png"] forState:UIControlStateNormal];
+    [fbtn setBackgroundImage:[UIImage imageNamed:@"2.png"] forState:UIControlStateNormal];
+    
+    [mbtn setBackgroundImage:[UIImage imageNamed:@"1.png"] forState:UIControlStateSelected];
+    [fbtn setBackgroundImage:[UIImage imageNamed:@"1.png"] forState:UIControlStateSelected];
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    rightButton.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:12];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"button14.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 30);
+    UILabel* rlab = [[UILabel alloc] initWithFrame:CGRectMake(0, 7, 42, 15)];
+    rlab.font = [UIFont fontWithName:@"Helvetica-Bold" size:12];
+    rlab.backgroundColor=[UIColor clearColor];
+    rlab.textAlignment=UITextAlignmentCenter;
+    rlab.textColor = [UIColor whiteColor];
+    rlab.text = @"Done";
+    [rightButton addSubview:rlab];
+    [rightButton addTarget:self action:@selector(done) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    selectView.hidden=YES;
+    type=100000;
+    locationArray = [[NSMutableArray alloc] init];
+    //  Single, In Relationship, Married, Confidential
+    
+    statusArray= [[NSMutableArray alloc] initWithObjects:@"",@"Single",@"In Relationship",@"Married",@"Confidential", nil];
+    MCity* city = [[MCity alloc] init];
+    // city.cityID = 0;
+    city.cityName =@"";
+    [locationArray addObject:city];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getUserInfo:obj:)];
+    [weiboClient profile];
+    // Do any additional setup after loading the view from its nib.
+}
+
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)done
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(editinfo:obj:)];
+    NSString* textName = ((UILabel*)[headView viewWithTag:2]).text;
+    UIButton* mbtn=(UIButton*)[headView viewWithTag:3];
+    BOOL gender = mbtn.selected;
+    NSLog(@"%d",gender);
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];     
+    NSDate *now ;     
+    NSDateComponents *comps = [[NSDateComponents alloc] init];     
+    NSInteger unitFlags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit;    
+    now= [TimeUtils toDate:[TimeUtils timeString:user.birthday]];
+    comps = [calendar components:unitFlags fromDate:now];     
+    int year=[comps year];     
+    int month = [comps month];     
+    int day = [comps day];     
+    NSString* univ = ((UILabel*)[universityCell viewWithTag:12]).text;
+    UILabel * lblStatus=(UILabel*)[statusCell  viewWithTag:7];
+    UILabel * labInfo=(UILabel*)[informationCell  viewWithTag:14];
+    
+    UITextField * tit=(UITextField*)[titleCell  viewWithTag:1];
+    
+    
+    [weiboClient modifyUserInfo:textName gender:gender birthdayYear:year birthdayMonth:month birthdayDay:day university:univ locationID:user.locationID industryID:user.industryID functionID:user.functionID state:lblStatus.text slogan:labInfo.text title:tit.text];
+    
+}
+#pragma mark - 数据解析
+- (void)editinfo:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        if (weiboClient) { 
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(postImage:obj:)];
+        if(isSelectImage)
+        {
+            [weiboClient saveAvatar:[UIImageJPEGRepresentation([headImage image], 0.5) retain]];
+        }
+        else
+        {
+            [self back];
+        }
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+    
+}
+- (void)postImage:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        [self back];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+    
+}
+-(IBAction)changeSex:(id)sender
+{
+    UIButton* mbtn=(UIButton*)[headView viewWithTag:3];
+    UIButton* fbtn=(UIButton*)[headView viewWithTag:4];
+    if([sender tag]==3&&!mbtn.selected)
+    {
+        BOOL b = mbtn.selected;
+        mbtn.selected=!b;
+        fbtn.selected=b;
+        ism=YES;
+    }
+    if([sender tag]==4&&!fbtn.selected)
+    {
+        BOOL b = fbtn.selected;
+        fbtn.selected=!b;
+        mbtn.selected=b;
+        ism=NO;
+    }
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    if (section==0) {
+        return 3;
+    }
+    if (section==1) {
+        return 3;
+    }
+    if(section==2){
+        return 2;
+    }
+    else {
+        return 1;
+    }
+    
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if(section==0)
+    {
+        return  [headView frame].size.height;
+    }
+    return  5;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 44;
+}
+
+
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section;{
+    
+    if (section==0) {
+        return headView;
+    }
+    else{
+        
+        return nil;
+    }
+    
+} 
+
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    
+    return 4;
+    
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if(indexPath.section==0){
+        if (indexPath.row==0) {
+            
+            
+            return  self.statusCell;
+        }
+        
+        if (indexPath.row==1) {
+            
+            
+            return  self.birthdayCell;
+        }
+        if (indexPath.row==2) {
+            
+            
+            return  self.locationCell;
+        }
+    }
+    
+    if(indexPath.section==1){
+        if (indexPath.row==0) {
+            
+            
+            return  self.universityCell;
+        }
+        if (indexPath.row==1) {
+            
+            
+            return  self.companyCell;
+        }
+        if(indexPath.row==2)
+            
+        {
+            
+            return self.titleCell;
+            
+        }
+        
+        
+        
+    }
+    
+    if(indexPath.section==2){
+        if (indexPath.row==0) {
+            
+            
+            return  self.industryCell;
+        }
+        
+        if (indexPath.row==1) {
+            
+            
+            return  self.functionCell;
+        }
+    }
+    else {
+        
+        if(indexPath.section==3){
+            
+            return  self.informationCell;
+        }
+    }
+    
+    return nil;
+    
+    
+    
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    
+    if (indexPath.section==0) {
+        
+        if (indexPath.row==0) {
+            type=0;
+            [pickerView reloadAllComponents];
+            selectView.hidden=NO;
+            pickerView.hidden=NO;
+            datePicker.hidden=YES;
+        }
+        if (indexPath.row==1) {
+            type=1;
+            selectView.hidden=NO;
+            pickerView.hidden=YES;
+            datePicker.hidden=NO;
+            
+        }  
+        else if(indexPath.row==2) {
+            if ([locationArray count]==0) {
+                
+                
+                [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+                return;
+            }
+            type=2;
+            [pickerView reloadAllComponents];
+            selectView.hidden=NO;
+            pickerView.hidden=NO;
+            datePicker.hidden=YES;
+        }    
+    }
+    
+    if (indexPath.section==2) {
+        if (indexPath.row==0) {
+            
+            IndustryCell *industry=[[IndustryCell alloc] initWithNibName:@"IndustryCell" bundle:nil];
+            industry.delegate=self;
+            [self.navigationController pushViewController:industry animated:YES];
+            [industry release];
+        }
+        else{
+            FunctionCell *function=[[FunctionCell alloc] initWithNibName:@"FunctionCell" bundle:nil];
+            function.delegate=self;
+            [self.navigationController pushViewController:function animated:YES];
+            [function release];
+            
+        }
+        
+    } 
+    
+}
+//#pragma mark -键盘事件
+//-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+//{
+//    switch (theTextField.returnKeyType) {
+//		case UIReturnKeyDone:
+//			[theTextField resignFirstResponder];
+//			break;
+//		default:
+//			break;
+//	}
+//	return YES;
+//}
+#pragma mark industry function
+-(void)industrySelect:(NSString*)industry industryID:(int)_industryID
+{
+	UILabel *lblIndustry=(UILabel*)[industryCell viewWithTag:10];
+    lblIndustry.text=industry;
+    user.industryID = _industryID;
+}
+
+-(void)functionSelect:(NSString*)function functionID:(int)_functionID{
+	UILabel *lblfunction=(UILabel*)[functionCell viewWithTag:11];
+    lblfunction.text=function;
+    user.functionID = _functionID;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    int userID= [PublicUtils getCurrentUser].userID;
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,userID,userID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+- (void)getUserInfo:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    NSLog(@"%@",dic);
+    user = [[MUser muserWithJsonDictionary:dic] retain];
+    [self updateImage:(UIImageView*)[headView viewWithTag:5]];
+    UITextField* username =(UITextField*)[headView viewWithTag:2];
+    username.text = user.userName;
+    
+    UIButton* mbtn=(UIButton*)[headView viewWithTag:3];
+    UIButton* fbtn=(UIButton*)[headView viewWithTag:4];
+    if(user.gender)
+    {
+        mbtn.selected=YES;
+        fbtn.selected=NO;
+    }
+    else
+    {
+        mbtn.selected=NO;
+        fbtn.selected=YES;
+    }
+    
+    if(user.userID)
+    {
+        [self updateImage:headImage];
+    }
+    else
+    {
+        [headImage setImage:[UIImage imageNamed:@"默认头像.png"]];
+    }
+    
+    UILabel* status = (UILabel*)[statusCell viewWithTag:7];
+    status.text = user.state;
+    
+    UILabel* birthday = (UILabel*)[birthdayCell viewWithTag:8];
+    birthday.text = [TimeUtils formatDate:user.birthday];
+    
+    UILabel* location = (UILabel*)[locationCell viewWithTag:9];
+    location.text =user.locationName;
+    
+    UILabel* industry = (UILabel*)[industryCell viewWithTag:10];
+    industry.text =user.industryName;
+    UILabel* fun = (UILabel*)[functionCell viewWithTag:11];
+    fun.text =user.functionName;
+    
+    UITextField* un = (UITextField*)[universityCell viewWithTag:12];
+    un.text = user.school;
+    
+    UITextField* company = (UITextField*)[companyCell viewWithTag:13];
+    company.text = user.company;
+    
+    UITextField* info = (UITextField*)[informationCell viewWithTag:14];
+    info.text = user.slogan;
+    
+    
+    UITextField * tit=(UITextField*)[titleCell  viewWithTag:1];
+    tit.text=user.title;
+    
+    [table_View reloadData];
+    active.hidden=YES;
+    [active stopAnimating];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getcity:obj:)];
+    [weiboClient getcity];
+}
+
+- (void)getcity:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取city数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"cityArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MCity* city = [MCity mcityWithJsonDictionary:[arr objectAtIndex:i]];
+        
+        [locationArray addObject:city];
+    }
+}
+
+#pragma mark - 加载选择框数据
+-(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+-(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    
+    if (type==0) {
+        return [statusArray count];
+    }
+    else if(type==2) {
+        return [locationArray count];
+    }
+    return 0;
+}
+-(NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
+{    if (type==0) {
+    return [statusArray objectAtIndex:row];
+}
+    if (type==2) {
+        return ((MCity*)[locationArray objectAtIndex:row]).cityName;
+    }
+    
+    return nil;
+    //  return ((MCity*)[locationArray objectAtIndex:row]).cityName;
+}
+#pragma mark -  location选择
+-(IBAction)confirm:(id)sender{
+    
+    int selectIndex = [pickerView selectedRowInComponent:0];
+    if (type==2) {
+        MCity* city = (MCity*)[locationArray objectAtIndex:selectIndex];
+        //  locationid = city.cityID;
+        UILabel * lblLocation=(UILabel*)[locationCell  viewWithTag:9];
+        lblLocation.text = city.cityName;
+        user.locationID = city.cityID;
+    }
+    if(type==1){
+        NSDate* _date = datePicker.date; 
+        UILabel * lblBirthday=(UILabel*)[birthdayCell  viewWithTag:8];
+        user.birthday = _date;
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+        lblBirthday.text= [dateFormatter stringFromDate:_date];
+        [dateFormatter release];
+        
+    }
+    if (type==0) {
+        
+        UILabel * lblStatus=(UILabel*)[statusCell  viewWithTag:7];
+        lblStatus.text = [statusArray objectAtIndex:selectIndex];
+        
+    }
+    
+    selectView.hidden=YES;
+}
+#pragma mark  -调用照相机和本地图片
+
+
+-(IBAction)changeHeadIcon:(id)sender{
+    // 创建时不指定按钮  
+    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@""  
+                                                       delegate:self  
+                                              cancelButtonTitle:nil  
+                                         destructiveButtonTitle:nil  
+                                              otherButtonTitles:nil];  
+    // 逐个添加按钮（比如可以是数组循环）  
+    [sheet addButtonWithTitle:@"Take Photo"];  
+    [sheet addButtonWithTitle:@"Choose From Library"];  
+    // 同时添加一个取消按钮  
+    [sheet addButtonWithTitle:@"Cancel"];  
+    // 将取消按钮的index设置成我们刚添加的那个按钮，这样在delegate中就可以知道是那个按钮  
+    sheet.destructiveButtonIndex = sheet.numberOfButtons-1;  
+    //[sheet showInView:self.view.superview];
+    [sheet showInView:[UIApplication sharedApplication].keyWindow];
+    [sheet release];
+}
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex  
+{  
+    if (buttonIndex == actionSheet.cancelButtonIndex)  
+    { return; }  
+    switch (buttonIndex)  
+    {  
+        case 0: {  
+            UIImagePickerControllerSourceType sourceType=UIImagePickerControllerSourceTypeCamera;
+            if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            }
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=sourceType;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+        case 1: { 
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+    }  
+}  
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo {
+	[picker dismissModalViewControllerAnimated:YES];
+    headImage.image=image;
+    isSelectImage=YES;
+	
+}
+
+
+#pragma mark - textFieldDelegate
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    //    UITableViewCell * cell=(UITableViewCell *)[[textField  superview] superview];
+    //    NSIndexPath *indexPath=[table_View indexPathForCell:cell];
+    //    CGRect rect = self.view.frame;
+    //    [UIView beginAnimations:@"ResizeForKeyBoard" context:NULL];
+    //    [UIView setAnimationDuration:0.3];
+    //    if (indexPath.section==1) {
+    //        if (indexPath.row==0) {
+    //            rect.origin.y = -47.0f *2;
+    //        }
+    //        if (indexPath.row==1) {
+    //            rect.origin.y = -46.0f *3;
+    //        }
+    //        if (indexPath.row==2) 
+    //    {
+    //            rect.origin.y = -46.0f *4;
+    //        }
+    //    } 
+    //    if (indexPath.section==3) {
+    //        rect.origin.y = -43.0f *6;
+    //    } 
+    //    self.view.frame = CGRectMake(0, rect.origin.y, 320, 460);
+    //    [UIView commitAnimations];
+    UITableViewCell * cell=(UITableViewCell *)[[textField  superview] superview];
+    NSIndexPath *indexPath=[table_View indexPathForCell:cell];
+    //CGRect rect = self.view.frame;
+    if (indexPath.section==1) {
+        if (indexPath.row==0) {
+            txtFieldH=universityCell.frame.origin.y;
+        }
+        if (indexPath.row==1) {
+            txtFieldH=companyCell.frame.origin.y;
+        }
+        if (indexPath.row==2) 
+        {
+            txtFieldH=titleCell.frame.origin.y;
+        }
+    } 
+    if (indexPath.section==3) {
+        txtFieldH=informationCell.frame.origin.y;
+    } 
+      [self scrolViewIfCovered];
+    
+}
+- (void)scrolViewIfCovered {
+    
+    
+    CGRect aRect = self.view.frame;
+    aRect.origin.y = aRect.size.height- inputHeight;
+    
+    CGFloat fieldY = txtFieldH+44;
+    
+    
+    if (fieldY > aRect.origin.y ) {
+        CGPoint scrollPoint = CGPointMake(0.0,fieldY-aRect.origin.y);
+        [table_View setContentOffset:scrollPoint animated:YES];
+    }
+    
+}
+
+- (void)keyboardWasShown:(NSNotification*)aNotification {
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+	inputHeight=kbSize.height;
+    [self scrolViewIfCovered];
+}
+- (void)keyboardWillBeHidden:(NSNotification*)aNotification {
+    
+
+    
+    CGPoint scrollPoint = CGPointMake(0.0,0.0);
+    [table_View setContentOffset:scrollPoint animated:YES];
+    
+}
+
+#pragma mark -键盘事件
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+//    
+//    [UIView beginAnimations:@"ResizeForKeyBoard" context:NULL];
+//    [UIView setAnimationDuration:0.3];
+//
+//    [table_View setContentOffset:CGPointMake(0, 0) animated:YES];
+//    [UIView commitAnimations];
+//    switch (theTextField.returnKeyType) {
+//		case UIReturnKeyDone:
+//			[theTextField resignFirstResponder];
+//			break;
+//		default:
+//			break;
+//	}
+//	return YES;
+    //[theTextField resignFirstResponder];
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyNext:
+			switch (theTextField.tag) {
+                case 12:
+                    [companyTxtF becomeFirstResponder];
+                  //  txtFieldH=companyCell.frame.origin.y;       
+                    break;
+                case 13:
+                    [titleTxtF becomeFirstResponder];
+                    //txtFieldH=titleCell.frame.origin.y;
+                    break;
+                case 1:
+                    [informTxtF becomeFirstResponder];
+                    //txtFieldH=informationCell.frame.origin.y;
+                    break;
+            }
+			break;
+	case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+		break;
+		default:
+			break;
+	}
+	return YES;
+    
+}
+
+
+
+-(void)dealloc{
+    [table_View release];
+    [statusCell release];
+    [birthdayCell release];
+    [locationCell release];
+    [universityCell release];
+    [companyCell release];
+    [industryCell release];
+    [functionCell release];
+    [informationCell release];
+    [headView release];
+    [locationArray  release];
+    [selectView release];
+    [pickerView release];
+    [statusArray release];
+    [datePicker release];
+    [headImage release];
+    [weiboClient release];
+  //  [scrollV release];
+    [super dealloc];
+}
+@end

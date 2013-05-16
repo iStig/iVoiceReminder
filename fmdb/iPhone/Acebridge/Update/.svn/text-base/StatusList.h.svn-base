@@ -1,0 +1,48 @@
+//
+//  StatusList.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "iToast.h"
+#import "NewComment.h"
+#import "TimeUtils.h"
+#import "PublicUtils.h"
+#import "PhotoViewController.h"
+//#import "PublicUtils.h"
+@interface StatusList : UTTableViewController<UIActionSheetDelegate>
+{
+    IBOutlet    PullRefreshTableView*    homeTableView;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    NSMutableArray*             homeArray;
+    int                         targetUserID;
+    BOOL                        isLoading;
+    int findex;
+    int lindex;
+    CGFloat                  picHight;
+    UIActionSheet*              action;
+    int                         nowUserID;
+    MStatus* mins;
+    int                       typeID;
+    int                         user_ID;
+}
+@property(nonatomic,retain) NSMutableArray* homeArray;
+@property(nonatomic,assign)int           targetUserID;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)homeList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(IBAction)newstatus:(id)sender;
+-(void) getStatusList:(int)pageNo;
+- (void)updateBottomImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(IBAction)showImage:(id)sender;
+- (void)deleteIndex:(WeiboClient*)sender obj:(NSObject*)obj;
+@end
+

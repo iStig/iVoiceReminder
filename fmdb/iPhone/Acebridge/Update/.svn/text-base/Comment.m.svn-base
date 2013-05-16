@@ -1,0 +1,336 @@
+//
+//  Comment.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Comment.h"
+#import "iToast.h"
+#import "MComment.h"
+#import "TimeUtils.h"
+@implementation Comment
+
+@synthesize commentArray,typeID,relatedID,userID,newcomment,statusUserID;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    tableView = commtableView;
+    tableView.frame = CGRectMake(0, 0, 320, 365);
+    isLoading = NO;
+    commentArray = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    [self getItemsWhenPullDownTableView];
+    actionDel = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                otherButtonTitles:@"Reply",@"Delete",nil];
+    [actionDel setTag:1];
+    actionComm = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                   cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                   otherButtonTitles:@"Reply",nil];
+    [actionComm setTag:2];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) viewWillAppear:(BOOL)animated
+{
+    if(newcomment.ispush)
+    {
+        [self getItemsWhenPullDownTableView];
+    }
+}
+-(void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void) getItemsWhenPullDownTableView
+{
+     loadCell.hidden=NO;
+    [self requestData:1];
+}
+
+-(void)requestData:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(commentList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient rreplies:relatedID pageNo:pageNo typeID:typeID];
+}
+- (void)commentList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取comment数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    int commentCount = [[dic objectForKey:@"commentCount"] intValue];
+    if(commentCount==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"commentArray"];
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [commentArray removeAllObjects];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MComment* mcomment = [MComment mcommentWithJsonDictionary:[arr objectAtIndex:i]];
+        [commentArray addObject:mcomment];
+    }
+    [tableView reloadData];
+    isLoading=NO;
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"edit.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42);
+    [rbutton addTarget:self action:@selector(leftClicked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark-撰写评论
+-(IBAction)leftClicked:(id)sender
+{
+    NSLog(@"%d",userID);
+    
+    newcomment = [[NewComment alloc] initWithNibName:@"NewComment" bundle:nil];
+    newcomment.relatedID = relatedID;
+    newcomment.typeID = typeID;
+    newcomment.userID =-1;
+    newcomment.isstatus=NO;
+    [newcomment setTitle:@"Comment"];
+    [self.navigationController pushViewController:newcomment animated:YES];
+}
+
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [commentArray count]+1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if([commentArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [commentArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"CommentListCell" owner:nil options:nil] objectAtIndex:0];
+        }
+        MComment* mcomm = (MComment*)[commentArray objectAtIndex:indexPath.row];
+        
+        UILabel* labName = (UILabel*)[cell viewWithTag:1];
+        labName.text =mcomm.username;
+        UILabel* labTime = (UILabel*)[cell viewWithTag:2];
+        labTime.text =[TimeUtils timestamp:mcomm.time]; 
+        UILabel* labText = (UILabel*)[cell viewWithTag:3];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:13];
+        CGSize textsize = [mcomm.content sizeWithFont:myfont constrainedToSize:CGSizeMake(300, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        labText.numberOfLines = textsize.height/16+1;
+        labText.frame=CGRectMake(11, 25, textsize.width, textsize.height);
+        labText.text =mcomm.content;
+        return cell;
+    }
+	
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestData:[commentArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([commentArray count]==0||[commentArray count]==indexPath.row)
+    {
+        if([commentArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    MComment* mcomm = (MComment*)[commentArray objectAtIndex:indexPath.row];
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:13];
+    CGSize textsize = [mcomm.content sizeWithFont:myfont constrainedToSize:CGSizeMake(300, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    return 50-15+textsize.height;
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    selectComment = (MComment*)[commentArray objectAtIndex:indexPath.row];
+    NSLog(@"%d",selectComment.userID);
+     NSLog(@"%d",[PublicUtils getCurrentUser].userID);
+     NSLog(@"%d",self.statusUserID);
+    
+    NSLog(@"%d",self.userID);
+    if(selectComment.userID == [PublicUtils getCurrentUser].userID||self.statusUserID== [PublicUtils getCurrentUser].userID||self.userID==[PublicUtils getCurrentUser].userID)
+    {
+         [actionDel showInView:self.view];
+    }
+    else
+    {
+          [actionComm showInView:self.view];
+          //[actionDel showInView:self.view];
+    }
+
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    NSLog(@"%d",[actionSheet tag]);
+    if([actionSheet tag]==1)
+    {
+        if(buttonIndex == 1)
+        {
+            if (weiboClient) {
+                weiboClient.delegate = nil;
+                [weiboClient release];
+                weiboClient = nil;
+            }
+            weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                       action:@selector(deleteComment:obj:)];
+            
+            NSLog(@"%d",selectComment.commentID);
+             NSLog(@"%d",typeID);
+            [weiboClient deleteComment:typeID relatedID:selectComment.commentID];
+        }
+    }
+    if(buttonIndex == 0)
+    {
+        newcomment = [[NewComment alloc] initWithNibName:@"NewComment" bundle:nil];
+        newcomment.relatedID = relatedID;
+        newcomment.typeID = typeID;
+        newcomment.userID = selectComment.userID;
+        newcomment.isstatus=NO;
+        newcomment.touserID = selectComment.userID;
+        newcomment.touserName = selectComment.username;
+        [newcomment setTitle:@"Comment"];
+        [self.navigationController pushViewController:newcomment animated:YES];
+    }
+}
+
+- (void)deleteComment:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"删除私信失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        [commentArray removeObject:selectComment];
+        [commtableView reloadData];
+    }
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

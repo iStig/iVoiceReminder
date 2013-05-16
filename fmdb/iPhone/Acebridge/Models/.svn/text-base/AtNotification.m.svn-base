@@ -1,0 +1,123 @@
+//
+//  AtNotification.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "AtNotification.h"
+
+@implementation AtNotification
+@synthesize  nID;
+@synthesize  relatedUserName;
+@synthesize  relatedTitle;
+@synthesize  relatedPoster;
+@synthesize  isShared;
+@synthesize  nTime;
+
+@synthesize  nContent;   
+@synthesize  relatedOperate;
+@synthesize  atUserID;
+@synthesize   atUserName;
+@synthesize relatedID;
+@synthesize relatedType;
+
++ (AtNotification*)atboxWithJsonDictionary:(NSDictionary*)dic{
+
+
+
+   return [[[AtNotification alloc] initWithJsonDictionary:dic] autorelease];
+
+
+}
+
+
+
+
+
+
+- (AtNotification*)initWithJsonDictionary:(NSDictionary*)dic{
+
+
+    if(self = [super init])
+    {
+        nID =  ([dic objectForKey:@"nID"]==[NSNull null])?0:[[dic objectForKey:@"nID"] intValue];
+        int i=[[dic objectForKey:@"relatedType"] intValue];
+        if (i==1) {
+          relatedType=@"blog";
+        }
+        if (i==2) {
+           relatedType=@"event";
+        }
+        if (i==3) {
+            relatedType=@"career";
+        }
+        if (i==4) {
+            relatedType=@"promotion";
+        }
+        if (i==5) {
+            relatedType=@"status";
+        }
+        if (i==6) {
+            relatedType=@"group";
+        }
+        if (i==7) {
+            relatedType=@"piebridge";
+        }
+        if (i==9) {
+            relatedType=@"photo";
+        }
+                
+        relatedID=[[dic objectForKey:@"relatedID"] intValue];
+        relatedUserName = [[dic objectForKey:@"relatedUserName"] retain];
+        relatedTitle=[[dic objectForKey:@"relatedTitle"] retain] ;
+        relatedPoster=[[dic objectForKey:@"relatedPoster"] retain];
+        nTime = [[dic objectForKey:@"nTime"] retain];
+        nContent=[[dic objectForKey:@"content"]retain]; 
+        isShared =  ([dic objectForKey:@"shared"]==[NSNull null])?0:[[dic objectForKey:@"shared"] boolValue];
+        relatedOperate =[[dic objectForKey:@"relatedOperate"] retain];
+        
+        NSArray* userArray =[[dic objectForKey:@"atUsersArray"] retain];
+        NSLog(@"%@",userArray);
+        NSLog(@"%d",[userArray count]);
+        
+        if([userArray count]>0)
+        {
+        for(int i=0;[userArray count]>i;i++) 
+            {
+            atUserID = [[[userArray objectAtIndex:i] objectForKey:@"atUserID"] intValue];
+            atUserName=[[userArray objectAtIndex:i] objectForKey:@"atUserName"];
+            }
+        }
+        if ((id)relatedUserName == [NSNull null]) relatedUserName = @"";
+        if ((id)relatedTitle == [NSNull null]) relatedTitle = @"";
+        if ((id)relatedPoster == [NSNull null]) relatedPoster = @"";
+        if ((id)nContent == [NSNull null]) nContent = @"";
+        if ((id)relatedOperate == [NSNull null])  relatedOperate = @"";
+        if ((id)atUserName == [NSNull null])  atUserName = @"";
+    }
+    return self;
+    
+}
+- (void)dealloc
+{
+    [relatedUserName release];
+    [relatedTitle release];
+    [relatedPoster release];
+    [nContent release];
+    [relatedOperate release]; 
+    [atUserName release];
+    [super dealloc];
+  
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

@@ -1,0 +1,39 @@
+//
+//  ViewPromotion.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-26.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MPromotion.h"
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "iToast.h"
+
+@interface ViewPromotion : UIViewController<UIWebViewDelegate>
+{
+    int promotionID;
+    IBOutlet UIScrollView* scrollview;
+    IBOutlet UIView*       headView;
+    IBOutlet UIView*       bottomView;
+    IBOutlet UIWebView*      webText;
+    
+    MPromotion*            mpromotion;
+    WeiboClient*           weiboClient;
+    ImageCache*            imageCache;
+    IBOutlet UIActivityIndicatorView *active;
+}
+@property(nonatomic,assign)int promotionID;
+@property(nonatomic,retain)MPromotion* mpromotion;
+-(void)getPromotion:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)updateImage:(UIImageView*)face;
+-(void)InitNavigationBarItems;
+-(void)back;
+-(void)binddata;
+-(IBAction)like:(id)sender;
+-(IBAction)forward:(id)sender;
+
+@end

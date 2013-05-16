@@ -1,0 +1,150 @@
+//
+//  SendChat.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-26.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "SendChat.h"
+#import "iToast.h"
+@implementation SendChat
+@synthesize toUser,toUserID,sendBtn;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillShown:) name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillHiden:) name:UIKeyboardDidHideNotification object:nil];
+    [self InitNavigationBarItems];
+    labTo.text = [NSString stringWithFormat:@"To: %@",toUser];
+    [sendText becomeFirstResponder];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 发送私信
+-(IBAction)send:(id)sender
+{
+     sendBtn.enabled=NO;
+    
+    [sendText resignFirstResponder];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    NSString* s= sendText.text;
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendInMail:obj:)];
+    [weiboClient sendInMail:toUserID content:sendText.text toGroup:NO groupID:-1];
+}
+#pragma mark - 数据解析
+- (void)sendInMail:(WeiboClient*)sender obj:(NSObject*)obj
+{
+        sendBtn.enabled=YES;
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+         [[[iToast makeText:NSLocalizedString(@"Message sent.", @"")] setGravity:iToastGravityBottom] show];
+     
+        [self back];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityBottom] show];
+    }
+    
+}
+
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark-键盘事件
+- (void)keyboardWillShown:(NSNotification*)aNotification {
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    sendView.frame = CGRectMake(0, 377-kbSize.height, 320, sendView.frame.size.height);
+}
+- (void)keyboardWillHiden:(NSNotification*)aNotification
+{
+    sendView.frame = CGRectMake(0, 377, 320, sendView.frame.size.height);
+}
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

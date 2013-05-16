@@ -1,0 +1,49 @@
+//
+//  AtNotification.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface AtNotification : NSObject{//relatedID relatedType  还没加上
+
+    int nID;
+    NSString*  relatedUserName;
+    NSString*  relatedTitle;
+    NSString*  relatedPoster;
+    NSString*  relatedOperate;
+    BOOL       isShared;
+    
+    int  atUserID;
+    NSString*  atUserName;
+    NSDate*    nTime;
+    NSString*  nContent;
+    int relatedID;
+    NSString  *relatedType;
+ 
+      
+}
+@property(nonatomic,assign) int  nID;
+@property(nonatomic,assign) int  atUserID;
+@property(nonatomic,assign) int relatedID;
+@property(nonatomic,retain) NSString *relatedType;
+@property(nonatomic,retain) NSString *relatedUserName;
+@property(nonatomic,retain) NSString *relatedTitle;
+@property(nonatomic,retain) NSString *relatedPoster;
+@property(nonatomic)        BOOL    isShared;
+
+
+
+@property(nonatomic,retain) NSDate   *nTime;
+@property(nonatomic,retain) NSString *nContent;
+@property(nonatomic,retain) NSString*  relatedOperate;
+@property(nonatomic,retain) NSString*  atUserName;
+
+
++ (AtNotification*)atboxWithJsonDictionary:(NSDictionary*)dic;
+- (AtNotification*)initWithJsonDictionary:(NSDictionary*)dic;
+
+@end

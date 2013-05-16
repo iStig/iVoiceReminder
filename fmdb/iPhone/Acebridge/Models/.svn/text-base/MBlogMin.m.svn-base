@@ -1,0 +1,51 @@
+//
+//  MBlogMin.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MBlogMin.h"
+
+@implementation MBlogMin
+
+@synthesize blogID,blogName,blogTime,blogAbstract,blogCategory,blogCreatorId,blogCreatorName,likeCount,shareCount,commentCount,picName;
++ (MBlogMin*)mblogminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MBlogMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MBlogMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        blogID =  ([dic objectForKey:@"blogID"]==[NSNull null])?0:[[dic objectForKey:@"blogID"] intValue];
+        blogCreatorId =  ([dic objectForKey:@"blogCreatorId"]==[NSNull null])?0:[[dic objectForKey:@"blogCreatorId"] intValue];
+        blogCreatorName = [[dic objectForKey:@"blogCreatorName"] retain];
+        blogCategory = [[dic objectForKey:@"blogCategory"] retain];
+        blogAbstract = [[dic objectForKey:@"blogAbstract"] retain];
+        blogName = [[dic objectForKey:@"blogName"] retain];
+        picName = [[dic objectForKey:@"picName"] retain];
+        blogTime= [[dic objectForKey:@"blogTime"] retain];
+        commentCount = ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount = ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        if ((id)blogAbstract == [NSNull null]) blogAbstract = @"";
+        if ((id)blogCreatorName == [NSNull null]) blogCreatorName = @"";
+        if ((id)blogCategory == [NSNull null]) blogCategory = @"";
+        if ((id)blogName == [NSNull null]) blogName = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+    }
+    return self;
+    
+}
+- (void)dealloc
+{
+    [picName release];
+    [blogName release];
+    [blogCategory release];
+    [blogCreatorName release];
+    [blogAbstract release];
+    [super dealloc];
+}
+@end

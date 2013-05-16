@@ -1,0 +1,34 @@
+//
+//  MInMail.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-19.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MInMail : NSObject
+{
+    int             userID;
+    int             mailID;
+    NSString*       userName;
+    BOOL            whoSent;
+    NSDate*         time;
+    NSString*       content;
+    NSString*       picName;
+    int             type;
+    NSString*       fileName;
+}
+@property(nonatomic,assign)int             userID;
+@property(nonatomic,assign)int             mailID;
+@property(nonatomic,retain)NSString*       userName;
+@property(nonatomic,assign)BOOL            whoSent;
+@property(nonatomic,retain)NSDate*         time;
+@property(nonatomic,retain)NSString*       content;
+@property(nonatomic,retain)NSString*       picName;
+@property(nonatomic,assign)int type;
+@property(nonatomic,retain)NSString*       fileName;
++ (MInMail*)minmailWithJsonDictionary:(NSDictionary*)dic;
+- (MInMail*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

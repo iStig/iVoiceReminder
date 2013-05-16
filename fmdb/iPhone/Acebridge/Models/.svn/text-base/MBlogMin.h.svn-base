@@ -1,0 +1,38 @@
+//
+//  MBlogMin.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MBlogMin : NSObject
+{
+    int                 blogID;
+    NSString*           blogName;
+    NSString*           blogCategory;
+    NSString*           blogAbstract;
+    NSDate*             blogTime;
+    int                 blogCreatorId;
+    NSString*           blogCreatorName;
+    int                 commentCount;
+    int                 shareCount;
+    int                 likeCount;
+    NSString*           picName;
+}
+@property(nonatomic,retain) NSString*           picName;
+@property(nonatomic,assign)int                 blogID;
+@property(nonatomic,retain)NSString*           blogName;
+@property(nonatomic,retain)NSString*           blogCategory;
+@property(nonatomic,retain)NSString*           blogAbstract;
+@property(nonatomic,retain)NSDate*             blogTime;
+@property(nonatomic,assign)int                 blogCreatorId;
+@property(nonatomic,retain)NSString*           blogCreatorName;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,assign)int                 shareCount;
+@property(nonatomic,assign)int                 likeCount;
++ (MBlogMin*)mblogminWithJsonDictionary:(NSDictionary*)dic;
+- (MBlogMin*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

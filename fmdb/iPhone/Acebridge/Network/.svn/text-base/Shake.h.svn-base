@@ -1,0 +1,59 @@
+//
+//  Shake.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UserInfo.h"
+#import "iToast.h"
+#import "MUser.h"
+#import "UIImageExtras.h"
+#import "UnitrueLabel.h"
+//添加
+#import <QuartzCore/QuartzCore.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import "UTTableViewController.h"
+
+@interface Shake : UTTableViewController<UIActionSheetDelegate>
+{
+    IBOutlet PullRefreshTableView*        shakeTableView;
+    UIActionSheet*              actionButtonActionSheet;
+    IBOutlet UIView*             bgView;
+    IBOutlet UIActivityIndicatorView* aiLoad;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    ImageCache                  *imageCache;
+    NSString*                   tel;
+    UIActionSheet*              action;
+    BOOL                        isBack;
+    MUser*                      selectUser;
+    
+    //添加
+    IBOutlet  UIImageView*        imgUp;
+    IBOutlet  UIImageView*        imgDown;
+    SystemSoundID                 soundID;
+    UIButton *leftbtn;
+    BOOL isLoading;
+}
+
+@property(nonatomic,retain) IBOutlet  UIImageView*        imgUp;
+
+@property(nonatomic,retain) IBOutlet  UIImageView*        imgDown;
+
+
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)shaleusers:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj;
+
+-(void)initNavigation;
+-(IBAction)chatClicked:(id)sender;
+-(IBAction)back:(id)sender;
+-(void) getList:(int)pageNo;
+//添加
+- (void)addAnimations;
+@end

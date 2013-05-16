@@ -1,0 +1,106 @@
+//
+//  MPBDetail.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-2.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MPBDetail.h"
+
+@implementation MPBDetail
+@synthesize publisherID,publishTime,pbRequirement,publisherName,age,cityName,constellation,like,income,height,weight,selfintroduction,location,picName;
++ (MPBDetail*)mpiebridgeWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MPBDetail alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MPBDetail*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        publisherID =  ([dic objectForKey:@"publisherID"]==[NSNull null])?0:[[dic objectForKey:@"publisherID"] intValue];
+        location = [[dic objectForKey:@"cityName"] retain];
+        picName = [[dic objectForKey:@"avatarName"] retain];
+        publisherName = [[dic objectForKey:@"publisherName"] retain];
+        age =  ([dic objectForKey:@"age"]==[NSNull null])?0:[[dic objectForKey:@"age"] intValue];
+        publishTime = [[dic objectForKey:@"publishTime"] retain];
+        height =  ([dic objectForKey:@"height"]==[NSNull null])?NO:[[dic objectForKey:@"height"] intValue];
+        like =  ([dic objectForKey:@"like"]==[NSNull null])?NO:[[dic objectForKey:@"like"] boolValue];
+        
+        constellation =[[dic objectForKey:@"constellation"] retain];
+        cityName = [[dic objectForKey:@"cityName"] retain];
+        pbRequirement = [[dic objectForKey:@"pbRequirement"] retain];
+        selfintroduction = [[dic objectForKey:@"selfIntroduction"] retain];
+        weight =  ([dic objectForKey:@"weight"]==[NSNull null])?NO:[[dic objectForKey:@"weight"] intValue];
+        income =  ([dic objectForKey:@"income"]==[NSNull null])?NO:[[dic objectForKey:@"income"] intValue];
+        if ((id)constellation == [NSNull null]) constellation = @"";
+        if ((id)publisherName == [NSNull null]) publisherName = @"";
+        if ((id)cityName == [NSNull null]) cityName = @"";
+        if ((id)pbRequirement == [NSNull null]) pbRequirement = @"";
+        if ((id)selfintroduction == [NSNull null]) selfintroduction = @"";
+        if ((id)location == [NSNull null]) location = @"";
+    }
+    return self;
+}
+//星座
+-(NSString*) constellationConvert:(int)t
+{
+    NSString* str ;
+    switch (t) {
+        case 0:
+            str= @"any";
+            break;
+        case 1:
+            str= @"Aquarius";
+            break;
+        case 2:
+            str= @"Pisces";
+            break;
+        case 3:
+            str= @"Aries";
+            break;
+        case 4:
+            str= @"Taurus";
+            break;
+        case 5:
+            str= @"Gemini";
+            break;
+        case 6:
+            str= @"Cancer";
+            break;
+        case 7:
+            str= @"Leo";
+            break;
+        case 8:
+            str= @"Virgo";
+            break;
+        case 9:
+            str= @"Libra";
+            break;
+        case 10:
+            str= @"Scorpio";
+            break;
+        case 11:
+            str= @"Saqittarius";
+            break;
+        case 12:
+            str= @"Capricorn";
+            break;
+        default:
+            str=@"";
+            break;
+    }
+    return str;
+}
+- (void)dealloc
+{
+    [picName release];
+    [location release];
+    [constellation release];
+    [publisherName release];
+    [cityName release];
+    [selfintroduction release];
+    [pbRequirement release];
+    [super dealloc];
+}
+@end

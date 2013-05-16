@@ -1,0 +1,27 @@
+//
+//  MNotification.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MNotification.h"
+
+@implementation MNotification
+@synthesize count,nTypeID;
+
++ (MNotification*)mnotificationWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MNotification alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MNotification*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        count =  ([dic objectForKey:@"count"]==[NSNull null])?0:[[dic objectForKey:@"count"] intValue];
+        nTypeID =  ([dic objectForKey:@"nTypeID"]==[NSNull null])?0:[[dic objectForKey:@"nTypeID"] intValue];
+    }
+    return self;
+}
+@end

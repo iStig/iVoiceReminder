@@ -1,0 +1,46 @@
+//
+//  MPBDetail.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-2.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MPBDetail : NSObject
+{
+    int                 publisherID;
+    NSString*           publisherName;
+    NSDate*             publishTime;
+    int                 age;
+    NSString*           constellation;
+    int                 height;
+    int weight;
+    int income;
+    NSString*       cityName;
+    NSString*       pbRequirement;
+    NSString*       selfintroduction;
+    BOOL                like;
+    NSString*       location;
+    NSString* picName;
+}
+@property(nonatomic,retain)NSString* picName;
+@property(nonatomic,retain)NSString*       location;
+@property(nonatomic,assign)int                 publisherID;
+@property(nonatomic,retain)NSString*           publisherName;
+@property(nonatomic,retain)NSDate*             publishTime;
+@property(nonatomic,assign)int                 age;
+@property(nonatomic,retain)NSString*           constellation;
+@property(nonatomic,assign)int                 height;
+@property(nonatomic,assign)int weight;
+@property(nonatomic,assign)int income;
+@property(nonatomic,retain)NSString*       cityName;
+@property(nonatomic,retain)NSString*       pbRequirement;
+@property(nonatomic,retain)NSString*       selfintroduction;
+@property(nonatomic,assign)BOOL                like;
+
++ (MPBDetail*)mpiebridgeWithJsonDictionary:(NSDictionary*)dic;
+- (MPBDetail*)initWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*) constellationConvert:(int)t;
+@end

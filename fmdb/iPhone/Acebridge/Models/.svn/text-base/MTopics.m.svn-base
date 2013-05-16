@@ -1,0 +1,44 @@
+//
+//  MTopics.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MTopics.h"
+
+@implementation MTopics
+@synthesize content,category,postTime,posterName,postUserID,postUserName,title,commentCount;
+
++ (MTopics*)mtopicsWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MTopics alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MTopics*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        postUserID =  ([dic objectForKey:@"postUserID"]==[NSNull null])?0:[[dic objectForKey:@"postUserID"] intValue];
+        commentCount=([dic objectForKey:@"replyCount"]==[NSNull null])?0:[[dic objectForKey:@"replyCount"] intValue];
+        content = [[dic objectForKey:@"content"] retain];
+        category = [[dic objectForKey:@"category"] retain];
+        postTime = [[dic objectForKey:@"postTime"] retain];
+        posterName = [[dic objectForKey:@"posterName"] retain];
+        postUserName =[[dic objectForKey:@"postUserName"] retain];
+        title =[[dic objectForKey:@"topicTitle"] retain];
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [title release];
+    [content release];
+    [category release];
+    [postUserName release];
+    [posterName release];
+    [super dealloc];
+}
+
+
+@end

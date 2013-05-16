@@ -1,0 +1,29 @@
+//
+//  MmailInCount.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-9-3.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MmailInCount.h"
+
+@implementation MmailInCount
+@synthesize count;
++ (MmailInCount*)mmailInCountWithJsonDictionary:(NSDictionary*)dic{
+
+ return [[[MmailInCount alloc] initWithJsonDictionary:dic] autorelease];
+
+}
+- (MmailInCount*)initWithJsonDictionary:(NSDictionary*)dic{
+
+    if(self = [super init])
+    {
+        count =  ([dic objectForKey:@"count"]==[NSNull null])?0:[[dic objectForKey:@"count"] intValue];
+           }
+    return self;
+
+
+
+}
+@end

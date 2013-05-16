@@ -1,0 +1,32 @@
+//
+//  MCity.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MCity.h"
+
+@implementation MCity
+@synthesize cityID,cityName;
+
++ (MCity*)mcityWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MCity alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MCity*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        cityID =  ([dic objectForKey:@"cityID"]==[NSNull null])?0:[[dic objectForKey:@"cityID"] intValue];
+        cityName= [[dic objectForKey:@"cityName"] retain];
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [cityName release];
+    [super dealloc];
+}
+@end

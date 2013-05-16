@@ -1,0 +1,50 @@
+//
+//  MTopicMin.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MTopicMin.h"
+
+@implementation MTopicMin
+
+@synthesize content,title,postTime,posterName,postUserID,postUserName,postID,postType,relatedId,replyCount;
+
++ (MTopicMin*)mtopicsminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MTopicMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MTopicMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        postUserID =  ([dic objectForKey:@"postUserID"]==[NSNull null])?0:[[dic objectForKey:@"postUserID"] intValue];
+        postID =  ([dic objectForKey:@"postID"]==[NSNull null])?0:[[dic objectForKey:@"postID"] intValue];
+        postType =  ([dic objectForKey:@"postType"]==[NSNull null])?0:[[dic objectForKey:@"postType"] intValue];
+        relatedId =  ([dic objectForKey:@"relatedId"]==[NSNull null])?0:[[dic objectForKey:@"relatedId"] intValue];
+        replyCount =  ([dic objectForKey:@"replyCount"]==[NSNull null])?0:[[dic objectForKey:@"replyCount"] intValue];
+        content = [[dic objectForKey:@"postAbstract"] retain];
+        title = [[dic objectForKey:@"postTitle"] retain];
+        postTime = [[dic objectForKey:@"postTime"] retain];
+        posterName = [[dic objectForKey:@"posterName"] retain];
+        postUserName =[[dic objectForKey:@"postUserName"] retain] ;
+        
+        if ((id)content == [NSNull null]) content = @"";
+        if ((id)title == [NSNull null]) title = @"";
+        if ((id)posterName == [NSNull null]) posterName = @"";
+        if ((id)postUserName == [NSNull null]) postUserName = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [content release];
+    [title release];
+    [postUserName release];
+    [posterName release];
+    [super dealloc];
+}
+
+@end

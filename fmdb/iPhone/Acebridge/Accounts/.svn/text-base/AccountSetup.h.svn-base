@@ -1,0 +1,25 @@
+//
+//  AccountSetup.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <MessageUI/MFMailComposeViewController.h>
+#import "LocationBased.h"
+#import "iToast.h"
+#import "ChangePass.h"
+#import "Edit_My_Info.h"
+#import "WeiboClient.h"
+#import "ImageCache.h"
+@interface AccountSetup : UIViewController<UITableViewDataSource,UITableViewDelegate,MFMailComposeViewControllerDelegate,UIAlertViewDelegate>
+{
+    IBOutlet UITableViewCell*   cellLogOut;
+    NSMutableArray* values;
+    WeiboClient*              weiboClient;
+}
+-(IBAction)logout:(id)sender;
+-(void)sendMail:(NSString *)subject content:(NSString *)content;
+@end

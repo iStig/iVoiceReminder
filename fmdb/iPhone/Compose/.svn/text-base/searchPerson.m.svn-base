@@ -1,0 +1,362 @@
+//
+//  searchPerson.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-7-17.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "searchPerson.h"
+#import "iToast.h"
+#import "MUser.h"
+#import "PYMethod.h"
+#import "SendChat.h"
+
+@implementation searchPerson
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    userArray = [[NSMutableArray alloc] init];
+
+    // Do any additional setup after loading the view from its nib.
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnectusers:obj:)];
+    int pageNo=1;
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient myconnectusers:pageNo ];
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+- (void)myconnectusers:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+    if(arr==nil)
+    {
+        return;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [userArray removeAllObjects];
+    }
+    
+    for (int i=0; i<[arr count]; i++) {
+        MUser* user = [MUser muserWithJsonDictionary:[arr objectAtIndex:i]];
+        [userArray addObject:user];
+    }
+        [self loadData];
+        [self merger];
+
+        [atList reloadData];
+}
+
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    if([keys count]==0){
+        
+        return 0;
+    }
+    else{   
+        return [keys count];
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+      if ([keys count]==0) {
+        return 0;
+    }
+    else{
+        NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+        return [dic count];
+}
+
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"CommentListCell" owner:nil options:nil] objectAtIndex:1];
+             } 
+    // Configure the cell...
+    NSString *name=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:1];
+    UILabel* labName = (UILabel*)[cell viewWithTag:1];
+    labName.text = name;
+    return cell;    
+}
+
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    if ([keys count]==0) {
+        return nil;
+    }
+    else{
+        return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+    }
+}
+
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView{
+    if(!keys)
+    {
+        return [[NSArray alloc] init];
+    };
+    return keys;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    NSString *userName=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:1];
+    id    userID=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:2];
+    
+    SendChat* sendchat = [[SendChat alloc] initWithNibName:@"SendChat" bundle:nil];
+    sendchat.toUser=userName;
+    [sendchat setTitle:[NSString stringWithFormat:@"To %@",userName]];
+    sendchat.toUserID = [userID intValue];
+    
+    sendchat.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:sendchat animated:YES];
+    [sendchat release];
+}
+
+-(void) loadData{
+    
+    NSMutableArray *arrValue;
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    valuesArray = [[NSMutableArray alloc] init];;
+    for (int i=0; i<=26; i++) {
+        arrValue = [[NSMutableArray alloc] init];
+        [values addObject:arrValue];
+        if(i==26)
+        {
+            [keys addObject:@"#"];
+        }
+        else
+        {
+            [keys addObject:[NSString stringWithFormat:@"%c",(char)(i+65)]];
+        }
+    }
+NSLog(@"%d",[values count]);
+    
+    for (MUser *user in userArray) {
+      
+            
+            NSMutableArray *infoValue = [[NSMutableArray alloc] init];
+            NSString* pinyingName = [[PYMethod getPinYin:user.userName] uppercaseString];
+            char frstChar = [pinyingName characterAtIndex:0];
+            int index = (int)frstChar;
+            [infoValue addObject:pinyingName];
+            [infoValue addObject:user.userName];
+            [infoValue addObject:[NSString stringWithFormat:@"%d",user.userID]];          
+        if(index>=65&&index<=90)
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+                [tempValue addObject:infoValue];
+            }
+            else
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:26];
+                [tempValue addObject:infoValue];
+            }
+
+    }
+    valuesArray=values;
+    NSLog(@"%d",[values count]);
+}
+
+#pragma mark - 合并
+-(void) merger
+{
+  
+    keys = [[NSMutableArray alloc] init];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    values = [[NSMutableArray alloc] init];
+    values = finValue;
+    NSLog(@"%d",[values count]);
+}
+
+
+#pragma mark -
+#pragma mark SearchBar Delegate Methods
+- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar {
+	searchBar.showsCancelButton = YES;
+	for(id cc in [searchBar subviews])
+    {
+        if([cc isKindOfClass:[UIButton class]])
+        {
+            UIButton *btn = (UIButton *)cc;
+            [btn setTitle:@"Cancel"  forState:UIControlStateNormal];
+            btn.backgroundColor=[UIColor clearColor];
+            [btn setBackgroundImage:[UIImage imageNamed: @"button08.png"] forState:UIControlStateNormal];
+        }
+    }
+    viewUp.hidden=NO;
+    viewUp.frame = CGRectMake(0, 44, 320, 460);
+    viewUp.backgroundColor=[UIColor colorWithRed:0/255.0 green:0/255.0 blue:0/255.0 alpha:0.7];
+    [self.view addSubview:viewUp];
+    
+	return YES;
+}
+
+- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar {
+	searchBar.text=@"";
+    values=valuesArray;
+    [self merger];
+    [atList reloadData];
+}
+
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
+	searchBar.showsCancelButton = NO;
+    viewUp.hidden=YES;
+    //searchBar.text=@"";
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+	[searchBar resignFirstResponder];
+ 
+    NSMutableArray *valueArr=[[NSMutableArray alloc] init];
+      
+    NSString *text = [searchBar.text uppercaseString];
+    NSLog(@"%d",[values count]);
+    for (int i=0; i<[values count]; i++) { 
+        NSLog(@"%d",i);
+ 
+      
+        
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        NSMutableArray *tempArr=[[NSMutableArray alloc] init];
+        for (int i=0; i<[temp count]; i++) {
+            int a=0;
+            int b=0;
+             
+            NSMutableArray* userArr = (NSMutableArray*)[temp objectAtIndex:i];
+            NSLog(@"%@",userArr);
+            NSString *pingyin =[userArr objectAtIndex:0];
+            NSRange range = [pingyin  rangeOfString:text];
+            if (range.length>0) {
+                a=10;
+            }
+            
+            NSString *name =[userArr objectAtIndex:1];
+            
+            NSRange range2 = [name rangeOfString:text];
+            if (range2.length>0) {
+                b=10;
+            }
+            if (b==10||a==10) {
+                [tempArr addObject:userArr];
+                NSLog(@"%@",tempArr);
+               
+            }
+
+
+        }
+        
+            [valueArr addObject:tempArr];
+            NSLog(@"%@",valueArr);
+        
+
+    }  
+     
+                
+
+        
+     
+      values = [[NSMutableArray alloc] init];
+     values=valueArr;
+        NSLog(@"%@",values);
+       [self merger];
+       [atList reloadData];
+}
+
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
+	[searchBar resignFirstResponder];
+    viewUp.hidden=YES;
+    values=valuesArray;
+    [self merger];
+   [atList reloadData];
+}
+@end

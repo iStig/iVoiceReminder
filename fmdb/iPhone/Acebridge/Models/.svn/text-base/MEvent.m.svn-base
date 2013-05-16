@@ -1,0 +1,74 @@
+//
+//  MEvent.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MEvent.h"
+
+@implementation MEvent
+@synthesize eventID,endTime,eventName,eventDetails,applyCount,attendeeCount,shareCount,startTime,count,cityName,categoryName,commentCount,contactNumber,budget,likeCount,deadline,organizer,organizerID,posterName,publishTime,isapply,status;
++ (MEvent*)meventWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MEvent alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MEvent*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        isapply =  ([dic objectForKey:@"applied"]==[NSNull null])?0:[[dic objectForKey:@"applied"] boolValue];
+        eventID =  ([dic objectForKey:@"eventID"]==[NSNull null])?0:[[dic objectForKey:@"eventID"] intValue];
+        eventName = [[dic objectForKey:@"eventName"] retain];
+        organizerID =  ([dic objectForKey:@"organizerID"]==[NSNull null])?0:[[dic objectForKey:@"organizerID"] intValue];
+        organizer = [[dic objectForKey:@"organizer"] retain];
+        
+        likeCount =  ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        contactNumber =  [[dic objectForKey:@"contactNumber"] retain];
+        attendeeCount =  ([dic objectForKey:@"attendeeCount"]==[NSNull null])?0:[[dic objectForKey:@"attendeeCount"] intValue];
+        categoryName= [[dic objectForKey:@"categoryName"] retain];
+        cityName= [[dic objectForKey:@"cityName"] retain];
+        commentCount = ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        startTime = [[dic objectForKey:@"startTime"] retain];
+        endTime =[[dic objectForKey:@"endTime"] retain];
+        deadline = [[dic objectForKey:@"deadline"] retain];
+        publishTime= [[dic objectForKey:@"publishTime"] retain];
+        budget= [[dic objectForKey:@"budget"] retain];
+        posterName= [[dic objectForKey:@"posterName"] retain];
+        eventDetails= [[dic objectForKey:@"eventDetails"] retain];
+        count =([dic objectForKey:@"count"]==[NSNull null])?0:[[dic objectForKey:@"count"] intValue];
+        applyCount =([dic objectForKey:@"applyCount"]==[NSNull null])?0:[[dic objectForKey:@"applyCount"] intValue];
+         status =  ([dic objectForKey:@"status"]==[NSNull null])?NO:[[dic objectForKey:@"status"] boolValue];
+        
+        if ((id)eventDetails == [NSNull null]) eventDetails = @"";
+        if ((id)eventName == [NSNull null]) eventName = @"";
+        if ((id)organizer == [NSNull null]) organizer = @""; 
+        if ((id)categoryName == [NSNull null]) categoryName = @""; 
+        
+        if ((id)cityName == [NSNull null]) cityName = @"";
+        if ((id)budget == [NSNull null]) budget = @"";
+        if ((id)posterName == [NSNull null]) posterName = @""; 
+        if ((id)eventDetails == [NSNull null]) eventDetails = @""; 
+        if ((id)contactNumber == [NSNull null]) contactNumber = @""; 
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [contactNumber release];
+    [startTime release];
+    [endTime release];
+    [deadline release];
+    [publishTime release];
+    [eventName release];
+    [eventDetails release];
+    [organizer release];
+    [categoryName release];
+    [cityName release];
+    [budget release];
+    [posterName release];
+    [super dealloc];
+}
+@end

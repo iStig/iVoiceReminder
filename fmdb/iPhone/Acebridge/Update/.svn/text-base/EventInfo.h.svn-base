@@ -1,0 +1,45 @@
+//
+//  EventInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "iToast.h"
+#import "MEvent.h"
+#import "Invite.h"
+#import "EventMembers.h"
+@interface EventInfo : UIViewController
+{
+    int eventID;
+    IBOutlet UIScrollView* scrollview;
+    IBOutlet UIView*       headView;
+    IBOutlet UIView*       bottomView;
+    IBOutlet UILabel*      labText;
+    MEvent*             mevent;
+    WeiboClient*           weiboClient;
+    ImageCache*            imageCache;
+    IBOutlet UIActivityIndicatorView *active;
+}
+@property(nonatomic,assign)int eventID;
+@property(nonatomic,retain)MEvent* mevent;
+-(void)eventdetails:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)updateImage:(UIImageView*)face;
+-(void)InitNavigationBarItems;
+-(void)back;
+-(void)binddata;
+- (NSString *)timeString:(NSDate*)date;
+-(IBAction)like:(id)sender;
+-(IBAction)share:(id)sender;
+-(IBAction)comment:(id)sender;
+-(IBAction)applyrequest:(id)sender;
+-(IBAction)quitrequest:(id)sender;
+-(IBAction)opCmd:(id)sender;
+- (NSString *)timeString1:(NSDate*)date;
+-(IBAction)userList:(id)sender;
+@end

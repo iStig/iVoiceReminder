@@ -1,0 +1,44 @@
+//
+//  FunctionCell.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-1.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "MFunction.h"
+@protocol functionSelect;
+@interface FunctionCell : UIViewController<UITableViewDataSource,UITableViewDelegate>
+
+{
+
+    IBOutlet UITableView *table_View;
+    NSMutableArray   *array;
+    WeiboClient*              weiboClient;
+     id<functionSelect> delegate;
+    NSString *strFunction;
+     NSIndexPath *lastIndexPath;
+    int _function;
+}
+
+@property(nonatomic,retain)  UITableView *table_View;
+@property(nonatomic,retain)  NSMutableArray *array;
+@property(nonatomic,retain)  id<functionSelect> delegate;
+@property(nonatomic,retain) NSString *strFunction;
+@property(nonatomic,retain)  NSIndexPath *lastIndexPath;
+@property(nonatomic,assign) int _function;
+- (void)getfunction:(WeiboClient*)sender obj:(NSObject*)obj;
+
+
+@end
+
+
+@protocol functionSelect
+
+-(void)functionSelect:(NSString*)function functionID:(int)_functionID;
+
+
+@end

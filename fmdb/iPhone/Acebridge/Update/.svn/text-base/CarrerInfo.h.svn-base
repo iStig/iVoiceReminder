@@ -1,0 +1,44 @@
+//
+//  CarrerInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "MCareer.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+@interface CarrerInfo : UIViewController<UIWebViewDelegate>
+{
+    IBOutlet    UIWebView*      carrerWebView;
+    IBOutlet    UIScrollView*   scrollview;
+    
+    IBOutlet    UIView*         headView;
+    IBOutlet    UIView*         bottomView;
+    int                         carrerID;
+    NSString*                   carrerName;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    MCareer*                    mcarrer;
+    IBOutlet UIActivityIndicatorView *active;
+    BOOL                         status;
+}
+@property(nonatomic,assign)BOOL                         status;
+@property(nonatomic,assign)int     carrerID;
+@property(nonatomic,retain)MCareer* mcarrer;
+@property(nonatomic,retain)NSString* carrerName;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)careerview:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImage:(UIImageView*)face;
+-(void)viewdataload;
+-(IBAction)share:(id)sender;
+-(IBAction)comment:(id)sender;
+-(IBAction)like:(id)sender;
+
+-(IBAction)applyrequest:(id)sender;
+-(IBAction)quitrequest:(id)sender;
+@end

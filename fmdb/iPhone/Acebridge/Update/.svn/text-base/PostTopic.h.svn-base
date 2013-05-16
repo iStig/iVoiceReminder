@@ -1,0 +1,30 @@
+//
+//  PostTopic.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-9-4.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+@interface PostTopic : UIViewController<UITextFieldDelegate,UITextViewDelegate>{
+
+
+    UIButton  *rbutton;
+    IBOutlet UIButton *postBtn;
+    //IBOutlet UITextView *contextView;
+    IBOutlet UITextView *titleView;
+    //IBOutlet UIButton *lineBtn;
+     WeiboClient*                weiboClient;
+    int              groupID;
+    IBOutlet UILabel *defaultLbl;
+}
+//@property(nonatomic,retain)UITextField *titleView;
+//@property(nonatomic,retain)UITextView *contextView;
+//@property(nonatomic,retain)UIButton *postBtn;
+@property(nonatomic,assign)int              groupID;
+
+-(void)InitNavigationBarItems;
+-(void)postTopic:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

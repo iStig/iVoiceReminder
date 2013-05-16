@@ -1,0 +1,20 @@
+//
+//  MCategory.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MCategory : NSObject
+{
+    int categoryID;
+    NSString* categoryName;
+}
+@property(nonatomic,assign) int categoryID;
+@property(nonatomic,retain) NSString* categoryName;
++ (MCategory*)mcategoryWithJsonDictionary:(NSDictionary*)dic;
+- (MCategory*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

@@ -1,0 +1,88 @@
+//
+//  Edit_My_Info.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "FunctionCell.h"
+#import "IndustryCell.h"
+#import "WeiboClient.h"
+#import "MCity.h"
+#import "MUser.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "TimeUtils.h"
+#import "PublicUtils.h"
+@interface Edit_My_Info : UIViewController<UITableViewDataSource,UITableViewDelegate,industrySelect,functionSelect,UIPickerViewDelegate,UIPickerViewDataSource,UITextFieldDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIActionSheetDelegate>
+{
+    IBOutlet  UITableView        *table_View;
+    IBOutlet  UITableViewCell    *statusCell;
+    IBOutlet  UITableViewCell    *birthdayCell;
+    IBOutlet  UITableViewCell    *locationCell;
+    IBOutlet  UITableViewCell    *universityCell;
+    IBOutlet  UITableViewCell    *companyCell;
+    IBOutlet  UITableViewCell    *industryCell;
+    IBOutlet  UITableViewCell    *functionCell;
+    IBOutlet  UITableViewCell    *informationCell;
+    IBOutlet UITableViewCell     *titleCell;
+              UIView             *headView;
+    NSMutableArray*           locationArray;
+    ImageCache                *imageCache;
+     WeiboClient*              weiboClient;
+    IBOutlet UIView*          selectView;
+    IBOutlet UIPickerView*    pickerView;
+    NSMutableArray*           statusArray;   
+    int                       type;
+    BOOL                    isSelectImage;
+    BOOL                    ism;
+    
+    IBOutlet UIDatePicker        *datePicker;
+    
+    IBOutlet  UIButton       *headIcon;
+    IBOutlet  UIImageView    *headImage;
+    MUser*  user;
+    IBOutlet UIActivityIndicatorView *active;
+    
+    IBOutlet UIScrollView    *scrollV;
+    CGFloat inputHeight;
+    CGFloat txtFieldH;
+    IBOutlet  UITextField *companyTxtF;
+    IBOutlet  UITextField *titleTxtF;
+    IBOutlet  UITextField *informTxtF;
+}
+
+
+@property(nonatomic,retain) UITableView        *table_View;
+@property(nonatomic,retain) UITableViewCell    *statusCell;
+@property(nonatomic,retain) UITableViewCell    *birthdayCell;
+@property(nonatomic,retain) UITableViewCell    *locationCell;
+@property(nonatomic,retain) UITableViewCell    *universityCell;
+@property(nonatomic,retain) UITableViewCell    *companyCell;
+@property(nonatomic,retain) UITableViewCell    *industryCell;
+@property(nonatomic,retain) UITableViewCell    *functionCell;
+@property(nonatomic,retain) UITableViewCell    *informationCell;
+@property(nonatomic,retain) UIView             *headView;
+@property(nonatomic,retain)  NSMutableArray*           locationArray;
+@property(nonatomic,retain) NSMutableArray*           statusArray;  
+@property(nonatomic,retain) UIDatePicker        *datePicker;
+@property(nonatomic,retain)   UIButton       *headIcon;
+@property(nonatomic,retain)  UIImageView    *headImage;
+@property(nonatomic,retain)  UITableViewCell *titleCell;
+@property(nonatomic,retain)  UIScrollView  *scrollV;
+
+
+
+@property(nonatomic,retain)  UIView*          selectView;
+@property(nonatomic,retain)  UIPickerView*    pickerView;
+@property(nonatomic)  int      type;
+- (void)getcity:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)getUserInfo:(WeiboClient*)sender obj:(NSObject*)obj;
+-(IBAction)confirm:(id)sender;
+-(IBAction)changeHeadIcon:(id)sender;
+-(IBAction)changeSex:(id)sender;
+- (void)updateImage:(UIImageView*)face;
+- (void)scrolViewIfCovered;
+@end

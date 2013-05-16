@@ -1,0 +1,32 @@
+//
+//  Login.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+
+@interface Login : UIViewController <UITableViewDelegate, UITableViewDataSource,UITextFieldDelegate>
+{
+    IBOutlet UITableViewCell*   username;
+    IBOutlet UITableViewCell*   password;
+    IBOutlet UITextField*       usernameField;
+    IBOutlet UITextField*       passwordField;
+    IBOutlet UITableView*       tableView;
+    WeiboClient*                weiboClient;
+    
+    IBOutlet    UINavigationBar* nav;
+    IBOutlet UIActivityIndicatorView *active; 
+}
+-(IBAction)login:(id)sender;
+-(IBAction)backgroundTap:(id)sender;
+-(IBAction)forgotPassword:(id)sender;
+- (void)loginResultDidReceive:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)getLoginUserInfo:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)forgotPasswordDidReceive:(WeiboClient*)sender obj:(NSObject*)obj;
+-(NSString*) md5:(NSString*) str;
+-(void)back;
+@end

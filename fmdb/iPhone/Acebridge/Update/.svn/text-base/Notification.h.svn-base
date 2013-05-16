@@ -1,0 +1,24 @@
+//
+//  Notification.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "MNotification.h"
+@interface Notification : UIViewController<UITableViewDelegate, UITableViewDataSource>
+{
+    NSMutableArray* typeArray;
+    NSMutableArray* notificationArray;
+    WeiboClient*                weiboClient;
+    IBOutlet UITableView*       cnTableView;
+    int userCount;
+}
+@property(nonatomic,retain) NSMutableArray* notificationArray;
+- (void)countNotification:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)InitNavigationBarItems;
+-(void)back;
+@end

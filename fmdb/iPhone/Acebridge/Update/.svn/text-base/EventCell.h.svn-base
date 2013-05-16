@@ -1,0 +1,34 @@
+//
+//  EventCell.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-24.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "AtNotification.h"
+
+#import "BlogInfo.h"
+#import "CarrerInfo.h"
+#import "GroupInfo.h"
+#import "EventInfo.h"
+#import "StatusInfo.h"
+#import "ViewPromotion.h"
+#import "UserInfo.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface EventCell :UTTableViewController
+{
+    IBOutlet PullRefreshTableView *eventTableView;
+    WeiboClient*          weiboClient;    
+    NSMutableArray*       eventArray;  
+    BOOL    isLoading;
+}
+
+@property(nonatomic,retain)NSMutableArray *eventArray;
+- (void)eventList:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void) getList:(int)pageNo;
+@end

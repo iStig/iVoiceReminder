@@ -1,0 +1,56 @@
+//
+//  MCareer.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MCareer : NSObject
+{
+    int                 careerID;
+    NSString*           careerName;
+    int                 creatorID;
+    NSString*           creatorName;
+    NSDate*             publishTime;
+    NSString*           industry;
+    NSString*           subIndustry;
+    NSString*           function;
+    NSString*           position;
+    NSString*           type;
+    NSString*           cityName;
+    NSString*           salary;
+    NSString*           cellphone;
+    NSDate*             deadline;
+    NSString*           careerDetails;
+    int                 commentCount;
+    NSString*           picName;
+    int                 likeCount;
+    int                 shareCount;
+    BOOL                 isapply;
+}
+@property(nonatomic,assign)BOOL                 isapply;
+@property(nonatomic,assign)int                 careerID;
+@property(nonatomic,assign)int                 creatorID;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,assign)int                 likeCount;
+@property(nonatomic,assign)int                 shareCount;
+@property(nonatomic,retain)NSString*           careerName;
+@property(nonatomic,retain)NSDate*             publishTime;
+@property(nonatomic,retain)NSString*           industry;
+@property(nonatomic,retain)NSString*           subIndustry;
+@property(nonatomic,retain)NSString*           function;
+@property(nonatomic,retain)NSString*           position;
+@property(nonatomic,retain)NSString*           type;
+@property(nonatomic,retain)NSString*           cityName;
+@property(nonatomic,retain)NSString*           salary;
+@property(nonatomic,retain)NSString*           cellphone;
+@property(nonatomic,retain)NSDate*             deadline;
+@property(nonatomic,retain)NSString*           careerDetails;
+@property(nonatomic,retain)NSString*           picName;
+@property(nonatomic,retain)NSString*           creatorName;
++ (MCareer*)mcareerWithJsonDictionary:(NSDictionary*)dic;
+- (MCareer*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

@@ -1,0 +1,20 @@
+//
+//  MNotification.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MNotification : NSObject
+{
+    int                 nTypeID;
+    int                 count;
+}
+@property(nonatomic,assign)int                 nTypeID;
+@property(nonatomic,assign)int                 count;
++ (MNotification*)mnotificationWithJsonDictionary:(NSDictionary*)dic;
+- (MNotification*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

@@ -1,0 +1,28 @@
+//
+//  SendChat.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-26.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+@interface SendChat : UIViewController<UITextFieldDelegate>
+{
+    IBOutlet UILabel* labTo;
+    IBOutlet UIView*  sendView;
+    IBOutlet UITextField* sendText;
+    NSString* toUser;
+    int       toUserID;
+     WeiboClient*                weiboClient;
+     IBOutlet  UIButton *sendBtn;
+}
+@property(nonatomic,assign)int toUserID;
+@property(nonatomic,retain)NSString* toUser;
+@property(nonatomic,retain)UIButton *sendBtn;
+-(IBAction)send:(id)sender;
+- (void)InitNavigationBarItems;
+-(void)back;
+- (void)sendInMail:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

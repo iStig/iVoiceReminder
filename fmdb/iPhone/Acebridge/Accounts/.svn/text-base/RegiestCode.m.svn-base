@@ -1,0 +1,226 @@
+//
+//  RegiestCode.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "RegiestCode.h"
+#import "RegiestVerifycode.h"
+
+@implementation RegiestCode
+//@synthesize strMobile;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+     self.navigationController.navigationBarHidden=NO;
+    [self setTitle:@"AceBridge"];
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void)back {
+    self.navigationController.navigationBarHidden=YES;
+	[self.navigationController popViewControllerAnimated:YES];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 2;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	
+    UITableViewCell *cell;
+    if (indexPath.row == 0) {
+		cell = phoneNumber;
+	}
+	else  if (indexPath.row == 1){
+		cell = code;
+	}
+    return cell;
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+-(IBAction)getCode:(id)sender
+{ 
+    
+    [phoneNumberField resignFirstResponder];
+    [codeField resignFirstResponder];
+    
+    if([phoneNumberField.text length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in mobile number", @"")] setGravity:iToastGravityTop] show];
+        return ;
+    }
+//    if ([phoneNumberField.text length]>=1 && [codeField.text length]>=1) {
+//        [[[iToast makeText:NSLocalizedString(@"如果您已有邀请码，请直接点“Sigh Up”", @"")] setGravity:iToastGravityTop] show];
+//        return ;
+//    }
+    else{
+    GetCodeInfo* editmyinfo = [[GetCodeInfo alloc] initWithNibName:@"GetCodeInfo" bundle:nil];
+    [editmyinfo setTitle:@"Edit My Info"];
+    editmyinfo.strMobile=phoneNumberField.text;
+    editmyinfo.strInviteCode=codeField.text;
+    editmyinfo.isWebSite=YES;
+    [self.navigationController pushViewController:editmyinfo animated:YES];
+    [editmyinfo release];
+    }
+}
+-(IBAction)signUp:(id)sender
+{
+    [phoneNumberField resignFirstResponder];
+    [codeField resignFirstResponder];
+    if([phoneNumberField.text length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in mobile number", @"")] setGravity:iToastGravityTop] show];
+        return ;
+        
+    }
+     if([codeField.text length]<1 && [phoneNumberField.text length]>=1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in invitation code", @"")] setGravity:iToastGravityTop] show];
+        return ;
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(validateCode:obj:)];
+    [weiboClient validateInviteCode:phoneNumberField.text inviteCode:codeField.text];
+}
+-(IBAction)backgroundTap:(id)sender
+{
+    [phoneNumberField resignFirstResponder];
+    [codeField resignFirstResponder];
+}
+#pragma mark -键盘事件
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+
+- (void)validateCode:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取city数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    NSLog(@"%@",obj);
+    int opResult = [[dic objectForKey:@"opResult"] intValue];
+   
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+     int type = [[dic objectForKey:@"registerType"] intValue];
+    if (opResult==0) {
+        
+        
+        
+//        RegiestVerifycode *regcode = [[RegiestVerifycode alloc] initWithNibName:@"RegiestVerifycode" bundle:nil];
+//        regcode.type=type;
+//        regcode.strMobile=phoneNumberField.text;
+//        [self.navigationController pushViewController:regcode animated:YES];
+//        [regcode release];//删除
+        
+        
+        
+         if(errCode==1)
+        {
+            [[[iToast makeText:NSLocalizedString(@"Wrong invitation code", @"")] setGravity:iToastGravityBottom] show];
+            return ;
+        }
+        else{
+        
+            [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+            return ;
+        }
+    }
+    if (opResult==1) {   
+        RegiestVerifycode *regcode = [[RegiestVerifycode alloc] initWithNibName:@"RegiestVerifycode" bundle:nil];
+        regcode.type=type;
+         regcode.strMobile=phoneNumberField.text;
+        [self.navigationController pushViewController:regcode animated:YES];
+        [regcode release];
+    }   
+}
+@end

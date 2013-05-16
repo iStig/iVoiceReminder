@@ -1,0 +1,283 @@
+//
+//  PrivacySettings.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "PrivacySettings.h"
+#import "PublicUtils.h"
+#import "iToast.h"
+@implementation PrivacySettings
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    values = [[NSMutableArray alloc] initWithObjects:@"All People",@"My Connections",@"Only Me", nil];
+    
+    activeIndicator.hidden=NO;
+    [activeIndicator startAnimating];
+    
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getContactPrivacy:obj:)];
+    
+    [weiboClient getContactPrivacy];
+
+    // Do any additional setup after loading the view from its nib.
+}
+
+#pragma mark - 获取隐私信息
+- (void)getContactPrivacy:(WeiboClient*)sender obj:(NSObject*)obj{
+    if (sender.hasError) {
+		NSLog(@"用户信息获取失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    
+    NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    getPrivacy=[[dic objectForKey:@"privacy"] intValue];
+    NSLog(@"%d",getPrivacy);
+
+    [pTableView reloadData];
+    activeIndicator.hidden=YES;
+    [activeIndicator stopAnimating];
+    
+}
+-(void)setContactPrivacy:(WeiboClient*)sender obj:(NSObject*)obj{
+
+    if (sender.hasError) {
+		NSLog(@"用户信息获取失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    //int errCode = [[dic objectForKey:@"errCode"] intValue];
+
+    
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    else{
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+    [pTableView reloadData];
+    activeIndicator.hidden=YES;
+    [activeIndicator stopAnimating];
+
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    
+    button.frame = CGRectMake(0, 0, 42, 42.0);  //改
+    
+    
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - tableview事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+{
+	return 3;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 44;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+//    if(section==0)
+//    {
+//    return  [header frame].size.height;
+//    }if (section==1) 
+//    {
+//        return [header1 frame].size.height;
+//    }
+//    else
+//    {
+//        return [header2 frame].size.height;
+//    }
+   return  [header frame].size.height;
+ //   return 0;
+}
+
+
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section;{
+//    if (section==0) {
+//        
+//        return header;
+//    }
+//    if (section==1) {
+//      
+//        return header1;
+//    }
+//    else{
+//        
+//        return header2;
+//    }
+       return header;
+} 
+
+-(UITableViewCell*) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ComposeCell" owner:nil options:nil] objectAtIndex:2];
+    }
+    UILabel* lab = (UILabel*)[cell viewWithTag:1];
+    lab.text=[values objectAtIndex:indexPath.row];
+    UIImageView* imageview = (UIImageView*)[cell viewWithTag:2];
+    if(getPrivacy==indexPath.row+1)
+    {
+        imageview.hidden=NO;
+    }
+    else
+    {
+        imageview.hidden=YES;
+    }
+
+    
+      
+    return cell;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  
+        
+    
+    if(indexPath.row==0||indexPath.row==1)
+    {
+        activeIndicator.hidden=NO;
+        [activeIndicator startAnimating];
+        
+        getPrivacy = indexPath.row+1;
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(setContactPrivacy:obj:)];
+        
+        [weiboClient setContactPrivacy:getPrivacy];
+        
+
+      //  [tableView reloadData];
+    }
+    else
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Do you want to stay reachable with your connections?" delegate:self cancelButtonTitle:@"No" otherButtonTitles:@"Yes", nil];
+        [alert show];
+        [alert release];
+    }
+    
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(buttonIndex==1)
+    {
+        
+        activeIndicator.hidden=NO;
+        [activeIndicator startAnimating];
+        getPrivacy= 2;
+        
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(setContactPrivacy:obj:)];
+        
+        [weiboClient setContactPrivacy:getPrivacy];
+        
+        [pTableView reloadData];
+    }
+    if(buttonIndex==0)
+    {
+        activeIndicator.hidden=NO;
+        [activeIndicator startAnimating];
+        
+        getPrivacy= 3;
+        
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(setContactPrivacy:obj:)];
+        
+        [weiboClient setContactPrivacy:getPrivacy];
+        [pTableView reloadData];
+    }
+}
+
+
+
+
+
+@end

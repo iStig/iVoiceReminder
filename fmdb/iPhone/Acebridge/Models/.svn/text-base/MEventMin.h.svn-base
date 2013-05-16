@@ -1,0 +1,54 @@
+//
+//  MEventMin.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MEventMin : NSObject
+{
+    int                 eventID;
+    NSString*           eventName;
+    NSString*           eventCreatorName;
+    int                 eventCreatorId;
+    NSString*           eventCategory;
+    NSString*           eventAddress;
+    NSDate*             eventStartTime;
+    NSDate*             eventEndTime;
+    NSDate*             eventDeadline;
+    NSString*           eventAbstract;
+    NSString*           eventPic;
+    int                 commentCount;
+    int                 eventApplyCount;
+    int                 likeCount;
+    int                 shareCount;
+    BOOL                hot;
+    BOOL                status;
+    BOOL                 isapply;
+    NSDate*             eventPublishTime;
+}
+@property(nonatomic,retain)NSDate*             eventPublishTime;
+@property(nonatomic,assign)BOOL                 isapply;
+@property(nonatomic,assign)int                 eventID;
+@property(nonatomic,retain)NSString*           eventName;
+@property(nonatomic,retain)NSString*           eventCreatorName;
+@property(nonatomic,assign)int                 eventCreatorId;
+@property(nonatomic,retain)NSString*           eventCategory;
+@property(nonatomic,retain)NSString*           eventAddress;
+@property(nonatomic,retain)NSDate*             eventStartTime;
+@property(nonatomic,retain)NSDate*             eventEndTime;
+@property(nonatomic,retain)NSDate*             eventDeadline;
+@property(nonatomic,retain)NSString*           eventAbstract;
+@property(nonatomic,retain)NSString*           eventPic;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,assign)int                 eventApplyCount;
+@property(nonatomic,assign)int                 likeCount;
+@property(nonatomic,assign)int                 shareCount;
+@property(nonatomic,assign)BOOL                hot;
+@property(nonatomic,assign)BOOL                status;
++ (MEventMin*)meventminWithJsonDictionary:(NSDictionary*)dic;
+- (MEventMin*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

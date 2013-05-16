@@ -1,0 +1,28 @@
+//
+//  PrivacySettings.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+
+@interface PrivacySettings : UIViewController<UITableViewDataSource,UITableViewDelegate,UIAlertViewDelegate>
+{
+    NSMutableArray* values;
+    IBOutlet UITableView* pTableView;
+    IBOutlet UIView*      header;
+    IBOutlet UIView*      header1;
+    IBOutlet UIView*      header2;
+    WeiboClient*              weiboClient;
+    int getPrivacy;
+    int setPrivacy;
+    IBOutlet UIActivityIndicatorView *activeIndicator;
+}
+-(void)getContactPrivacy:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)setContactPrivacy:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)InitNavigationBarItems;
+-(void)back;
+@end

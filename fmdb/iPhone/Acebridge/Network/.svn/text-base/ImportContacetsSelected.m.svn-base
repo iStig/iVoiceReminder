@@ -1,0 +1,267 @@
+//
+//  ImportContacetsSelected.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-23.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "ImportContacetsSelected.h"
+#import "iToast.h"
+
+@implementation ImportContacetsSelected
+@synthesize keys;
+@synthesize values;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    self.title=@"Import Contacts";
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"全不选.png"] forState:UIControlStateNormal];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"全选.png"] forState:UIControlStateSelected];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42.0);
+    [rbutton addTarget:self action:@selector(checked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return [keys count];
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+    return [dic count];
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    UIImage* noCheck =[UIImage imageNamed:@"选择框1.png"] ;
+    UIImage* yesCheck =[UIImage imageNamed:@"选择框2.png"];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:3];
+    } 
+    // Configure the cell..
+    cell.textLabel.font = [UIFont systemFontOfSize:14];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:indexPath.row];
+    NSString* name = [temp objectAtIndex:1];
+    UILabel* lab = (UILabel*)[cell viewWithTag:1];
+    lab.text=name;
+    UIImageView* imageview = (UIImageView*)[cell viewWithTag:3];
+    imageview.hidden=YES;
+    UIButton* btn = (UIButton*)[cell viewWithTag:2];
+    BOOL isChecked = [[temp objectAtIndex:3] boolValue];
+    [btn addTarget:self action:@selector(btnChecked:) forControlEvents:UIControlEventTouchUpInside];
+    [btn setBackgroundImage:noCheck forState:UIControlStateNormal];
+    [btn setBackgroundImage:yesCheck forState:UIControlStateSelected];
+    if(isChecked==NO)
+    {
+        btn.selected=NO;
+        NSString* s = [temp objectAtIndex:3];
+        s=@"NO";
+    }
+    else
+    {
+        btn.selected=YES;
+        NSString* s = [temp objectAtIndex:3];
+        s=@"YES";
+    }
+    return cell; 
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section 
+{
+    return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+}
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    return keys;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
+    UIButton* btn = (UIButton*)[cell viewWithTag:2];
+    [self btnChecked:btn];
+}
+#pragma mark - 全选
+-(IBAction)checked:(id)sender
+{
+    UIButton*   btn = (UIButton*)sender;
+    btn.selected=!btn.selected;
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[values objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            if([temp count]>3)
+            {
+                [temp removeObjectAtIndex:3];
+                NSString* s = @"";
+                s=btn.selected?@"YES":@"NO";
+                [temp addObject:s];
+            }
+        }
+    }
+    [addressTableView reloadData];
+}
+#pragma mark - 点击选择
+-(IBAction)btnChecked:(id)sender
+{
+    UIButton*   btn = (UIButton*)sender;
+    btn.selected=!btn.selected;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:[addressTableView indexPathForCell:cell].section];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:[addressTableView indexPathForCell:cell].row];
+    if([temp count]>3)
+    {
+        [temp removeObjectAtIndex:3];
+        NSString* s = @"";
+        s=btn.selected?@"YES":@"NO";
+        [temp addObject:s];
+    }
+    [addressTableView reloadData];
+}
+#pragma mark - 发送短信
+-(IBAction)invite:(id)sender
+{
+    [self sendSMS];
+}
+//内容 收件人
+-(void) sendSMS
+{
+    NSString* str = [[NSString alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[values objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            if([temp count]>3)
+            {
+                BOOL s = [[temp objectAtIndex:3] boolValue];
+                if(s)
+                {
+                    str = [NSString stringWithFormat:@"%@,%@",str,[temp objectAtIndex:2]];
+                }
+            }
+        }
+    }
+    str =[str stringByReplacingOccurrencesOfString:@"(" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@")" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@"-" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@" " withString:@""];
+    str =[str stringByReplacingOccurrencesOfString:@"+86" withString:@""];
+    if([str length]>0)
+    {
+        str = [str substringFromIndex:1];
+    }
+    if([str length]>11)
+    {
+        str = [str substringToIndex:str.length-1];
+    }
+    if([str length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please choose your contact", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendCode:obj:)];
+    [weiboClient sendInviteCode:str type:1 eventID:0];
+}
+#pragma mark - 数据解析
+- (void)sendCode:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

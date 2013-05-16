@@ -1,0 +1,57 @@
+//
+//  AppDelegate_iPhone.h
+//  ZhiWeibo
+//
+//  Created by junmin liu on 10-11-19.
+//  Copyright 2010 Openlab. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "AceBridgeAppDelegate.h"
+#import "WeiboClient.h"
+#import "CustomTabBar.h"
+#import "ComposeView.h"
+#import "LoginHome.h"
+#import "DDMenuController.h"
+#import "Update.h"
+//#import "LeftMenuViewController.h"
+
+@class Network,Myconnections,Connectreguest,Buildconnect,Shake,Currentplace9,CurrentEvent,LeftMenuViewController;
+
+@interface AppDelegate_iPhone : AceBridgeAppDelegate<UITabBarControllerDelegate> {
+	IBOutlet UITabBarController*    tabBarController;
+	UINavigationController *homeViewController;
+	UIViewController *rootViewController;
+	BOOL userSignined;
+	UINavigationController *newsRootViewController;
+    CustomTabBar	*mTabBarController;
+	int                             selectedTab;
+    BOOL                            initialized;
+    NSTimeInterval                  autoRefreshInterval;
+    NSTimer*                        autoRefreshTimer;
+    NSDate*                         lastRefreshDate;
+    WeiboClient *weiboClient;
+    UINavigationController *loginNavViewController;
+    LoginHome * loginhome;
+    Network*        currentplace;
+    Connectreguest* connectregest;
+    Buildconnect*   buildconnect;
+    Shake*          shake;
+    Currentplace9*  currentplace9;
+    ComposeView*    composeView;
+    CurrentEvent* cevent;
+    int              user_count;
+}
+
+@property (nonatomic, retain) IBOutlet UINavigationController *homeViewController;
+@property (nonatomic, retain) ComposeView*                      composeView;
+
+@property (strong, nonatomic) DDMenuController *menuController;
+//@property (nonatomic,retain)  Update *update;
+@property (nonatomic,retain) LeftMenuViewController *leftController;
+-(void)showChatColum:(int)index withObject:(id)withObject;
+-(void)networkcp:(int)type;
+
+
+@end
+

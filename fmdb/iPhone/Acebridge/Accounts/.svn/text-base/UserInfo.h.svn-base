@@ -1,0 +1,51 @@
+//
+//  UserInfo.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "MUser.h"
+#import "ImageCache.h"
+#import "ChatInfo.h"
+@interface UserInfo : UIViewController<UITableViewDelegate, UITableViewDataSource,UIActionSheetDelegate,UIAlertViewDelegate>
+{
+    IBOutlet UITableView*     uiTableView;
+    IBOutlet UITableViewCell* location;
+    IBOutlet UITableViewCell* university;
+    IBOutlet UITableViewCell* company;
+    IBOutlet UITableViewCell* selfinfroduction;
+    IBOutlet UITableViewCell* info;
+    IBOutlet UITableViewCell* op;
+    
+    IBOutlet UITableViewCell* titlecell;
+    
+    IBOutlet UIView*          headView;
+    MUser*                    user;
+    int                       userID;
+    WeiboClient*              weiboClient;
+    ImageCache                *imageCache;
+    UIActionSheet*            actionButtonActionSheet;
+    NSString*                 tel;
+    NSString*                 userName;
+    int                       scetionCount;
+    IBOutlet UIActivityIndicatorView* activity;
+}
+@property (nonatomic,assign) int userID;
+@property (nonatomic,retain) NSString* userName;
+@property (nonatomic,retain) MUser* user;
+- (void)InitNavigationBarItems;
+-(void)back;
+-(void) bindData;
+- (void)getUserInfo:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImage:(UIImageView*)face;
+-(IBAction)connectClicked:(id)sender;
+-(IBAction)telClicked:(id)sender;
+-(IBAction)networkClicked:(id)sender;
+-(IBAction)chatClicked:(id)sender;
+-(IBAction)opClicked:(id)sender;
+-(IBAction)viewBigPicture:(id)sender;
+@end

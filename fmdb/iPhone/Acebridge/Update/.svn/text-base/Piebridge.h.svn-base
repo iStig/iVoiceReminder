@@ -1,0 +1,42 @@
+//
+//  Piebridge.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MPiebridgeMin.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "PieBridgeDetail.h"
+#import "UTTableViewController.h"
+@interface Piebridge :UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             pbArray;
+    IBOutlet  PullRefreshTableView*      pbTableView; 
+    ImageCache                  *imageCache;
+    MPiebridgeMin*              selectpb;
+    BOOL                        isLoading;
+    int                         type;
+    
+    IBOutlet    UIImageView*    imageSelect;
+    IBOutlet    UIButton*       buttonAll;
+    IBOutlet    UIButton*       button2;
+    IBOutlet    UIButton*       button3;
+}
+@property(nonatomic,retain) NSMutableArray* pbArray;
+- (void)InitNavigationBarItems;
+-(void)back;
+- (void)pbList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)like:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void)requestData:(int)typeID pageNo:(int)pageNo;
+-(IBAction)getNext:(id)sender;
+-(IBAction)leftClicked:(id)sender;
+-(IBAction)like:(id)sender;
+@end

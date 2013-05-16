@@ -1,0 +1,404 @@
+//
+//  Piebridge.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Piebridge.h"
+#import "Piebridge9.h"
+#import "UserInfo.h"
+@implementation Piebridge
+
+@synthesize pbArray;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    //添加
+    buttonAll.titleLabel.textColor=[UIColor whiteColor];
+    button2.titleLabel.textColor=[UIColor darkGrayColor];
+    button3.titleLabel.textColor=[UIColor darkGrayColor];
+    imageSelect.frame=CGRectMake(45, 26, 16, 10);
+    tableView = pbTableView;
+    tableView.frame = CGRectMake(0, 36, 320, 381);
+    isLoading = NO;
+    type = 1;
+    pbArray = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self requestData:type pageNo:1];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 加载数据
+-(void)requestData:(int)typeID pageNo:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(pbList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient piebridge:typeID age:0 constellation:0 height:0 weight:0 income:0 cityID:0 pageNo:pageNo];
+}
+#pragma mark - tableView事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [pbArray count]+1;
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([pbArray count]==0||[pbArray count]==indexPath.row)
+    {
+        if([pbArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 70;
+}
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([pbArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [pbArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:6];  
+        }
+        MPiebridgeMin*pbmin= (MPiebridgeMin*)[pbArray objectAtIndex:indexPath.row];
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        if([pbmin.avatarName length]>0)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        UILabel *labUserName = (UILabel*)[cell viewWithTag:2];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+        CGFloat width = [pbmin.publisherName sizeWithFont:myfont constrainedToSize:CGSizeMake(150, 15) lineBreakMode:UILineBreakModeWordWrap].width;
+        labUserName.frame=CGRectMake(73, 3, width+5, 20);
+        [labUserName setText:pbmin.publisherName];
+        UIImageView* sex= (UIImageView*)[cell viewWithTag:3];
+        sex.frame=CGRectMake(80+width, 5, 14, 12);
+        if(pbmin.gender)
+        {
+            [sex setImage:[UIImage imageNamed:@"male.png"]];
+        }
+        else
+        {
+            [sex setImage:[UIImage imageNamed:@"female.png"]];
+        }
+        UILabel *labAge = (UILabel*)[cell viewWithTag:4];
+        labAge.text=[NSString stringWithFormat:@"Age:%d",pbmin.age];
+        
+        UILabel *labXZ = (UILabel*)[cell viewWithTag:5];
+        labXZ.text=[NSString stringWithFormat:@"%@",pbmin.constellation ];
+        
+        UILabel *labcity= (UILabel*)[cell viewWithTag:6];
+        labcity.text=[NSString stringWithFormat:@"%@",pbmin.cityName ];
+        
+        UIButton* btnLike = (UIButton*)[cell viewWithTag:7];
+        if(pbmin.isLike)
+        {
+            [btnLike setImage:[UIImage imageNamed:@"like.png"] forState:UIControlStateNormal];
+        }
+        else
+        {
+            [btnLike setImage:[UIImage imageNamed:@"dislike.png"] forState:UIControlStateNormal]; 
+        }
+        [btnLike addTarget:self action:@selector(like:) forControlEvents:UIControlEventTouchUpInside];
+        return cell;
+	}
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestData:type pageNo:[pbArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    MPiebridgeMin*pbmin= (MPiebridgeMin*)[pbArray objectAtIndex:indexPath.row];
+    PieBridgeDetail* pb = [[PieBridgeDetail alloc] initWithNibName:@"PieBridgeDetail" bundle:nil];
+    pb.pbID=pbmin.publisherID;
+    [pb setTitle:@"PieBridge"];
+    pb.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:pb animated:YES];
+    [pb release];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"宫格.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42);
+    [rbutton addTarget:self action:@selector(leftClicked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+-(IBAction)like:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    selectpb =(MPiebridgeMin*)[pbArray objectAtIndex:[pbTableView indexPathForCell:cell].row];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(like:obj:)];
+    int cmd = 0;
+    if(selectpb.isLike)
+    {
+        cmd=2;
+    }
+    else
+    {
+        cmd=1;
+    }
+    [weiboClient like:[selectpb.avatarName intValue] opCmd:cmd];
+}
+#pragma mark - 数据解析
+- (void)like:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        selectpb.isLike = !selectpb.isLike;
+        [pbTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+- (void)pbList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取pb数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [pbArray removeAllObjects];
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        [pbArray removeAllObjects];
+        [pbTableView reloadData];
+        return;
+    }
+    int count = [[dic objectForKey:@"pbCount"] intValue];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        [tableView reloadData];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"pbArray"];
+    
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [pbArray removeAllObjects];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MPiebridgeMin* mpb = [MPiebridgeMin mpiebridgeminWithJsonDictionary:[arr objectAtIndex:i]];
+        [pbArray addObject:mpb];
+    }
+    [pbTableView reloadData];
+    isLoading=NO;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [pbArray release];
+    [super dealloc];
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MPiebridgeMin *pItem =(MPiebridgeMin*) [pbArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%@/%@_small.jpg",IMAGE_PATH,pItem.avatarName,pItem.avatarName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+              
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+#pragma mark - 切换
+-(IBAction)getNext:(id)sender
+{
+    [pbArray removeAllObjects];
+    UIButton* btn=(UIButton*)sender;
+    if([btn tag]==1)
+    {
+        type=1;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor whiteColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(45, 26, 16, 10); 
+    }
+    if([btn tag]==2)
+    {
+        type=2;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor whiteColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(155, 26, 16, 10);
+    }
+    if([btn tag]==3)
+    {
+        type=3;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor whiteColor];
+        imageSelect.frame=CGRectMake(260, 26, 16, 10);
+    }
+    [self getItemsWhenPullDownTableView];
+}
+#pragma mark-切换九宫格
+-(IBAction)leftClicked:(id)sender
+{
+    Piebridge9 *pie = [[Piebridge9 alloc] initWithNibName:@"Piebridge9" bundle:nil];
+    pie.pbArray = nil;
+    [pie setTitle:@"Piebridge"];
+    [self.navigationController pushViewController:pie animated:YES];
+    [pie release];
+}
+@end

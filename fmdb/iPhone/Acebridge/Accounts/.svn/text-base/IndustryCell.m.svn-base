@@ -1,0 +1,190 @@
+//
+//  IndustryCell.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-1.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "IndustryCell.h"
+
+@implementation IndustryCell
+
+@synthesize table_View;
+@synthesize array;
+@synthesize lastIndexPath;
+@synthesize strIndustry,_industryID;
+@synthesize delegate;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self setTitle:@"Industry"];
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+   
+    self.array=[[NSMutableArray alloc]init];
+    
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getindustry:obj:)];
+    [weiboClient getindustry];
+
+    // array= [[NSMutableArray alloc] initWithObjects:@"Finance",@"Services",@"Consumer",@"Auto",@"Property",@"Traverl&Leisure",@"TMT",@"Healthcare",@"Industrials",@"Energy&Resources",@"Others", nil];
+    // Do any additional setup after loading the view from its nib.
+}
+
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+
+-(void)viewDidDisappear:(BOOL)animated{
+
+    if (strIndustry==nil) {
+        
+    }
+    else{
+        [self.delegate industrySelect:strIndustry industryID:_industryID];
+   
+    }
+
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+
+    return  [array count];
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+   
+    static NSString *CellIdentifier = @"Cell";
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"functionAndindustry" owner:nil options:nil] objectAtIndex:0];
+    } 
+    UILabel *lbl=(UILabel*)[cell viewWithTag:1];
+    lbl.text=((MIndustry*)[array objectAtIndex:indexPath.row]).industryName;
+    
+    return cell;
+}
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    int iNewRow = [indexPath row];
+  	int iOldRow = (lastIndexPath !=nil)?[lastIndexPath row]:-1;
+    //  lastIndexPath = [NSIndexPath indexPathForRow:5 inSection:0];
+    if (iNewRow != iOldRow) {
+        UITableViewCell *newCell = [tableView cellForRowAtIndexPath:indexPath];
+		newCell.accessoryType=UITableViewCellAccessoryCheckmark;
+        UITableViewCell *oldCell = [tableView cellForRowAtIndexPath:lastIndexPath];
+		oldCell.accessoryType = UITableViewCellAccessoryNone;
+        lastIndexPath=[indexPath retain];//indexPath可能在这之前被系统release了  因此我们要手动retain下
+	}
+	
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    MIndustry* m =((MIndustry*)[array objectAtIndex:indexPath.row]);
+      strIndustry=m.industryName;
+    _industryID = m.industryID;
+    [self back];
+}
+#pragma mark - 选择数据绑定
+- (void)getindustry:(WeiboClient*)sender obj:(NSObject*)obj{
+
+    if (sender.hasError) {
+		NSLog(@"获取industry数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        //return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"industryArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MIndustry* industry = [MIndustry mindustryWithJsonDictionary:[arr objectAtIndex:i]];
+      
+        
+        [self.array addObject:industry];
+    }
+    
+    
+    
+       [table_View reloadData];
+    
+
+
+}
+
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void)dealloc{
+    [weiboClient release];
+    [table_View release];
+    [array release];
+    [lastIndexPath release];
+    [strIndustry release];
+    [super dealloc];
+}
+
+@end

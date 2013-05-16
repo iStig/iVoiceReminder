@@ -1,0 +1,44 @@
+//
+//  GroupInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "MGroup.h"
+#import "Members.h"
+@interface GroupInfo : UIViewController<UITableViewDelegate, UITableViewDataSource>
+{
+    IBOutlet    UITableView*    groupTableView;
+    IBOutlet    UIButton*       btnJoin;
+    IBOutlet    UIButton*       btnExit;
+    IBOutlet    UITableViewCell* cellInfo;
+    IBOutlet    UITableViewCell* cellBtn;
+    int         groupID;
+    NSString*   groupName;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    MGroup*                     mgroup;
+  IBOutlet  UIActivityIndicatorView     *active;
+}
+@property(nonatomic,assign)int groupID;
+@property(nonatomic,retain)NSString* groupName;
+@property(nonatomic,retain)MGroup* mgroup;
+-(IBAction)join:(id)sender;
+-(IBAction)exit:(id)sender;
+-(IBAction)share:(id)sender;
+-(IBAction)topics:(id)sender;
+-(IBAction)members:(id)sender;
+-(void)InitNavigationBarItems;
+-(void)back;
+-(void)groupInfo:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)updateImage:(UIImageView*)face;
+-(void) bindGroupData;
+-(void) joinData:(int) opCmd;
+@end

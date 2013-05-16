@@ -1,0 +1,27 @@
+//
+//  searchPerson.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-7-17.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+@interface searchPerson : UIViewController<UITableViewDataSource,UITableViewDelegate,UISearchBarDelegate>
+{
+    IBOutlet UITableView *atList;
+    IBOutlet UISearchBar *searchP;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             keys;
+    NSMutableArray*             values;
+    NSMutableArray*           userArray;
+    NSMutableArray*           valuesArray;
+    IBOutlet UIView*          viewUp;
+}
+
+
+- (void)myconnectusers:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void) loadData;
+-(void) merger;
+@end

@@ -1,0 +1,48 @@
+//
+//  RegiestVerifycode.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "iToast.h"
+#import "WeiboClient.h"
+#import "GetCodeInfo.h"
+#import "PublicUtils.h"
+
+@interface RegiestVerifycode : UIViewController <UITableViewDelegate, UITableViewDataSource,UITextFieldDelegate>
+{
+    IBOutlet UITableViewCell*   phoneNumber;
+    IBOutlet UITableViewCell*   password;
+    IBOutlet UITableViewCell*   reenterPassword;
+    IBOutlet UITableViewCell*   verificationCode;
+    IBOutlet UITextField*       phoneNumberField;
+    IBOutlet UITextField*       passField;
+    IBOutlet UITextField*       reenterPassField;
+    IBOutlet UITextField*       codeField;
+    IBOutlet UITableView*       tableView;
+    int                         type; 
+    WeiboClient*              weiboClient;
+    
+    IBOutlet UIActivityIndicatorView *active;
+    IBOutlet UIButton           *signBtn;
+      NSString                    *strMobile;
+    
+    IBOutlet  UIButton          *btnGetCode;
+    
+    
+    
+}
+@property(nonatomic) int                         type; 
+@property(nonatomic,retain) NSString                    *strMobile;
+@property(nonatomic,retain) IBOutlet  UIButton          *btnGetCode;
+-(IBAction)backgroundTap:(id)sender;
+
+-(IBAction)getVerificationCode:(id)sender;
+-(void)back;
+-(IBAction)signUp:(id)sender;
+
+
+@end

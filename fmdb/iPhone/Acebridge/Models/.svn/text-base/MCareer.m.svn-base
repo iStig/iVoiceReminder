@@ -1,0 +1,72 @@
+//
+//  MCareer.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MCareer.h"
+
+@implementation MCareer
+@synthesize careerName,careerID,creatorID,cityName,cellphone,commentCount,careerDetails,deadline,function,likeCount,industry,shareCount,salary,subIndustry,type,picName,position,publishTime,isapply,creatorName;
++ (MCareer*)mcareerWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MCareer alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MCareer*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        creatorName = [[dic objectForKey:@"creatorName"] retain];
+        isapply =  ([dic objectForKey:@"applied"]==[NSNull null])?0:[[dic objectForKey:@"applied"] boolValue];
+        careerID =  ([dic objectForKey:@"careerID"]==[NSNull null])?0:[[dic objectForKey:@"careerID"] intValue];
+        creatorID =  ([dic objectForKey:@"creatorID"]==[NSNull null])?0:[[dic objectForKey:@"creatorID"] intValue];
+        careerName = [[dic objectForKey:@"careerName"] retain];
+        cityName = [[dic objectForKey:@"cityName"] retain];
+        cellphone = [[dic objectForKey:@"cellphone"] retain];
+        function = [[dic objectForKey:@"function"] retain];
+        industry = [[dic objectForKey:@"industry"] retain];
+        subIndustry = [[dic objectForKey:@"subIndustry"] retain];
+        position = [[dic objectForKey:@"position"] retain];
+        salary = [[dic objectForKey:@"salary"] retain];
+        type = [[dic objectForKey:@"type"] retain];
+        picName = [[dic objectForKey:@"picName"] retain];
+        publishTime = [[dic objectForKey:@"publishTimeDate"] retain];
+        careerDetails = [[dic objectForKey:@"careerDetails"] retain];
+        deadline= [[dic objectForKey:@"deadlineDate"] retain];
+        commentCount = ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount = ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        if ((id)creatorName == [NSNull null]) creatorName = @"";
+        if ((id)careerName == [NSNull null]) careerName = @"";
+        if ((id)cellphone == [NSNull null]) cellphone = @"";
+        if ((id)position == [NSNull null]) position = @"";
+        if ((id)cityName == [NSNull null]) cityName = @"";
+        if ((id)function == [NSNull null]) function = @"";
+        if ((id)industry == [NSNull null]) industry = @"";
+        if ((id)subIndustry == [NSNull null]) subIndustry = @"";
+        if ((id)salary == [NSNull null]) salary = @"";
+        if ((id)type == [NSNull null]) type = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+        if ((id)careerDetails == [NSNull null]) careerDetails = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [creatorName release];
+    [careerName release];
+    [cellphone release];
+    [position release];
+    [cityName release];
+    [function release];
+    [industry release];
+    [subIndustry release];
+    [type release];
+    [salary release];
+    [picName release];
+    [careerDetails release];
+    [super dealloc];
+}
+@end

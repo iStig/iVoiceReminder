@@ -1,0 +1,20 @@
+//
+//  MIndustry.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MIndustry : NSObject
+{
+    int industryID;
+    NSString* industryName;
+}
+@property(nonatomic,assign) int industryID;
+@property(nonatomic,retain) NSString* industryName;
++ (MIndustry*)mindustryWithJsonDictionary:(NSDictionary*)dic;
+- (MIndustry*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

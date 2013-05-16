@@ -1,0 +1,559 @@
+
+
+#import "AppDelegate_iPhone.h"
+#import "ImageCache.h"
+#import "WeiboClient.h"
+#import "LoginHome.h"
+#import "Login.h"
+#import "CstSystem.h"
+#import "iToast.h"
+
+#import "Network.h"
+#import "Myconnections.h"
+#import "Connectreguest.h"
+#import "Buildconnect.h"
+#import "Shake.h"
+#import "Currentplace9.h"
+
+#import "PublicUtils.h"
+#import "MLoginInfo.h"
+#import "CurrentEvent.h"
+
+#import "MmailInCount.h"
+#import "Chat.h"
+#import "AWVersionAgent.h"
+
+@implementation UINavigationBar (CustomImage)  
+- (void)drawRect:(CGRect)rect {  
+    UIImage *image = [UIImage imageNamed: @"titlebar"];  
+    [image drawInRect:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];  
+}  
+@end 
+
+@interface AppDelegate_iPhone(Private)
+- (void)postInit;
+- (void)setNextTimer:(NSTimeInterval)interval;
+@end
+
+@implementation AppDelegate_iPhone
+@synthesize composeView;
+@synthesize homeViewController,menuController;
+
+#pragma mark Application lifecycle
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions { 
+    //app-info 中隐藏了状态栏 这里显示
+    [application setStatusBarHidden:NO withAnimation:UIStatusBarAnimationNone];
+    //设置状态栏为黑色
+    application.statusBarStyle=UIStatusBarStyleBlackOpaque;
+    
+
+//    https:  //itunes.apple.com/us/app/acebridge/id542634233?mt=8
+    
+    [[AWVersionAgent sharedAgent] setDebug:NO];
+    [[AWVersionAgent sharedAgent] checkNewVersionForApp:@"542634233"];
+    
+    self.isOpen=NO;
+    if([PublicUtils get:@"sexselect.db"]==nil)
+    {
+        [PublicUtils save:[NSString stringWithFormat:@"%d",2] name:@"sexselect.db"];
+    }
+    if([PublicUtils get:@"dayselect.db"]==nil)
+    {
+        [PublicUtils save:[NSString stringWithFormat:@"%d",3] name:@"dayselect.db"];
+    }
+    weiboClient=nil;
+    if(composeView==nil)
+    {
+        composeView = [[ComposeView alloc] initWithNibName:@"ComposeView" bundle:nil];
+    }
+    userSignined=NO;
+    //Network切换
+    currentplace = [[Network alloc] initWithNibName:@"Network" bundle:nil];
+    connectregest = [[Connectreguest alloc] initWithNibName:@"Connectreguest" bundle:nil];
+    buildconnect = [[Buildconnect alloc] initWithNibName:@"Buildconnect" bundle:nil];
+    shake = [[Shake alloc] initWithNibName:@"Shake" bundle:nil];
+    currentplace9 = [[Currentplace9 alloc] initWithNibName:@"Currentplace9" bundle:nil];
+    cevent = [[CurrentEvent alloc] initWithNibName:@"CurrentEvent" bundle:nil];
+    //Network切换结束
+	tabBarController.selectedIndex = 0;
+	[window addSubview:tabBarController.view];
+	rootViewController = tabBarController;
+    
+    loginhome = [[LoginHome alloc] initWithNibName:@"LoginHome" bundle:nil];
+    loginNavViewController = [[UINavigationController alloc] initWithRootViewController:loginhome];
+    
+//ddmenu
+    //UINavigationController *nav=[[UINavigationController alloc] initWithRootViewController:update];
+    //Update *update=[[Update alloc] initWithNibName:@"Update" bundle:nil];
+    
+    /* Update *update=[((UINavigationController*)[tabBarController.viewControllers objectAtIndex:3]).viewControllers objectAtIndex:0];
+    UINavigationController *nav=(UINavigationController*)[tabBarController.viewControllers objectAtIndex:3];
+    _menuController = [[DDMenuController alloc] initWithRootViewController:nav];
+    _leftController = [[LeftMenuViewController alloc] init];
+    _menuController.leftViewController = _leftController;
+    [_menuController viewDidLoad];*/
+    
+    
+    Update *update=[((UINavigationController*)[tabBarController.viewControllers objectAtIndex:3]).viewControllers objectAtIndex:0];
+    UINavigationController *nav=(UINavigationController*)[tabBarController.viewControllers objectAtIndex:3];
+    
+    
+    menuController = [[DDMenuController alloc] initWithRootViewController:tabBarController];
+    _leftController = [[LeftMenuViewController alloc] init];
+    //_menuController.leftViewController = nil;
+     [self setDDMenuEnabled:NO];
+    [self.window.layer setCornerRadius:0.7];
+    
+    self.window.rootViewController=menuController;
+    
+    
+    
+    
+    
+    //_menuController.leftViewController = nil;
+   // [self setDDMenuEnabled:NO];
+    
+
+
+    //self.window.rootViewController=_menuController;
+    
+  //  id a=window.rootViewController;
+    MLoginInfo* user = [PublicUtils currentUserInfo];
+    if(user)
+    {
+        userSignined = YES;  
+        [self connectionrequestCount];
+        
+    }
+    else
+    {
+        [self postInit];
+        [self openLoginView];
+    }
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController
+{
+    
+//    [self setDDMenuEnabled:(tabBarController.selectedIndex==0)];
+      if (tabBarController.selectedIndex!=3) {
+        [self setDDMenuEnabled:NO];
+      }else{
+          [self setDDMenuEnabled:YES];
+      }
+    
+}
+-(void)setDDMenuEnabled:(BOOL)enabled
+{
+    NSLog(@"%d",tabBarController.selectedIndex);
+    
+    if (!enabled) {
+        menuController.leftViewController=nil;
+        return;
+    }
+  
+    
+//     NSLog(@"%d",tabBarController.selectedIndex);
+//     NSLog(@"%d",[((UINavigationController*)_menuController.rootViewController).viewControllers count]);//[navi.viewControllers count]
+//     NSLog(@"%d",tabBarController.selectedIndex);
+//    UINavigationController*navi=[((UINavigationController*)_menuController.rootViewController).viewControllers objectAtIndex:tabBarController.selectedIndex];
+//    NSLog(@"%d",[navi.viewControllers count]);//[navi.viewControllers count]
+//    
+//   
+//    UIViewController *viewcontroller=[navi.viewControllers objectAtIndex:0];
+   // if (([viewcontroller isKindOfClass:[Update class]])) {
+    
+    
+    if (tabBarController.selectedIndex==3) {
+        menuController.leftViewController = _leftController;
+    }
+        
+      //  _menuController.menuDisplayedWidth=200;
+    //}
+}
+
+
+- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification
+{
+    [[AWVersionAgent sharedAgent] upgradeAppWithNotification:notification];
+}
+
+-(void)mmailcount{
+    
+
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(chatCountRequest:obj:)];
+    [weiboClient countInMail];
+}
+- (void)chatCountRequest:(WeiboClient*)sender obj:(NSObject*)obj{
+    
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    
+    if(opresult>0)
+    {
+        int icount=0;
+        
+        
+        MmailInCount* mmail = [MmailInCount mmailInCountWithJsonDictionary:dic];
+        icount+=mmail.count;
+        Chat* chat = (Chat*)[[[[tabBarController viewControllers] objectAtIndex:1] viewControllers] objectAtIndex:0];
+        if(icount>0)
+        {
+         
+            [chat navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", icount];
+        }
+        else {
+            [chat navigationController].tabBarItem.badgeValue = nil;
+            
+        }
+    }
+    
+    
+    
+}
+
+
+-(void) ncount
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(ncountRequest:obj:)];
+    [weiboClient countNotifications];
+}
+- (void)ncountRequest:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult>0)
+    {
+        int icount=0;
+        NSArray* arr =(NSArray*)[dic objectForKey:@"notificationCountArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MNotification* mpb = [MNotification mnotificationWithJsonDictionary:[arr objectAtIndex:i]];
+            icount+=mpb.count;
+        }
+        if(icount+user_count>0)
+        {
+            Update* update = (Update*)[[[[tabBarController viewControllers] objectAtIndex:3] viewControllers] objectAtIndex:0];
+          //  int count = [[update navigationController].tabBarItem.badgeValue intValue];
+//            if(count+icount>0)
+//            {
+                [update navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", icount+user_count];
+           // }
+        }
+    }
+    
+     [self mmailcount];
+
+}
+-(void) connectionrequestCount
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(connectrequestcount:obj:)];
+    [weiboClient connectrequestcount];
+}
+- (void)connectrequestcount:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+ //   int opresult = [[dic objectForKey:@"opResult"] intValue];
+//    if(opresult==0)
+//    {
+//        return;
+//    }
+    user_count = [[dic objectForKey:@"requestCount"] intValue];
+//    if(userCount>0)
+//    {
+//        Update* update = (Update*)[[[[tabBarController viewControllers] objectAtIndex:1] viewControllers] objectAtIndex:0];
+//        if(userCount>0)
+//        {
+//            [update navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", userCount];
+//        }
+//    }
+    [self ncount];
+    //[self mmailcount];
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+	[super applicationWillResignActive:application];
+	if (!userSignined) {
+		return;
+	}
+    if (autoRefreshTimer) {
+        [autoRefreshTimer invalidate];
+        autoRefreshTimer = nil;
+    }
+	NSArray *views = tabBarController.viewControllers;
+    for (int i = 0; i < [views count]; ++i) {
+        UINavigationController* nav = (UINavigationController*)[views objectAtIndex:i];
+        UIViewController *c = [nav.viewControllers objectAtIndex:0];
+        if ([c respondsToSelector:@selector(saveData)]) {
+            [c performSelector:@selector(saveData)];
+        }
+    }
+    NSArray *newsviews = mTabBarController.viewControllers;
+    for (int i = 0; i < [newsviews count]; ++i) {
+        UINavigationController* nav = (UINavigationController*)[newsviews objectAtIndex:i];
+        UIViewController *c = [nav.viewControllers objectAtIndex:0];
+        if ([c respondsToSelector:@selector(saveData)]) {
+            [c performSelector:@selector(saveData)];
+        }
+    }
+    
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+ 	[super applicationDidBecomeActive:application];
+	if (!userSignined) {
+		return;
+	}
+    if (lastRefreshDate == nil) {
+        lastRefreshDate = [[NSDate date] retain];
+    }
+    else if (autoRefreshInterval) {
+        NSDate *now = [NSDate date];
+        NSTimeInterval diff = autoRefreshInterval - [now timeIntervalSinceDate:lastRefreshDate];
+        if (diff < 0) {
+            diff = 2.0;
+        }
+        [self setNextTimer:diff];
+    }
+	
+}
+
+
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+	NSArray *views = tabBarController.viewControllers;
+    for (int i = 0; i < [views count]; ++i) {
+        UINavigationController* nav = (UINavigationController*)[views objectAtIndex:i];
+        UIViewController *c = [nav.viewControllers objectAtIndex:0];
+        if ([c respondsToSelector:@selector(saveData)]) {
+            [c performSelector:@selector(saveData)];
+        }
+    }
+    NSArray *newsviews = tabBarController.viewControllers;
+    for (int i = 0; i < [newsviews count]; ++i) {
+        UINavigationController* nav = (UINavigationController*)[newsviews objectAtIndex:i];
+        UIViewController *c = [nav.viewControllers objectAtIndex:0];
+        if ([c respondsToSelector:@selector(saveData)]) {
+            [c performSelector:@selector(saveData)];
+        }
+    }
+	[ImageCache removeExpiredImages];
+    [super applicationWillTerminate:application];
+}
+
+#pragma mark Memory management
+
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
+    /*
+     Free up as much memory as possible by purging cached data objects that can be recreated (or reloaded from disk) later.
+     */
+	[super applicationDidReceiveMemoryWarning:application];
+}
+
+
+- (void)dealloc {
+    [super dealloc];
+}
+
+- (void)signIn:(WeiboAccount *)account {
+    [self connectionrequestCount];
+	userSignined = YES;
+	[self postInit];
+}
+
+- (void)signOut {
+    //重新设置currentuser
+    [PublicUtils removeCurrentUser];
+    tabBarController.selectedIndex=0;
+    userSignined = NO;
+    [self openLoginView];
+}
+
+- (void)openAuthenticateView {
+	
+}
+
+-(void)openLoginView
+{
+    if(self.isOpen==NO)
+    {
+        self.isOpen=YES;
+        [window addSubview:[loginNavViewController view]];
+        [rootViewController presentModalViewController:loginNavViewController animated:YES];
+    }
+}
+-(void)openRegisterView
+{
+    //注册 
+}
+-(void)openLogin
+{
+   
+}
+
+- (void)postInit
+{
+	
+}
+
+
+- (void)setNextTimer:(NSTimeInterval)interval
+{
+    autoRefreshTimer = [NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(autoRefresh:) userInfo:nil repeats:false];    
+}
+
+
+- (void)refresh {
+	if (!userSignined) {
+		return;
+	}
+	NSArray *views = tabBarController.viewControllers;
+    for (int i = 0; i < [views count]; ++i) {
+        UINavigationController* nav = (UINavigationController*)[views objectAtIndex:i];
+        UIViewController *c = [nav.viewControllers objectAtIndex:0];
+        if ([c respondsToSelector:@selector(autoRefresh)]) {
+            [c performSelector:@selector(autoRefresh)];
+        }
+    }
+}
+
+- (void)autoRefresh:(NSTimer*)timer
+{
+    
+}
+
+
+- (void)composeNewTweet {
+	[tabBarController presentModalViewController:composeView animated:YES];
+}
+- (void)replyTweet:(Status *)status comment:(Comment *)comment {
+	[tabBarController presentModalViewController:composeView animated:YES];
+}
+
+- (void)retweet:(Status*)status {
+	[tabBarController presentModalViewController:composeView animated:YES];
+}
+
+- (void)newDM {
+	
+}
+
+- (void)loadDraft:(Draft *)draft {
+	[tabBarController presentModalViewController:composeView animated:YES];
+}
+
+
+- (void)advise {
+	[tabBarController presentModalViewController:composeView animated:YES];
+}
+
+-(BOOL)application:(UIApplication *)application handleOpenURL: (NSURL*)url
+{
+    return YES;
+}
+-(void)networkcp:(int)type
+{
+    [tabBarController setSelectedIndex:0];
+    [self showChatColum:type withObject:nil];
+}
+
+-(void)showChatColum:(int)index withObject:(id) withObject
+{
+    NSMutableArray *viewcontrollers=[[NSMutableArray alloc]initWithArray: tabBarController.viewControllers];
+    UINavigationController *tmpNavigationController=[viewcontrollers objectAtIndex:0];
+    NSMutableArray *childviewcontrollers=[[NSMutableArray alloc]initWithArray:[tmpNavigationController viewControllers]];
+    switch (index) {
+        case 0://currentplace
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:currentplace];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        case 1://connect reguest
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:connectregest];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        case 2://buildconnect
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:buildconnect];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        case 3://shake
+            //[tabBarController presentModalViewController:shake animated:YES];
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:shake];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        case 100://九宫格
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:currentplace9];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        case 101://cevent
+            [childviewcontrollers replaceObjectAtIndex:0 withObject:cevent];
+            [tmpNavigationController setViewControllers:childviewcontrollers];
+            [tabBarController setViewControllers:viewcontrollers];
+            break;
+        default:
+            break;
+    }
+}
+-(BOOL) isLogin
+{
+    return userSignined;
+}
+- (UITabBarController*)gettabview
+{
+    return tabBarController;
+}
+@end

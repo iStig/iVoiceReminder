@@ -1,0 +1,50 @@
+//
+//  MGroup.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MGroup.h"
+
+@implementation MGroup 
+@synthesize description,groupCategory,groupCreatorId,groupTopicsNum,groupMembersNum,groupCreatorName,groupPic,admin,member,groupName;
++ (MGroup*)mgroupWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MGroup alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MGroup*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        groupName = [[dic objectForKey:@"groupName"] retain];
+        groupCreatorId =  ([dic objectForKey:@"groupCreatorId"]==[NSNull null])?0:[[dic objectForKey:@"groupCreatorId"] intValue];
+        groupTopicsNum =  ([dic objectForKey:@"groupTopicsNum"]==[NSNull null])?0:[[dic objectForKey:@"groupTopicsNum"] intValue];
+        description = [[dic objectForKey:@"description"] retain];
+        groupCategory = [[dic objectForKey:@"groupCategory"] retain];
+        groupCreatorName = [[dic objectForKey:@"groupCreatorName"] retain];
+        groupPic = [[dic objectForKey:@"groupPic"] retain];
+        groupMembersNum = ([dic objectForKey:@"groupMembersNum"]==[NSNull null])?0:[[dic objectForKey:@"groupMembersNum"] intValue];
+        admin = ([dic objectForKey:@"admin"]==[NSNull null])?0:[[dic objectForKey:@"admin"] boolValue];
+        member = ([dic objectForKey:@"member"]==[NSNull null])?0:[[dic objectForKey:@"member"] intValue];
+        
+        if ((id)description == [NSNull null]) description = @"";
+        if ((id)groupCategory == [NSNull null]) groupCategory = @"";
+        if ((id)groupCreatorName == [NSNull null]) groupCreatorName = @"";
+        if ((id)groupPic == [NSNull null]) groupPic = @"";
+        if ((id)groupName == [NSNull null]) groupName = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [groupName release];
+    [groupPic release];
+    [description release];
+    [groupCategory release];
+    [groupCreatorName release];
+    [super dealloc];
+}
+
+@end

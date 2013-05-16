@@ -1,0 +1,81 @@
+//
+//  LoginHome.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "LoginHome.h"
+#import "Login.h"
+#import "RegiestCode.h"
+#import "AceBridgeAppDelegate.h"
+
+@implementation LoginHome
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    //滚动背景    
+    self.navigationController.navigationBarHidden=YES;
+    NSArray *images = [NSArray arrayWithObjects:[UIImage imageNamed:@"fly.png"],[UIImage imageNamed:@"新加坡.png"],[UIImage imageNamed:@"香港.png"],[UIImage imageNamed:@"上海.png"],[UIImage imageNamed:@"北京.png"], nil];
+    bgView.animationImages = images;
+    bgView.animationDuration = 8;
+    bgView.animationRepeatCount = 0;//无限
+    // Do any additional setup after loading the view from its nib.
+    
+}
+-(void) viewDidAppear:(BOOL)animated
+{
+    [bgView startAnimating];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(IBAction)getNext:(id)sender
+{
+    [bgView stopAnimating];
+    int tag = [sender tag];
+    if(tag==1)
+    {
+        Login *login = [[Login alloc] initWithNibName:@"Login" bundle:nil];
+        [self.navigationController pushViewController:login animated:YES];
+        [login release];
+    }
+    else
+    {
+        RegiestCode *code = [[RegiestCode alloc] initWithNibName:@"RegiestCode" bundle:nil];
+        [self.navigationController pushViewController:code animated:YES];
+        [code release];
+    }
+}
+
+@end

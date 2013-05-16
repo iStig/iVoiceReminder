@@ -1,0 +1,33 @@
+//
+//  Promotion.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-25.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MPromotion.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "ViewPromotion.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface Promotion : UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             promotionArray;
+    MPromotion*                 mpromotion;
+    IBOutlet  PullRefreshTableView*      promotionTableView; 
+    ImageCache                  *imageCache;
+    BOOL                        isLoading;
+}
+@property(nonatomic,retain) NSMutableArray* promotionArray;
+- (void)InitNavigationBarItems;
+- (void)promotionList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void)back;
+-(void) requestData:(int)pageNo;
+@end

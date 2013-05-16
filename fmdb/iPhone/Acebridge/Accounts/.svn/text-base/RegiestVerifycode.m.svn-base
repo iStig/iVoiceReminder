@@ -1,0 +1,283 @@
+//
+//  RegiestVerifycode.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "RegiestVerifycode.h"
+
+@implementation RegiestVerifycode
+@synthesize type;
+@synthesize strMobile;
+@synthesize btnGetCode;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self setTitle:@"AceBridge"];
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+
+    [active setHidden:YES];
+    [phoneNumberField setText:strMobile];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark -键盘事件
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    //if(section==0)
+        return 3;
+   // return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	
+    UITableViewCell *cell;
+    if(indexPath.section==0)
+    {
+        if (indexPath.row == 0) {
+            cell = phoneNumber;
+        }
+        if (indexPath.row == 1){
+            cell = password;
+        }
+        if (indexPath.row == 2){
+            cell = reenterPassword;
+        }
+    }
+//    else{
+//		cell = verificationCode;
+//        UIView* view = [[UIView alloc] init];
+//        [cell setBackgroundView:view];
+//	}
+    return cell;
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+-(IBAction)getVerificationCode:(id)sender{//获得验证码 先得确认输入手机号码 //2012-9-7没用了 取消了验证码
+    
+    if([phoneNumberField.text length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in mobile number", @"")] setGravity:iToastGravityTop] show];
+        return ;
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendAuthCode:obj:)];
+    [weiboClient sendCode:phoneNumberField.text];
+    
+}
+
+
+
+#pragma mark - 数据解析
+- (void)sendAuthCode:(WeiboClient*)sender obj:(NSObject*)obj{//获取验证码  //2012-9-7取消了验证码
+
+    self.btnGetCode.enabled=NO;
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+  
+    
+    if (opresult==1) {
+              [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    else{
+    
+        
+        if (errCode==1) {
+              [[[iToast makeText:NSLocalizedString(@"This mobile has already registered", @"")] setGravity:iToastGravityBottom] show];  
+        }
+        else{
+              [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        }
+    
+    }
+
+}
+
+
+- (void)sendPassword:(WeiboClient*)sender obj:(NSObject*)obj{//验证手机密码和验证码信息
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+    if (opresult==1) {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        if (type==1) {
+            
+            GetCodeInfo* editmyinfo = [[GetCodeInfo alloc] initWithNibName:@"GetCodeInfo" bundle:nil];
+            [editmyinfo setTitle:@"Edit My Info"];
+            editmyinfo.isWebSite=NO;
+             editmyinfo.strMobile=phoneNumberField.text;
+            [self.navigationController pushViewController:editmyinfo animated:YES];
+            [editmyinfo release];
+    }
+    else{
+        
+        
+        [PublicUtils saveCurrentUser:dic];
+        [self dismissModalViewControllerAnimated:YES];
+        [[AceBridgeAppDelegate getAppDelegate] signIn:nil];
+    
+    
+    }
+}
+    else{
+        if (errCode==1) {
+            [[[iToast makeText:NSLocalizedString(@"This mobile has already registered", @"")] setGravity:iToastGravityBottom] show]; 
+            
+   
+
+        }
+        else{
+            [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        }
+}    
+    [signBtn setEnabled:YES];
+    [active stopAnimating];
+    [active setHidden:YES];
+}
+
+-(IBAction)signUp:(id)sender{
+    
+    if([phoneNumberField.text length]<1||[passField.text length]<1||[reenterPassField.text length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in information as required", @"")] setGravity:iToastGravityTop] show];
+        return ;
+    }
+    else{
+        if (![passField.text isEqualToString:reenterPassField.text]) 
+        {
+        [[[iToast makeText:NSLocalizedString(@"Please make sure of consistency between passwords", @"")] setGravity:iToastGravityTop] show];
+        return ;
+        }
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendPassword:obj:)];
+  //  [weiboClient validateAuthCode:phoneNumberField.text  authCode:codeField.text password:passField.text type:type];
+    
+    [weiboClient sendPassword:phoneNumberField.text password:passField.text type:type];
+    
+    [active setHidden:NO];
+    [active startAnimating];
+    [signBtn setEnabled:NO];
+    
+}
+
+
+
+
+-(IBAction)backgroundTap:(id)sender
+{
+    [phoneNumberField resignFirstResponder];
+    [passField resignFirstResponder];
+    [reenterPassField resignFirstResponder];
+    [codeField resignFirstResponder];
+}
+
+@end

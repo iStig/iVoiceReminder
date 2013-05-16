@@ -1,0 +1,411 @@
+//
+//  Group.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Group.h"
+#import "GroupInfo.h"
+
+@implementation Group
+@synthesize groupArray,targetUserID,type;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        targetUserID = -1;
+        type = 0;
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    groupArray = [[NSMutableArray alloc] init];
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"group_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil){
+    NSArray* arr =(NSArray*)[dic objectForKey:@"groupArray"];
+    
+    for (int i=0; i<[arr count]; i++) {
+        MGroupMin* mgrouptemp = [MGroupMin mgroupminWithJsonDictionary:[arr objectAtIndex:i]];
+        [groupArray addObject:mgrouptemp];
+    }
+}
+    //添加
+    buttonAll.titleLabel.textColor=[UIColor whiteColor];
+    button2.titleLabel.textColor=[UIColor darkGrayColor];
+    button3.titleLabel.textColor=[UIColor darkGrayColor];
+    imageSelect.frame=CGRectMake(45, 26, 16, 10);
+    tableView = groupTableView;
+    if(targetUserID>0)
+    {
+        tableView.frame = CGRectMake(0, 0, 320, 367);
+        imageSelect.hidden=YES;
+    }
+    else
+    {
+        tableView.frame = CGRectMake(0, 36, 320, 331);
+        imageSelect.hidden=NO; 
+    }
+    isLoading = NO;
+    
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self requestData:targetUserID pageNo:1 type:type];
+}
+#pragma mark - 加载数据
+-(void)requestData:(int)loaduserID pageNo:(int)pageNo type:(int) type
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(groupList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient rgroups:loaduserID groupName:@"" categoryID:0 subCategoryID:0 pageNo:pageNo type:self.type];
+}
+#pragma mark - tableView事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [groupArray count]+1;
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([groupArray count]==0||[groupArray count]==indexPath.row)
+    {
+        if([groupArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 90;
+}
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([groupArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [groupArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:11];
+        }
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        MGroupMin* group= (MGroupMin*)[groupArray objectAtIndex:indexPath.row];
+        if(group.groupCreatorId)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        UILabel* labName = (UILabel*)[cell viewWithTag:2];
+        labName.text = group.groupName;
+        
+        UILabel* labCategory = (UILabel*)[cell viewWithTag:3];
+        labCategory.text = group.groupCategory;
+        
+        UILabel* labCreator = (UILabel*)[cell viewWithTag:4];
+        labCreator.text = group.groupCreatorName;
+        
+        UILabel* labCount = (UILabel*)[cell viewWithTag:5];
+        labCount.text = [NSString stringWithFormat:@"%d",group.groupMemberCount];
+        UIButton* btnConnect = (UIButton*)[cell viewWithTag:6];
+        btnConnect.hidden=NO;
+        UIImageView* link = (UIImageView*)[cell viewWithTag:7];
+        link.hidden=YES;
+        if(group.member==0)
+        {
+            [btnConnect setTitle:@"Join" forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button02.png"] forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button02_s.png"] forState:UIControlStateSelected];
+            [btnConnect addTarget:self action:@selector(join:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        if(group.member==1)
+        {
+            btnConnect.hidden=YES;
+            link.frame = CGRectMake(286, 7, 23, 23);
+            [link setImage:[UIImage imageNamed:@"已加入.png"]];
+            link.hidden=NO;
+        }
+        if(group.member==2)
+        {
+            [btnConnect setTitle:@"Pending" forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03_s.png"] forState:UIControlStateSelected];
+        }
+        
+        return cell; 
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestData:targetUserID pageNo:[groupArray count]/20+1 type:type];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    MGroupMin* mgroupmin = (MGroupMin*)[groupArray objectAtIndex:indexPath.row];
+    GroupInfo* groupinfo = [[GroupInfo alloc] initWithNibName:@"GroupInfo" bundle:nil];
+    [groupinfo setTitle:@"Group"];
+    groupinfo.groupID = mgroupmin.groupID;
+    groupinfo.groupName = mgroupmin.groupName;
+    [self.navigationController pushViewController:groupinfo animated:YES];
+    [groupinfo release];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - join
+-(IBAction)join:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    MGroupMin* groupmin =(MGroupMin*)[groupArray objectAtIndex:[groupTableView indexPathForCell:cell].row];
+    selectGroup = groupmin;
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(joinGroup:obj:)];
+    [weiboClient applyOrExitGroup:selectGroup.groupID opCmd:1 reason:@""];
+}
+#pragma mark - 数据解析
+- (void)joinGroup:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取event数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        selectGroup.member = 2;
+        [groupTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+- (void)groupList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取event数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+    if(opresult==0)
+    {
+        if (errCode==12) {
+            [[[iToast makeText:NSLocalizedString(@"No access due to user’s setting.", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        else{
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        
+        return;
+    }
+//    if(opresult==0)
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+//        return;
+//    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"groupArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [groupArray removeAllObjects];
+          [PublicUtils save:dic name:[NSString stringWithFormat:@"group_list_%d.db",[PublicUtils getCurrentUser].userID]];  
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MGroupMin* mgrouptemp = [MGroupMin mgroupminWithJsonDictionary:[arr objectAtIndex:i]];
+        [groupArray addObject:mgrouptemp];
+    }
+    [groupTableView reloadData];
+    isLoading=NO;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [groupArray release];
+    [super dealloc];
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MGroupMin *pItem =(MGroupMin*) [groupArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/group/%d/%d_medium.jpg",IMAGE_PATH,pItem.groupID,pItem.groupID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+#pragma mark - 切换
+-(IBAction)getNext:(id)sender
+{
+    UIButton* btn=(UIButton*)sender;
+    if([btn tag]==1)
+    {
+        type = 0;
+        targetUserID = -1;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor whiteColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(45, 26, 16, 10);
+    }
+    if([btn tag]==2)
+    {
+        type = 1;
+        targetUserID = [PublicUtils getCurrentUser].userID;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor whiteColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(155, 26, 16, 10);
+    }
+    if([btn tag]==3)
+    {
+        type = 2;
+        targetUserID = [PublicUtils getCurrentUser].userID;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor whiteColor];
+        imageSelect.frame=CGRectMake(260, 26, 16, 10);
+    }
+    [self requestData:targetUserID pageNo:1 type:type];
+}
+@end

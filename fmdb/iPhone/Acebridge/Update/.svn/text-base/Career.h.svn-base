@@ -1,0 +1,43 @@
+//
+//  Career.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MCareerMin.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface Career : UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             careerArray;
+    IBOutlet  PullRefreshTableView*      careerTableView; 
+    ImageCache                  *imageCache;
+    int                         type;
+    int                         targetUserID;
+    MCareerMin*                 selectmin;
+    BOOL                        isLoading;
+    IBOutlet    UIImageView*    imageSelect;
+    IBOutlet    UIButton*       buttonAll;
+    IBOutlet    UIButton*       button2;
+    IBOutlet    UIButton*       button3;
+}
+@property(nonatomic,assign)int                         type;
+@property(nonatomic,assign)int                         targetUserID;
+@property(nonatomic,retain) NSMutableArray* careerArray;
+- (void)InitNavigationBarItems;
+-(void)back;
+- (void)careerList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void)requestData:(int)loaduserID type:(int)type pageNo:(int)pageNo;
+-(IBAction)getNext:(id)sender;
+-(IBAction)applyrequest:(id)sender;
+-(IBAction)quitrequest:(id)sender;
+@end

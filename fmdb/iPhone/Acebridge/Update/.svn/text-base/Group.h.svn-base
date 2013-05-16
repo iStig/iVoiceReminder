@@ -1,0 +1,43 @@
+//
+//  Group.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MGroupMin.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface Group : UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             groupArray;
+    IBOutlet  PullRefreshTableView*      groupTableView; 
+    ImageCache                  *imageCache;
+    MGroupMin*                  selectGroup;
+    BOOL                        isLoading;
+    int                         type;
+    int                         targetUserID;
+    IBOutlet    UIImageView*    imageSelect;
+    IBOutlet    UIButton*       buttonAll;
+    IBOutlet    UIButton*       button2;
+    IBOutlet    UIButton*       button3;
+}
+@property(nonatomic,retain) NSMutableArray* groupArray;
+@property(nonatomic,assign)int                         type;
+@property(nonatomic,assign)int                         targetUserID;
+- (void)InitNavigationBarItems;
+- (void)back;
+- (void)groupList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void)requestData:(int)loaduserID pageNo:(int)pageNo type:(int) type;
+- (IBAction)getNext:(id)sender;
+-(IBAction)join:(id)sender;
+- (void)joinGroup:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

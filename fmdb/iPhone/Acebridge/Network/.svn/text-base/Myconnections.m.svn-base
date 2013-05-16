@@ -1,0 +1,756 @@
+         
+//
+//  Myconnections.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-23.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+#import "MyConnectSelected.h"
+#import "Myconnections.h"
+#import "iToast.h"
+#import "PYMethod.h"
+
+@implementation Myconnections
+@synthesize keys;
+@synthesize values,finkeys,finvalues,type;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        //userArray = [[NSMutableArray alloc] init];//new 改
+        
+    }
+    return self;
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"添加好友.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42.0);
+    [rbutton addTarget:self action:@selector(add) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+    if(type==1)
+    {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+        //set the frame of the button to the size of the image (see note below)
+        button.frame = CGRectMake(0, 0, 42, 42);
+        [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+        //create a UIBarButtonItem with the button as a custom view
+        UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+        self.navigationItem.leftBarButtonItem = customBarItem;
+        // Cleanup
+        [customBarItem release];
+    }
+    else {
+        buttonr = [UIButton buttonWithType:UIButtonTypeCustom];
+        [buttonr setBackgroundImage:[UIImage imageNamed:@"更新.png"] forState:UIControlStateNormal];
+        //set the frame of the button to the size of the image (see note below)
+        buttonr.frame = CGRectMake(0, 0, 42, 42);
+        [buttonr addTarget:self action:@selector(leftClicked:) forControlEvents:UIControlEventTouchUpInside];
+        //create a UIBarButtonItem with the button as a custom view
+        UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:buttonr];
+        self.navigationItem.leftBarButtonItem = customBarItem;
+        // Cleanup
+        [customBarItem release];
+    }
+}
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    // Release any cached data, images, etc that aren't in use.
+}
+-(void) back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 更新
+-(IBAction)leftClicked:(id)sender
+{
+    NSIndexPath* topindexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+    
+    [addressTableView scrollToRowAtIndexPath:topindexPath atScrollPosition:UITableViewScrollPositionTop animated:NO];
+    viewUp.hidden=NO;
+    activeView.hidden=NO;
+    [activeView startAnimating];
+    buttonr.enabled=NO;
+    loadCell.hidden=NO;
+    [userArray removeAllObjects];//new 改
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnection:obj:)];
+    [weiboClient myconnectusers:1];
+
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad]; 
+   
+    activeView.hidden=YES;
+     addressTableView.hidden=YES;
+     userArray = [[NSMutableArray alloc] init];
+    loadCell = [[LoadMoreCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"LoadMoreCell"];
+    action = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                otherButtonTitles:@"Dial",@"Message",@"Invite",nil];
+    if(type==1) {
+    loadCell.hidden=NO;
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnection:obj:)];
+    [weiboClient myconnectusers:1];
+    }
+    else {
+        [self loadRequestData];
+    }
+    [self InitNavigationBarItems];
+    
+   
+    
+    // Do any additional setup after loading the view from its nib.
+}
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if(buttonIndex==0)
+    {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"tel://%@",phonenumber]]];
+    }
+    if(buttonIndex==1)
+    {
+//        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"sms://%@",phonenumber]]];
+        if( [MFMessageComposeViewController canSendText] )
+        {
+            MFMessageComposeViewController * controller = [[MFMessageComposeViewController alloc] init]; //autorelease];
+            controller.recipients = [NSArray arrayWithObject:phonenumber];
+//            controller.body =[NSString stringWithFormat:@"%@ invited you to join AceBridge, a young elite professional network. Please download the App via the link below: http://itunes.apple.com/cn/app/acebridge/id542634233?mt=8 for Iphone users, and https://play.google.com/store/apps/details?id=net.acebridge.android for Android users. Invitation code:%@ (to be used when you sign up).(www.AceBridge.net)",_name,invite_Code];
+            controller.messageComposeDelegate = self;
+            [self presentModalViewController:controller animated:YES];
+            
+            //        [[[[controller viewControllers] lastObject] navigationItem] setTitle:@"SomethingElse"];//修改短信界面标题
+            
+            [controller release];
+        }
+        else
+        {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示信息"
+                                  
+                                                            message:@"该设备不支持短信功能"
+                                  
+                                                           delegate:self
+                                  
+                                                  cancelButtonTitle:nil
+                                  
+                                                  otherButtonTitles:@"确定", nil];
+            [alert show];
+            [alert release];
+        }
+    }
+    if (buttonIndex==2) {
+        [self sendSMS];
+    }
+}
+// /*
+//内容 收件人
+-(void) sendSMS
+{
+    
+    
+    activeView.hidden=NO;
+    [activeView startAnimating];
+    
+    
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self
+                                               action:@selector(sendCode:obj:)];
+    [weiboClient sendInviteCode:phonenumber type:1 eventID:0];
+    
+    
+    
+    
+    
+    
+}
+#pragma mark - 数据解析
+- (void)sendCode:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    
+  
+    
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    invite_Code=(NSString*)[dic objectForKey:@"inviteCode"];
+    _name=(NSString*)[dic objectForKey:@"name"];
+    activeView.hidden=YES;
+    [activeView stopAnimating];
+    if(opresult==1)
+    {
+        if( [MFMessageComposeViewController canSendText] )
+            
+        {
+            
+            MFMessageComposeViewController * controller = [[MFMessageComposeViewController alloc] init]; //autorelease];
+            
+            controller.recipients = [NSArray arrayWithObject:phonenumber];
+            
+            controller.body =[NSString stringWithFormat:@"%@ invited you to join AceBridge, a young elite professional network. Please download the App via the link below: http://itunes.apple.com/cn/app/acebridge/id542634233?mt=8 for Iphone users, and https://play.google.com/store/apps/details?id=net.acebridge.android for Android users. Invitation code:%@ (to be used when you sign up).(www.AceBridge.net)",_name,invite_Code];
+            
+            controller.messageComposeDelegate = self;
+            
+            
+            
+            [self presentModalViewController:controller animated:YES];
+            
+            //        [[[[controller viewControllers] lastObject] navigationItem] setTitle:@"SomethingElse"];//修改短信界面标题
+            
+            [controller release];
+            
+        }
+        
+        else
+            
+        {
+            
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示信息"
+                                  
+                                                            message:@"该设备不支持短信功能"
+                                  
+                                                           delegate:self
+                                  
+                                                  cancelButtonTitle:nil
+                                  
+                                                  otherButtonTitles:@"确定", nil];
+            
+            [alert show];
+            
+            [alert release];
+            
+        }
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+
+//*/
+-(void) loadRequestData
+{
+    
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"myconnections_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil)
+    {
+        
+       
+        NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+        if(![arr isKindOfClass:[NSArray class]])
+        {
+            arr = [[NSArray alloc] init];
+        }
+        for (int i=0; i<[arr count]; i++) {
+            MUser* user = [[MUser muserWithJsonDictionary:[arr objectAtIndex:i]] retain];
+            [userArray addObject:user];
+            
+        }
+        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            [self loadData];
+            [self merger];
+            
+            finkeys = keys.copy;
+            finvalues = values.copy;
+            [keys removeAllObjects];
+            NSMutableArray *finValue = [[NSMutableArray alloc] init];
+            for (int i=0; i<[values count]; i++) {
+                NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+                if(!(temp ==nil||temp==NULL||[temp count]==0))
+                {
+                    char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+                    int  index =(int)fristChar;
+                    [finValue addObject:temp.copy];
+                    if(index>=65&&index<=90)
+                    {
+                        [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+                    }
+                    else
+                    {
+                        [keys addObject:@"#"];
+                    }
+                }
+            }
+            
+            [values removeAllObjects];
+            values = finValue;
+            if ([userArray count]==0) {
+                loadCell.hidden=YES;
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self setMe];
+                [addressTableView reloadData];
+            });
+        });  
+        [pool release];
+    }
+    else{
+
+    loadCell.hidden=NO;
+//    [userArray removeAllObjects];//new 改
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnection:obj:)];
+    [weiboClient myconnectusers:1];
+    }
+    
+    
+   
+    
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{  if([keys count]==0){
+
+    return 1;
+}
+else{   
+    return [keys count];
+}
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if ([keys count]==0) {
+        return 1;
+    }
+    else{
+         NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+         return [dic count];
+    }
+}    
+    
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([values count]==0) {
+        [loadCell.spinner startAnimating];
+        return loadCell;
+    }
+    else{
+        static NSString *CellIdentifier = @"Cell";
+        
+        
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:3];
+        } 
+        // Configure the cell...
+        NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+        cell.textLabel.font = [UIFont systemFontOfSize:14];
+        NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:indexPath.row];
+        NSString* name = [temp objectAtIndex:1];
+        UILabel* lab = (UILabel*)[cell viewWithTag:1];
+        lab.text=name;
+        UIButton* btn = (UIButton*)[cell viewWithTag:2];
+        BOOL isAddressBook = [[temp objectAtIndex:4] boolValue];
+        UIImageView* imageview=(UIImageView*)[cell viewWithTag:3];
+        if(isAddressBook)
+        {
+            imageview.hidden=YES;
+        }
+        else
+        {
+            imageview.hidden=NO;
+        }
+        [btn addTarget:self action:@selector(btnChecked:) forControlEvents:UIControlEventTouchUpInside];
+        btn.hidden = YES;
+        lab.frame= CGRectMake(14, lab.frame.origin.y, 200, lab.frame.size.height);
+        return cell; 
+    }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section 
+{
+    if ([keys count]==0) {
+        return nil;
+    }
+    else{
+    return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+    }
+}
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    if(!keys)
+    {
+        return [[NSArray alloc] init];
+    };
+    return keys;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
+    UIButton* btn = (UIButton*)[cell viewWithTag:2];
+    if([keys count]>0)
+    {
+        [self btnChecked:btn];
+    }
+}
+#pragma mark - 进入选择界面
+-(void)add
+{
+    MyConnectSelected* mcs = [[MyConnectSelected alloc] initWithNibName:@"MyConnectSelected" bundle:nil];
+    mcs.keys = finkeys;
+    mcs.type=0;
+    mcs.values = finvalues;
+    mcs.title=@"Contacts Book Import";
+    mcs.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:mcs animated:YES];
+    [mcs release];
+}
+#pragma mark - 点击选择
+-(IBAction)btnChecked:(id)sender
+{
+    UIButton*   btn = (UIButton*)sender;
+    btn.selected=!btn.selected;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:[addressTableView indexPathForCell:cell].section];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:[addressTableView indexPathForCell:cell].row];
+    BOOL isAddressBook = [[temp objectAtIndex:4] boolValue];
+    if(isAddressBook)
+    {
+        phonenumber = [temp objectAtIndex:2];
+        [action showInView:self.view.superview];
+    }
+    else
+    {
+        UserInfo* userinfo = [[UserInfo alloc]  initWithNibName:@"UserInfo" bundle:nil];
+        [userinfo setTitle:[temp objectAtIndex:1]];
+        userinfo.userID = [[temp objectAtIndex:5] intValue];
+        userinfo.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:userinfo animated:YES];
+        [userinfo release];
+    }
+}
+
+-(void) loadData
+{
+    NSMutableArray *arrValue;
+    NSMutableArray* arrValue_temp;
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    finvalues_temp = [[NSMutableArray alloc] init];
+    for (int i=0; i<=26; i++) {
+        arrValue = [[NSMutableArray alloc] init];
+        arrValue_temp = [[NSMutableArray alloc] init];
+        [values addObject:arrValue];
+        [finvalues_temp addObject:arrValue_temp];
+        if(i==26)
+        {
+            [keys addObject:@"#"];
+        }
+        else
+        {
+            [keys addObject:[NSString stringWithFormat:@"%c",(char)(i+65)]];
+        }
+    }
+    ABAddressBookRef addressBook =ABAddressBookCreate();
+    NSMutableArray* allpeople = (NSMutableArray *)ABAddressBookCopyArrayOfAllPeople (addressBook);
+    for(id person in allpeople)
+    {
+        NSString* firstName = (NSString *)ABRecordCopyValue(person, kABPersonFirstNameProperty);
+        NSString* lastName = (NSString *)ABRecordCopyValue(person, kABPersonLastNameProperty);
+        lastName=lastName==NULL?@"":lastName;
+        firstName=firstName==NULL?@"":firstName;
+        NSString* fullName = (NSString *)[lastName stringByAppendingFormat:@"%@",firstName];
+        ABMultiValueRef phones = (ABMultiValueRef)ABRecordCopyValue(person, kABPersonPhoneProperty);
+        NSString* phone;
+        if(ABMultiValueGetCount(phones)>0)
+        {
+            phone = (NSString *)ABMultiValueCopyValueAtIndex(phones, 0);
+            phone = [[[[phone stringByReplacingOccurrencesOfString:@" " withString:@""] stringByReplacingOccurrencesOfString:@"-" withString:@""] stringByReplacingOccurrencesOfString:@"(" withString:@""] stringByReplacingOccurrencesOfString:@")" withString:@""];
+            if([fullName length]<1)
+            {
+                fullName = [phone copy];
+            }
+            NSMutableArray *infoValue = [[NSMutableArray alloc] init];
+            NSMutableArray *infoValue_temp = [[NSMutableArray alloc] init];
+            NSString* pinyingName = [[PYMethod getPinYin:fullName] uppercaseString];
+            char frstChar = [pinyingName characterAtIndex:0];
+            int index = (int)frstChar;
+            [infoValue addObject:pinyingName];
+            [infoValue addObject:fullName];
+            [infoValue addObject:phone];
+            [infoValue addObject:@"NO"];//是否选中 后期使用
+            [infoValue addObject:@"YES"];//非通讯录信息
+            [infoValue addObject:@"0"];
+            
+            [infoValue_temp addObject:pinyingName.copy];
+            [infoValue_temp addObject:fullName.copy];
+            [infoValue_temp addObject:phone.copy];
+            [infoValue_temp addObject:@"NO"];//是否选中 后期使用
+            [infoValue_temp addObject:@"YES"];//非通讯录信息
+            [infoValue_temp addObject:@"0"];
+            
+            if(index>=65&&index<=90)
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+                [tempValue addObject:infoValue];
+                NSMutableArray *tempValue_temp=[finvalues_temp objectAtIndex:(index-65)];
+                [tempValue_temp addObject:infoValue_temp];
+            }
+            else
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:26];
+                [tempValue addObject:infoValue];
+                NSMutableArray *tempValue_temp=[finvalues_temp objectAtIndex:26];
+                [tempValue_temp addObject:infoValue_temp];
+            }
+        }
+    }
+    CFRelease(addressBook);
+}
+#pragma mark - 数据交互
+- (void)myconnection:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        buttonr.enabled=YES;
+        viewUp.hidden=YES;
+        activeView.hidden=YES;
+        [activeView stopAnimating];
+        [sender alert];
+        return;
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+     NSLog(@"%@",dic);
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        buttonr.enabled=YES;
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    int userCount =0;
+    userCount = [[dic objectForKey:@"userCount"] intValue];
+    if(userCount==0)
+    {
+        buttonr.enabled=YES;
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+   // userArray = [[NSMutableArray alloc] init];//new 改
+    NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+    if(![arr isKindOfClass:[NSArray class]])
+    {
+        arr = [[NSArray alloc] init];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MUser* user = [[MUser muserWithJsonDictionary:[arr objectAtIndex:i]] retain];
+        [userArray addObject:user];
+        
+    }
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+        [self loadData];
+        [self merger];
+        finkeys = keys.copy;
+        finvalues = values.copy;
+        [keys removeAllObjects];
+        NSMutableArray *finValue = [[NSMutableArray alloc] init];
+        for (int i=0; i<[values count]; i++) {
+            NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+            if(!(temp ==nil||temp==NULL||[temp count]==0))
+            {
+                char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+                int  index =(int)fristChar;
+                [finValue addObject:temp.copy];
+                if(index>=65&&index<=90)
+                {
+                    [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+                }
+                else
+                {
+                    [keys addObject:@"#"];
+                }
+            }
+        }
+        
+        [values removeAllObjects];
+        values = finValue;
+        
+        if ([userArray count]==0) {
+            loadCell.hidden=YES;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self setMe];
+            [PublicUtils save:dic name:[NSString stringWithFormat:@"myconnections_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+            [addressTableView reloadData];
+            activeView.hidden=YES;
+            [activeView stopAnimating];
+            viewUp.hidden=YES;
+            buttonr.enabled=YES;
+        });
+    });  
+    [pool release];
+    
+    addressTableView.hidden=NO;
+}
+-(void) setMe
+{
+    [keys insertObject:@" " atIndex:0];
+    NSMutableArray* temp = [[NSMutableArray alloc] init];
+    [temp addObject:@""];
+    [temp addObject:@"My Profile"];
+    [temp addObject:@""];
+    [temp addObject:@"NO"];
+    [temp addObject:@"NO"];
+    [temp addObject:[NSString stringWithFormat:@"%d",[PublicUtils currentUserInfo].userID]];
+    NSMutableArray* vtemp = [[NSMutableArray alloc] init];
+    [vtemp addObject:temp];
+    [values insertObject:vtemp atIndex:0];
+}
+#pragma mark - 合并
+-(void) merger
+{
+    
+    for (int i=0; i<[userArray count]; i++) 
+    {
+        [self addmerger:(MUser*)[userArray objectAtIndex:i]];
+    }
+    
+    keys = [[NSMutableArray alloc] init];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    values = [[NSMutableArray alloc] init];
+    values = finValue;
+     addressTableView.hidden=NO;
+}
+-(void) addmerger:(MUser*) user
+{
+    BOOL b = YES;
+    NSString* pinyingName = [[PYMethod getPinYin:user.userName] uppercaseString];
+    
+    for (int i=0; i<[finvalues_temp count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[finvalues_temp objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            NSString* phone = [temp objectAtIndex:2];
+            NSRange range1 = [phone rangeOfString:user.mobile];
+            NSRange range2 = [user.mobile rangeOfString:phone];
+            BOOL ismobile = [user.mobile length]>10;
+            if(ismobile&&(range1.location!=NSNotFound||range2.location!=NSNotFound)&&[[temp objectAtIndex:4] isEqualToString:@"YES"])
+            {
+                [arr removeObject:temp];
+                break;
+            }
+        }
+    }
+    if(b)
+    {
+        NSMutableArray* temp = [[NSMutableArray alloc] init];
+        char frstChar = [pinyingName characterAtIndex:0];
+        int index = (int)frstChar;
+        [temp addObject:pinyingName];
+        [temp addObject:user.userName];
+        [temp addObject:user.mobile];
+        [temp addObject:@"NO"];
+        [temp addObject:@"NO"];
+        [temp addObject:[NSString stringWithFormat:@"%d",user.userID]];
+        if(index>=65&&index<=90)
+        {
+            NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+            [tempValue addObject:temp];
+        }
+        else
+        {
+            NSString* key = [keys objectAtIndex:([keys count]-1)];
+            if([key isEqualToString:@"#"])
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:([values count]-1)];
+                [tempValue addObject:temp];
+            }
+            else
+            {
+                NSMutableArray* t = [[NSMutableArray alloc] init];
+                [t addObject:temp];
+                [keys addObject:@"#"];
+                [values addObject:t];
+            }
+        }
+    }
+}
+@end
+

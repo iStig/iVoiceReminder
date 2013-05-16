@@ -1,0 +1,52 @@
+//
+//  MPromotion.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-25.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MPromotion : NSObject
+{
+    int promotionID;
+    int requirePoint;
+    float originalPrice;
+    float currentPrice;
+    float discount;
+    int itemNum;
+    NSString* category;
+    NSDate* deadline;
+    NSString* content;
+    NSString* picName;
+    int applicateNum;
+    
+    int biddingPersonalMaxCount;
+    int hot;
+    int likeCount;
+    int personalMaxCount;
+    int shareCount;
+    NSString* title;
+}
+@property(nonatomic,assign) int promotionID;
+@property(nonatomic,retain) NSString* category;
+@property(nonatomic,assign) int requirePoint;
+@property(nonatomic,assign) float originalPrice;
+@property(nonatomic,assign)float currentPrice;
+@property(nonatomic,assign)float discount;
+@property(nonatomic,assign)int itemNum;
+@property(nonatomic,assign)int applicateNum;
+@property(nonatomic,retain)NSDate* deadline;
+@property(nonatomic,retain)NSString* content;
+@property(nonatomic,retain)NSString* picName;
+
+@property(nonatomic,assign)int biddingPersonalMaxCount;
+@property(nonatomic,assign)int hot;
+@property(nonatomic,assign)int likeCount;
+@property(nonatomic,assign)int personalMaxCount;
+@property(nonatomic,assign)int shareCount;
+@property(nonatomic,retain)NSString* title;
++ (MPromotion*)mpromotionWithJsonDictionary:(NSDictionary*)dic;
+- (MPromotion*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

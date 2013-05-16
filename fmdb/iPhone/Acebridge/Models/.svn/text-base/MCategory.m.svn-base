@@ -1,0 +1,32 @@
+//
+//  MCategory.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MCategory.h"
+
+@implementation MCategory
+@synthesize categoryID,categoryName;
+
++ (MCategory*)mcategoryWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MCategory alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MCategory*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        categoryID =  ([dic objectForKey:@"categoryID"]==[NSNull null])?0:[[dic objectForKey:@"categoryID"] intValue];
+        categoryName= [[dic objectForKey:@"categoryName"] retain];
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [categoryName release];
+    [super dealloc];
+}
+@end

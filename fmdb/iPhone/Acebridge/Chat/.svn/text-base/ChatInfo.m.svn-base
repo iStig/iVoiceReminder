@@ -1,0 +1,1209 @@
+//
+//  ChatInfo.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-19.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "ChatInfo.h"
+#import "iToast.h"
+#import "MInMail.h"
+#import "RegexKitLite.h"
+//#import "Photo_base64.h"
+#import "PhotoViewController.h"
+
+@implementation ChatInfo
+@synthesize chatArray,userID;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        self.hidesBottomBarWhenPushed=YES;
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    chatArray = [[NSMutableArray alloc] init];
+  int i=  [PublicUtils getCurrentUser].userID;
+    
+    netWorkQueue  = [[ASINetworkQueue alloc] init];
+    [netWorkQueue reset];
+    [netWorkQueue setShowAccurateProgress:YES];
+    [netWorkQueue go];
+    
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"chatinfo_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"mailArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MInMail* minbox = [[MInMail minmailWithJsonDictionary:[arr objectAtIndex:i]] retain];
+            [chatArray addObject:minbox];
+        }
+        [chatArray retain];
+    }
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillShown:) name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillHiden:) name:UIKeyboardDidHideNotification object:nil];
+    [self InitNavigationBarItems];
+    
+    action = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                otherButtonTitles:@"Delete",nil];
+    tableView = inmailTableView;
+    isLoading=NO;
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self loadChatData:1];
+}
+#pragma mark - 加载数据
+-(void) loadChatData:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(chatList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient viewInMail:userID pageNo:pageNo];
+}
+- (void)keyboardWillShown:(NSNotification*)aNotification {
+    
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    inmailTableView.frame=CGRectMake(0, 0, 320, 370-kbSize.height);
+
+    bomView.frame = CGRectMake(0, 370-kbSize.height, 320, bomView.frame.size.height);
+
+    
+}
+- (void)keyboardWillHiden:(NSNotification*)aNotification
+{
+    
+    inmailTableView.frame=CGRectMake(0, 0, 320, 370);
+    if (isShow) {//isshow  如果是按过changetypebtn 则为no  如果是按过sendbtn 则为yes；用于bomview返回位置
+        bomView.frame = CGRectMake(0, 370-100, 320, bomView.frame.size.height);
+    }
+    else{
+        bomView.frame = CGRectMake(0, 370, 320, bomView.frame.size.height);
+    }
+    
+}
+
+
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
+    NSLog(@"1");
+    return YES;
+}
+- (void)textFieldDidBeginEditing:(UITextField *)textField{
+NSLog(@"2");
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyDone:
+		//	[theTextField resignFirstResponder];
+            //sendBtn.enabled=NO;
+            //[sendText resignFirstResponder];
+            
+            
+            if ([theTextField.text length]==0) {
+                return YES;
+            }
+            
+            else{
+                activeView.hidden=NO;
+                [activeView startAnimating];
+                
+               // sendText.text=@"";
+                
+            if (weiboClient) {
+                weiboClient.delegate = nil;
+                [weiboClient release];
+                weiboClient = nil;
+            }
+            weiboClient = [[WeiboClient alloc] initWithTarget:self
+                                                       action:@selector(sendInMail:obj:)];
+            [weiboClient sendInMail:userID content:sendText.text toGroup:NO groupID:-1];
+                
+            }
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+#pragma mark  buttonAction
+-(IBAction)recordVoice:(UIButton*)sender{
+
+}
+-(IBAction)choosePhotoButton:(UIButton*)sender{
+    UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+    picker.delegate=self;
+    picker.allowsEditing=YES;
+    picker.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+    [self presentModalViewController:picker animated:YES];
+    [picker release];
+}
+
+-(IBAction)takePhotoButton:(UIButton*)sender{
+    UIImagePickerControllerSourceType sourceType=UIImagePickerControllerSourceTypeCamera;
+    if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+    }
+    UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+    picker.delegate=self;
+    picker.allowsEditing=YES;
+    picker.sourceType=sourceType;
+    [self presentModalViewController:picker animated:YES];
+    [picker release];
+}
+
+-(IBAction)changeType:(UIButton*)sender{
+    
+    
+    isShow =NO;
+    
+    sendBtn.selected=NO;
+    
+    if (sender.selected) {
+        sender.selected=NO;
+                 //[changeTypeBtn setTitle:@"文" forState:UIControlStateNormal];
+        [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到键盘.png"] forState: UIControlStateNormal];
+           [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到键盘.png-s"] forState:UIControlStateHighlighted];
+        
+  
+                recordVoiceBtn.hidden=NO;
+        sendText.hidden=YES;
+                [sendText resignFirstResponder];
+
+    }
+    else{
+    sender.selected=YES;
+    //[changeTypeBtn setTitle:@"音" forState:UIControlStateSelected];切换到语音.png
+        
+        [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到语音.png"] forState: UIControlStateSelected];
+           [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到语音.png-s"] forState:UIControlStateHighlighted];
+        recordVoiceBtn.hidden=YES;
+         sendText.hidden=NO;
+          [sendText becomeFirstResponder];
+
+    }
+    
+    
+
+    
+    
+    
+}
+-(IBAction)send:(UIButton*)sender
+{
+    isShow =YES;
+    
+    if (sender.selected) {
+        
+        [UIView animateWithDuration:0.2f animations:^{
+            bomView.frame = CGRectMake(0, 370, 320, bomView.frame.size.height);
+        }];
+        sender.selected=NO;
+        
+    }else{
+    if (changeTypeBtn.selected) {
+        
+        changeTypeBtn.selected=NO;
+       // [changeTypeBtn setTitle:@"文" forState:UIControlStateNormal];
+         [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到键盘.png"] forState: UIControlStateNormal];
+        [changeTypeBtn setBackgroundImage:[UIImage imageNamed:@"切换到键盘.png-s"] forState:UIControlStateHighlighted];
+        recordVoiceBtn.hidden=NO;
+        sendText.hidden=YES;
+        [sendText resignFirstResponder];
+
+        
+        
+        
+    }else{
+        
+    [UIView animateWithDuration:0.2f animations:^{
+    bomView.frame = CGRectMake(0, 370-100, 320, bomView.frame.size.height);
+    }];
+    [sendText resignFirstResponder];
+    }
+        sender.selected=YES;
+    }
+    
+  
+    
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 40.0);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 数据解析
+
+//- (void)sendInMailAudio:(WeiboClient*)sender obj:(NSObject*)obj{
+//    if (sender.hasError) {
+//		NSLog(@"failed!!!, error:%@, details:%@"
+//			  , sender.errorMessage, sender.errorDetail);
+//        if (sender.statusCode == 401) {
+//            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+//            [appDelegate openAuthenticateView];
+//        }
+//        [sender alert];
+//        // sendText.enabled=YES;
+//        activeView.hidden=YES;
+//        [activeView stopAnimating];
+//    }
+//	NSLog(@"%@",obj);
+//    NSDictionary* dic = (NSDictionary*)obj;
+//    int opresult = [[dic objectForKey:@"opResult"] intValue];
+//    if(opresult==1)
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"Message sent.", @"")] setGravity:iToastGravityBottom] show];
+//        //        sendText.text = @"";
+//        [self getItemsWhenPullDownTableView];
+//    }
+//    else
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityBottom] show];
+//        
+//        //sendText.enabled=YES;
+//        activeView.hidden=YES;
+//        [activeView stopAnimating];
+//        
+//        
+//    }
+//
+//
+//}
+//- (void)sendInMailPic:(WeiboClient*)sender obj:(NSObject*)obj{
+//
+//    if (sender.hasError) {
+//		NSLog(@"failed!!!, error:%@, details:%@"
+//			  , sender.errorMessage, sender.errorDetail);
+//        if (sender.statusCode == 401) {
+//            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+//            [appDelegate openAuthenticateView];
+//        }
+//        [sender alert];
+//        // sendText.enabled=YES;
+//        activeView.hidden=YES;
+//        [activeView stopAnimating];
+//    }
+//	NSLog(@"%@",obj);
+//    NSDictionary* dic = (NSDictionary*)obj;
+//    int opresult = [[dic objectForKey:@"opResult"] intValue];
+//    if(opresult==1)
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"Message sent.", @"")] setGravity:iToastGravityBottom] show];
+////        sendText.text = @"";
+//        [self getItemsWhenPullDownTableView];
+//    }
+//    else
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityBottom] show];
+//        
+//        //sendText.enabled=YES;
+//        activeView.hidden=YES;
+//        [activeView stopAnimating];
+//        
+//        
+//    }
+//
+//}
+
+
+
+
+
+//发送私信
+- (void)sendInMail:(WeiboClient*)sender obj:(NSObject*)obj
+{
+     //sendBtn.enabled=YES;
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        // sendText.enabled=YES;
+        activeView.hidden=YES;
+        [activeView stopAnimating];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Message sent.", @"")] setGravity:iToastGravityBottom] show];
+//        sendText.text = @"";
+        [self getItemsWhenPullDownTableView];
+    }
+    else
+    {
+         [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityBottom] show];
+        
+        //sendText.enabled=YES;
+        activeView.hidden=YES;
+        [activeView stopAnimating];
+        
+        
+    }
+
+}
+
+//获取chat列表
+- (void)chatList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    
+    sendText.text = @"";
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+      //  sendText.enabled=YES;
+        activeView.hidden=YES;
+        [activeView stopAnimating];
+        return;//添加
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        activeView.hidden=YES;
+        [activeView stopAnimating];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"mailArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+  
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [chatArray removeAllObjects];
+        //添加缓存
+        [PublicUtils save:dic name:[NSString stringWithFormat:@"chatinfo_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MInMail* minbox = [MInMail minmailWithJsonDictionary:[arr objectAtIndex:i]];
+        [chatArray addObject:minbox];
+        [chatArray retain];
+    }
+    [inmailTableView reloadData];
+    inmailTableView.scrollsToTop=YES;//default is YES;
+    isLoading=NO;
+    //sendText.enabled=YES;
+    activeView.hidden=YES;
+    [activeView stopAnimating];
+}
+
+
+
+
+#pragma mark - 下载图片
+
+
+-(IBAction)showImage:(UIButton*)sender {
+
+    NSLog(@"image");
+    
+   // UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    //MUser* user =(MUser*)[userArray objectAtIndex:[crtableView indexPathForCell:cell].row];
+    
+    UITableViewCell *cell=(UITableViewCell*)[[sender superview] superview];
+     MInMail* min = (MInMail*) [chatArray objectAtIndex:[tableView indexPathForCell:cell].row];
+   
+    
+    PhotoViewController *photoViewController = [[PhotoViewController alloc] init];
+   // photoViewController.hidesBottomBarWhenPushed = YES;
+    
+
+//   NSLog(@"%d______%d",min.userID,[PublicUtils getCurrentUser].userID);
+//    
+//    id a32=min.whoSent;
+//    int t2323 =min.whoSent?[PublicUtils getCurrentUser].userID:min.userID;
+    
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/chat/big/%@",IMAGE_PATH,min.whoSent?[PublicUtils getCurrentUser].userID:min.userID, min.fileName];
+    
+    
+    Photo *p = [Photo photoWithURL:path];
+    [self.navigationController pushViewController:photoViewController animated:YES];
+    [photoViewController showImage:p];
+
+}
+
+-(NSString*)getLocalFullPath:(NSString*)filename
+{
+   
+    filename=[filename substringFromIndex:[filename rangeOfString:@"/" options:NSBackwardsSearch].location];
+    //初始化临时文件路径
+	NSString *folderPath = [[PathHelper documentDirectoryPathWithName:@""]stringByAppendingString:filename];
+    return folderPath;
+}
+-(IBAction)showAudio:(UIButton*)sender{
+    
+    
+    NSLog(@"audio");
+    UITableViewCell *cell=(UITableViewCell*)[[sender superview] superview];
+    MInMail* min = (MInMail*) [chatArray objectAtIndex:[tableView indexPathForCell:cell].row];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/chat/audio/%@",IMAGE_PATH,min.whoSent?[PublicUtils getCurrentUser].userID:min.userID, min.fileName];
+    
+    audioPath=path;
+    NSString *pa=[self getLocalFullPath:path];
+    
+    //创建文件管理器
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+    if (![fileManager fileExistsAtPath:[self getLocalFullPath:path]]) {
+        [fileManager createFileAtPath:[self getLocalFullPath:path] contents:nil attributes:nil];
+    }
+    else{
+    
+//        /添加
+//        NSString *path = [[NSBundle mainBundle] pathForResource:@"glass" ofType:@"mp3"];
+        
+        if ([self getLocalFullPath:audioPath]) {
+            
+            NSData *AudioData=[[NSData alloc] initWithContentsOfFile:[self getLocalFullPath:audioPath]] ;
+            
+            
+           // NSURL *musicURL = [NSURL fileURLWithPath:[self getLocalFullPath:audioPath]];
+            
+            
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];//后台播放
+          //  audioPlayer = [[AVAudioPlayer alloc]  initWithContentsOfURL:musicURL  error:nil];
+           // audioPlayer=- (id)initWithData:(NSData *)data error:(NSError **)outError;
+           audioPlayer=   [[AVAudioPlayer alloc]  initWithData:AudioData error:nil];
+            [audioPlayer setDelegate:self];
+            
+            
+            
+            if ([audioPlayer isPlaying]) {
+                
+                // Stop playing audio and change text of button
+                
+                [audioPlayer stop];
+              //  [sender setTitle:@"Play Audio File"    forState:UIControlStateNormal];
+            }    else {
+                
+                // Start playing audio and change text of button so
+                // user can tap to stop playback
+                [audioPlayer play];
+                
+               // [sender setTitle:@"Stop Audio File"  forState:UIControlStateNormal];  
+                
+            }
+            
+        }
+        return;
+    
+    }
+    
+    
+    //初始下载路径
+	NSURL *url = [NSURL URLWithString:path];
+	//设置下载路径
+	ASIHTTPRequest *request = [[ASIHTTPRequest alloc] initWithURL:url];
+	//设置ASIHTTPRequest代理
+	request.delegate = self;
+    
+	//设置文件保存路径
+	[request setDownloadDestinationPath:[self getLocalFullPath:path]];
+	//设置临时文件路径
+	[request setTemporaryFileDownloadPath:[[self getLocalFullPath:path] stringByAppendingString:@".tmp"]];
+    
+    //设置进度条的代理,
+	[request setDownloadProgressDelegate:nil];
+	//设置是是否支持断点下载
+	[request setAllowResumeForFileDownloads:NO];
+    
+    //[request setUserInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:indexPath.row],@"fileindex",nil]];
+	//添加到ASINetworkQueue队列去下载
+	[netWorkQueue addOperation:request];
+	//收回request
+	[request release];
+
+}
+- (void)requestFinished:(ASIHTTPRequest *)request {
+    
+    if ([self getLocalFullPath:audioPath]) {
+        
+       // NSURL *musicURL = [NSURL fileURLWithPath:[self getLocalFullPath:audioPath]];
+        NSData *AudioData=[[NSData alloc] initWithContentsOfFile:[self getLocalFullPath:audioPath]] ;
+        
+        audioPlayer=   [[AVAudioPlayer alloc]  initWithData:AudioData error:nil];
+        
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+      //  audioPlayer = [[AVAudioPlayer alloc]  initWithContentsOfURL:musicURL  error:nil];
+        
+        [audioPlayer setDelegate:self];
+        
+        if ([audioPlayer isPlaying]) {
+            
+            // Stop playing audio and change text of button
+            
+            [audioPlayer stop];
+          //  [sender setTitle:@"Play Audio File"    forState:UIControlStateNormal];
+        }    else {
+            
+            // Start playing audio and change text of button so
+            // user can tap to stop playback
+            [audioPlayer play];
+            
+      //  [sender setTitle:@"Stop Audio File" forState:UIControlStateNormal];
+            
+        }
+        
+    }
+   
+}
+//这个类对应的AVAudioPlayerDelegate有两个委托方法。一个是 audioPlayerDidFinishPlaying:successfully: 当音频播放完成之后触发。当播放完成之后，可以将播放按钮的文本重新回设置成：Play Audio File
+
+- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player   successfully:(BOOL)flag  {
+    //[audioButton setTitle:@"Play Audio File"   forState:UIControlStateNormal];
+    
+}
+
+//另一个是audioPlayerEndInterruption:，当程序被应用外部打断之后，重新回到应用程序的时候触发。在这里当回到此应用程序的时候，继续播放音乐。
+
+- (void)audioPlayerEndInterruption:(AVAudioPlayer *)player{
+    //[audioPlayer play];
+
+}
+
+
+- (void)updateTranslatImageForCell:(UITableViewCell*)cell AtIndex:(int)index{
+
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MInMail *min =(MInMail*) [chatArray objectAtIndex:index];
+     NSString *path = [NSString stringWithFormat:@"%@/data/%d/chat/small/%@",IMAGE_PATH,min.whoSent?[PublicUtils getCurrentUser].userID:min.userID, min.fileName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path])
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:15];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:15];
+                    [imageview setImage:image];
+                }
+            });
+        });
+    }
+    [pool release];
+
+
+
+}
+
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+     MInMail *pItem =(MInMail*) [chatArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.userID,pItem.userID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    int userid = [PublicUtils getCurrentUser].userID;
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,userid,userid];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [chatArray count]+1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if([chatArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [chatArray count])
+    {
+        static NSString *CellIdentifierTo = @"CellTo";
+        UITableViewCell *cellTo = [_tableView dequeueReusableCellWithIdentifier:CellIdentifierTo];
+        
+        static NSString *CellIdentifierFrom = @"CellFrom";
+        UITableViewCell *cellFrom = [_tableView dequeueReusableCellWithIdentifier:CellIdentifierFrom];
+   //当传的是图片CellImageTo CellImageFrom
+        static NSString *CellIdentifierImageTo = @"CellImageTo";
+        UITableViewCell *CellImageTo = [_tableView dequeueReusableCellWithIdentifier:CellIdentifierImageTo];
+        
+        
+        static NSString *CellIdentifierImageFrom = @"CellImageFrom";
+        UITableViewCell *CellImageFrom = [_tableView dequeueReusableCellWithIdentifier:CellIdentifierImageFrom];
+
+        
+        MInMail* min = (MInMail*) [chatArray objectAtIndex:indexPath.row];
+        
+        
+        UITableViewCell *cell;
+        if(!min.whoSent)
+        {
+            if (min.type==1) {//当传的是图片
+                
+                if(CellImageTo==nil)
+                {
+                    cell = [[[NSBundle mainBundle] loadNibNamed:@"ChatCell" owner:nil options:nil] objectAtIndex:2];//别人
+                    
+                }
+                else
+                {
+                    cell = CellImageTo;
+                }
+                
+                
+                
+            }
+            else{
+            if(cellTo==nil)
+            {
+                cell = [[[NSBundle mainBundle] loadNibNamed:@"ChatCell" owner:nil options:nil] objectAtIndex:0];//别人
+            }
+            else
+            {
+                cell = cellTo;
+            }
+            }
+            
+            
+        }
+        else
+        {
+            if (min.type==1) {//当传的是图片
+                
+                if(CellImageFrom==nil)
+                {
+                    cell = [[[NSBundle mainBundle] loadNibNamed:@"ChatCell" owner:nil options:nil] objectAtIndex:3];//别人
+                }
+                else
+                {
+                    cell = CellImageFrom;
+                }
+                
+                
+                
+            }
+            else{
+            
+            if(cellFrom == nil)
+            {
+                cell = [[[NSBundle mainBundle] loadNibNamed:@"ChatCell" owner:nil options:nil] objectAtIndex:1];//我自己
+            }
+            else
+            {
+                cell = cellFrom;
+            }
+            
+            
+            }
+            
+            
+                        
+        }
+        if(cell!=nil)
+        {
+            
+            
+            int mleft = 0;//56 和 7
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+            
+            UILabel* labName = (UILabel*)[cell viewWithTag:2];
+            if(min.whoSent)
+            {
+                mleft = 7;
+                [self updateImageForCell:cell];
+                labName.text = @"Me";
+            }
+            else
+            {
+                if(min.userID)
+                {
+                    [self updateImageForCell:cell AtIndex:indexPath.row];
+                    labName.text = min.userName;
+                }
+                mleft =56;
+            }
+
+            
+            UILabel* labTime = (UILabel*)[cell viewWithTag:3];
+            labTime.text = [TimeUtils timestamp:min.time];
+            
+            
+            if (min.type==1) {
+                UIImageView *imageView=(UIImageView*)[cell viewWithTag:15];
+            
+                UIButton *btn=(UIButton*)[cell viewWithTag:20];
+//                if(min.whoSent)
+//                {
+//                    mleft = 7;
+//                    
+//                }
+//                else
+//                {
+//            
+//                    mleft =56;
+//                }
+                imageView.frame=CGRectMake(mleft, imageView.frame.origin.y, imageView.frame.size.width, imageView.frame.size.height);
+                btn.frame=imageView.frame;
+                [btn addTarget:self action:@selector(showImage:) forControlEvents:UIControlEventTouchUpInside];
+                [self updateTranslatImageForCell:cell AtIndex:indexPath.row];
+                
+                
+                
+            }
+            if (min.type==2) {
+                UILabel* labContent = (UILabel*)[cell viewWithTag:4];
+                labContent.hidden=YES;
+                
+                UIButton *audioBtn=(UIButton*)[cell viewWithTag:10];
+                audioBtn.hidden=NO;
+                
+//                if(min.whoSent)
+//                {
+//                    mleft = 7;
+//               
+//                }
+//                else
+//                {
+//                 
+//                    mleft =56;
+//                }
+                audioBtn.frame=CGRectMake(mleft, 25, audioBtn.frame.size.width, audioBtn.frame.size.height);
+               
+                [audioBtn addTarget:self action:@selector(showAudio:) forControlEvents:UIControlEventTouchUpInside];
+            }
+            else{
+                
+                UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+                CGSize textsize = [min.content sizeWithFont:myfont constrainedToSize:CGSizeMake(254, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                UILabel* labContent = (UILabel*)[cell viewWithTag:4];
+                labContent.numberOfLines = textsize.height/16+1;
+//                if(min.whoSent)
+//                {
+//                    mleft = 7;
+//                    [self updateImageForCell:cell];
+//                    labName.text = @"Me";
+//                }
+//                else
+//                {
+//                    if(min.userID)
+//                    {
+//                        [self updateImageForCell:cell AtIndex:indexPath.row];
+//                        labName.text = min.userName;
+//                    }
+//                    mleft =56;
+//                }
+                labContent.frame=CGRectMake(mleft, 32, textsize.width, textsize.height);
+                labContent.text = min.content;
+            }
+            
+            
+            
+            
+            
+            return cell;
+
+            
+            }
+    }
+	if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self loadChatData:[chatArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([chatArray count]==0||[chatArray count]==indexPath.row)
+    {
+        if([chatArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    CGFloat f=0;
+  
+    MInMail* min = (MInMail*) [chatArray objectAtIndex:indexPath.row];
+    if (min.type==1) {
+        f=140;
+    }
+    if (min.type==2) {
+        f=58;
+    }
+    else  if(min.type==0){
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+    CGSize textsize = [min.content sizeWithFont:myfont constrainedToSize:CGSizeMake(254, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+     f = 58-15+textsize.height;
+    if(f<58)
+    {
+        f=58;
+    };
+        
+        
+    }
+    NSLog(@"%f",f);
+    return f;
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    minmail = (MInMail*) [chatArray objectAtIndex:indexPath.row];
+    [action showInView:self.view];
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if(buttonIndex == 0)
+    {
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(deleteInMail:obj:)];
+        [weiboClient dInMail:minmail.mailID];
+    }
+}
+- (void)deleteInMail:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    [chatArray removeObject:minmail];
+    [inmailTableView reloadData];
+}
+
+
+
+#pragma mark  -调用照相机和本地图片 图片base64编码
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo {
+	[picker dismissModalViewControllerAnimated:YES];
+
+      postImage=image;
+    [self encodeImage];
+	
+}
+
+//base64编码图片
+-(void)encodeImage{
+
+
+    if (postImage) {
+        
+        NSString *imageString=[PublicUtils imageToString_base64:UIImageJPEGRepresentation(postImage , 0.5)];
+        activeView.hidden=NO;
+        [activeView startAnimating];
+    
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self
+                                                   action:@selector(sendInMail:obj:)];
+        [weiboClient sendInMailPic:userID content:imageString toGroup:NO groupID:-1];
+    }
+    else{
+    
+        NSLog(@"无图无真相");
+    
+    }
+
+}
+
+#pragma mark 语音录制
+- (IBAction)btnSpeakerTouched:(id)sender
+{
+    
+    //Begin the recording session.
+    //Error handling removed.  Please add to your own code.
+    
+    //Setup the dictionary object with all the recording settings that this
+    //Recording sessoin will use
+    //Its not clear to me which of these are required and which are the bare minimum.
+    //This is a good resource: http://www.totodotnet.net/tag/avaudiorecorder/
+    NSMutableDictionary* recordSetting = [[NSMutableDictionary alloc] init];
+    
+    [recordSetting setValue :[NSNumber numberWithInt:kAudioFormatAppleIMA4] forKey:AVFormatIDKey];
+    
+    [recordSetting setValue:[NSNumber numberWithFloat:44110.0] forKey:AVSampleRateKey];
+    [recordSetting setValue:[NSNumber numberWithInt: 2] forKey:AVNumberOfChannelsKey];
+    [recordSetting setValue:[NSNumber numberWithInt: AVAudioQualityMin] forKey:AVEncoderAudioQualityKey];
+    
+
+    
+    recordedTmpFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@",[NSDate timeIntervalSinceReferenceDate] * 1000.0, @"caf"]]];
+
+    
+    
+    
+    AVAudioSession * audioSession = [AVAudioSession sharedInstance];
+	//Setup the audioSession for playback and record.
+	//We could just use record and then switch it to playback leter, but
+	//since we are going to do both lets set it up once.
+	[audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error: nil];
+	//Activate the session
+	[audioSession setActive:YES error: nil];
+    
+    recorder = [[ AVAudioRecorder alloc] initWithURL:recordedTmpFile settings:recordSetting error:nil];
+    [recorder setDelegate:self];
+    [recorder prepareToRecord];
+    //[recorder peakPowerForChannel:0];
+    [recorder record];
+}
+
+- (IBAction)btnSpeakerTouchUP:(id)sender
+{
+    
+    NSLog(@"1111'");
+    
+    [recorder stop];
+    recorder =nil;
+
+    [[AVAudioSession sharedInstance] setActive: NO error: nil];
+    
+    
+    //[self btnSendTouched:sender];
+}
+
+#pragma mark AVAudioRecorderDelegate
+- (void)audioRecorderDidFinishRecording:(AVAudioRecorder *)recorder successfully:(BOOL)flag
+{
+    NSLog(@"111122222");
+    
+    if (!flag) {
+        [recordedTmpFile release];
+        recordedTmpFile=nil;
+       // fileStr=nil;
+        
+        return;
+    }
+    else{
+        NSData *vedioDate = [NSData     dataWithContentsOfURL:recordedTmpFile];
+
+    
+
+//        NSData *vedioDate = [NSData dataWithContentsOfFile:fileStr];
+
+//        [reader getBytes:&gData0 range:NSMakeRange([temp length], sizeof(gData0))];
+//        [reader getBytes:&gData2 range:NSMakeRange([temp length] + sizeof(gData0), sizeof(gData1))];
+//        
+//        NSLog(@”gData0:%@  gData1:%i gData2:%f”, gData0, gData1, gData2);
+    
+   NSString *vedioStr= [PublicUtils imageToString_base64:vedioDate];
+    
+    
+        activeView.hidden=NO;
+        [activeView startAnimating];
+        
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self
+                                                   action:@selector(sendInMail:obj:)];
+        [weiboClient sendInMailAudio:userID content:vedioStr toGroup:NO groupID:-1];
+
+    
+    }
+    
+    
+    
+}
+
+
+
+
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

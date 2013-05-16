@@ -1,0 +1,30 @@
+//
+//  MInbox.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-18.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MInbox : NSObject
+{
+    int             userID;
+    NSString*       userName;
+    bool            lastWhoSent;//true表示发送消息，false表示接受消息
+    NSString*       lastContent;
+    NSDate*         lastTime;
+    int             count;
+    NSString*       userPic;
+}
+@property(nonatomic,assign)int             userID;
+@property(nonatomic,retain)NSString*       userName;
+@property(nonatomic,assign)bool            lastWhoSent;//true表示发送消息，false表示接受消息
+@property(nonatomic,retain)NSString*       lastContent;
+@property(nonatomic,retain)NSString*       userPic;
+@property(nonatomic,retain)NSDate*         lastTime;
+@property(nonatomic,assign)int             count;
++ (MInbox*)minboxWithJsonDictionary:(NSDictionary*)dic;
+- (MInbox*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

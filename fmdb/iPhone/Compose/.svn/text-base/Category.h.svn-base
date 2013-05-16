@@ -1,0 +1,29 @@
+//
+//  Category.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "MCategory.h"
+#import "MCity.h"
+#import "PostEvent.h"
+@interface Category : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    int type;
+    NSMutableArray* dataArray;
+    WeiboClient*                weiboClient;
+    IBOutlet UITableView*       dataTableView;
+    NSString*   cname;
+    int         cid;
+}
+@property(nonatomic,assign)int type;
+@property(nonatomic,assign)int cid;
+@property(nonatomic,retain)NSString* name;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)categoryList:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

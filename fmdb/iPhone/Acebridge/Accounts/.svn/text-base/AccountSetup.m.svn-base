@@ -1,0 +1,286 @@
+//
+//  AccountSetup.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "AccountSetup.h"
+#import "PublicUtils.h"
+#import "PrivacySettings.h"
+#import "AceBridgeAppDelegate.h"
+@implementation AccountSetup
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+-(IBAction)update:(id)sender{
+    
+    self.tabBarController.selectedIndex=1;
+    
+}
+-(IBAction)currentplace:(id)sender
+{
+    [[AceBridgeAppDelegate getAppDelegate] networkcp:0];
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(update:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    //navigationBarLeftBtn按钮
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"Locate.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(currentplace:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    
+    
+    UIImage *image = [UIImage imageNamed: @"titlebar"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    
+    values = [[NSMutableArray alloc] init];
+    NSMutableArray* arr1 = [[NSMutableArray alloc] initWithObjects:@"Edit My Info",@"Change User Account",@"Change Password",@"Pirvacy Settings",@"Location Based Setup", nil];
+    [values addObject:arr1];
+    NSMutableArray* arr3 = [[NSMutableArray alloc] initWithObjects:@"Feedback", nil];
+    [values addObject:arr3];
+    // Do any additional setup after loading the view from its nib.
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(IBAction)logout:(id)sender
+{
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Are you sure to log out?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Confirm", nil];
+    [alert show];
+    [alert release];
+}
+
+
+//获取文件路径
+- (NSString *)attchmentFolder{
+    
+    NSString *document = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    
+    NSString *path = [document stringByAppendingPathComponent:@"Attchments"];
+    
+    
+    NSFileManager *manager = [NSFileManager defaultManager];
+    
+    
+    if(![manager contentsOfDirectoryAtPath:path error:nil]){
+        
+        [manager createDirectoryAtPath:path withIntermediateDirectories:NO attributes:nil error:nil];
+        
+    }
+    
+    
+    return path;
+    
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(buttonIndex==1)
+    {
+        
+  
+        
+        if (weiboClient) { 
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(logoutResult:obj:)];
+        [weiboClient logout];
+    }
+}
+- (void)logoutResult:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        ImageCache* imagecache = [ImageCache sharedCache];
+        [imagecache removeAll:YES];
+        [PublicUtils removeAll];
+        [[AceBridgeAppDelegate getAppDelegate] signOut];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Logout Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - tableview事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+	return 3;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+{
+	if(section==0)
+        return 5;
+    return 1;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 44;
+}
+-(UITableViewCell*) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(indexPath.section!=2)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ComposeCell" owner:nil options:nil] objectAtIndex:1];
+        UILabel* lab = (UILabel*)[cell viewWithTag:1];
+        lab.text=[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+    }
+    else
+    {
+        cell = cellLogOut;
+        UIView* view = [[UIView alloc] init];
+        [cell setBackgroundView:view];
+    }
+    return cell;
+}
+#pragma  mark-发送email
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if(indexPath.section == 0&&indexPath.row==0)
+    {
+        Edit_My_Info* editmyinfo = [[Edit_My_Info alloc] initWithNibName:@"Edit_My_Info" bundle:nil];
+        [editmyinfo setTitle:@"Edit My Info"];
+        editmyinfo.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:editmyinfo animated:YES];
+        [editmyinfo release];
+    }
+    if(indexPath.section == 0&&indexPath.row==3)
+    {
+        PrivacySettings* privacy = [[PrivacySettings alloc] initWithNibName:@"PrivacySettings" bundle:nil];
+        [privacy setTitle:@"Privacy Settings"];
+        privacy.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:privacy animated:YES];
+        [privacy release];
+    }
+    if(indexPath.section==0&&indexPath.row==4)
+    {
+        LocationBased* loca = [[LocationBased alloc] initWithNibName:@"LocationBased" bundle:nil];
+        [loca setTitle:@"Location Based Setup"];
+        [self.navigationController pushViewController:loca animated:YES];
+        [loca release];
+    }
+    if(indexPath.section==1&&indexPath.row==0)
+    {
+        [self sendMail:@"AceBridge Feedback" content:@""];
+    }
+    if(indexPath.section==0&&indexPath.row==2)
+    {
+        ChangePass* pass = [[ChangePass alloc] initWithNibName:@"ChangePass" bundle:nil];
+        [pass setTitle:@"Change Password"];
+        [self.navigationController pushViewController:pass animated:YES];
+        [pass release];
+    }
+}
+//发送邮件
+
+-(void)sendMail:(NSString *)subject content:(NSString *)content{
+    MFMailComposeViewController *controller = [[[MFMailComposeViewController alloc] init] autorelease];
+    if([MFMailComposeViewController canSendMail])  
+    {
+        [controller setToRecipients:[[NSArray alloc]initWithObjects:@"Contact@Acebridge.net", nil ]];
+        [controller setSubject:subject];
+        [controller setMessageBody:@"" isHTML:NO];
+        [controller setTitle:@"Feedback"];
+        [controller setBccRecipients:nil];
+        [controller setCcRecipients:nil];
+        controller.mailComposeDelegate = self;
+        [self presentModalViewController:controller animated:YES];
+    }    
+}
+//邮件完成处理
+
+-(void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error{
+    [self dismissModalViewControllerAnimated:YES];
+    switch (result) 
+    { 
+        case MFMailComposeResultCancelled: 
+            [[[iToast makeText:NSLocalizedString(@"Mail send canceled", @"")] setGravity:iToastGravityBottom] show];
+            break; 
+        case MFMailComposeResultSaved: 
+            [[[iToast makeText:NSLocalizedString(@"Mail saved", @"")] setGravity:iToastGravityBottom] show];
+            break; 
+        case MFMailComposeResultSent: 
+            [[[iToast makeText:NSLocalizedString(@"Mail sent", @"")] setGravity:iToastGravityBottom] show];
+            break; 
+        case MFMailComposeResultFailed: 
+            [[[iToast makeText:NSLocalizedString(@"Mail send errored", @"")] setGravity:iToastGravityBottom] show];
+            break; 
+        default: 
+            break; 
+    }  
+}
+@end

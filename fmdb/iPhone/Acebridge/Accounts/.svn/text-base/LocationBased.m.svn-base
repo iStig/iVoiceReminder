@@ -1,0 +1,134 @@
+//
+//  LocationBased.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+#import "iToast.h"
+#import "LocationBased.h"
+#import "PublicUtils.h"
+@implementation LocationBased
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    days = [[NSMutableArray alloc] initWithObjects:@"1",@"3",@"5",@"10", nil];
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    int selectsex=0;
+    int sexvalue = [[PublicUtils get:@"sexselect.db"] intValue];
+    switch (sexvalue) {
+        case 0:
+            selectsex=2;
+            break;
+        case 1:
+            selectsex=1;
+            break; 
+        case 2:
+            selectsex=0;
+            break; 
+        default:
+            selectsex=0;
+            break;
+    }
+    sex.selectedSegmentIndex=selectsex;
+    int timevalue = [[PublicUtils get:@"dayselect.db"] intValue];
+    switch (timevalue) {
+        case 1:
+            timevalue=0;
+            break;
+        case 3:
+            timevalue=1;
+            break;
+        case 5:
+            timevalue=2;
+            break;
+        case 10:
+            timevalue=3;
+            break;
+        default:
+            timevalue=1;
+            break;
+    }
+    day.selectedSegmentIndex = timevalue;
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+-(IBAction)save:(id)sender
+{
+    int selectsex=0;
+    int sexvalue = sex.selectedSegmentIndex;
+    switch (sexvalue) {
+        case 0:
+            selectsex=2;
+            break;
+        case 1:
+            selectsex=1;
+            break; 
+        case 2:
+            selectsex=0;
+            break; 
+        default:
+            selectsex=0;
+            break;
+    }
+    int selectday = day.selectedSegmentIndex;
+    [PublicUtils save:[NSString stringWithFormat:@"%d",selectsex] name:@"sexselect.db"];
+    [PublicUtils save:[days objectAtIndex:selectday] name:@"dayselect.db"];
+    [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+}
+@end

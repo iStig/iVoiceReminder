@@ -1,0 +1,304 @@
+//
+//  Birthday.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-4.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Birthday.h"
+#import "iToast.h"
+#import "PublicUtils.h"
+#import "UserInfo.h"
+#import "SendChat.h"
+@implementation Birthday
+@synthesize keys,values;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    [self InitNavigationBarItems];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(birthdayList:obj:)];
+    [weiboClient birthday:2];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    //rightBtn
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"添加好友.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(currentplace:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+//    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+//    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+//    //set the frame of the button to the size of the image (see note below)
+//    button.frame = CGRectMake(0, 0, 42, 42.0);  
+//    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+//    //create a UIBarButtonItem with the button as a custom view
+//    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+//    self.navigationItem.leftBarButtonItem = customBarItem;
+//    // Cleanup
+//    [customBarItem release];
+}
+-(IBAction)currentplace:(id)sender
+{
+    [[AceBridgeAppDelegate getAppDelegate] networkcp:2];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if(keys)
+    {
+        return [keys count];
+    }
+    else
+    {
+        return 0;
+    }
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:section];
+    if(temp)
+    {
+        return [temp count];
+    }
+    else
+    {
+        return 0;
+    }
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    MBirthday* birthday = (MBirthday*)[temp objectAtIndex:indexPath.row];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:9];
+    } 
+    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+    [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+    if(birthday.userID)
+    {
+        [self updateImageForCell:cell postName:[NSString stringWithFormat:@"%d",birthday.userID]];
+    }
+    
+    UILabel* labUserName = (UILabel*)[cell viewWithTag:2];
+    labUserName.text=birthday.userName;
+    
+    UILabel* labSchool = (UILabel*)[cell viewWithTag:3];
+    labSchool.text=birthday.school;
+    
+    UILabel* labCompany = (UILabel*)[cell viewWithTag:4];
+    labCompany.text=birthday.company;
+    
+    UIButton* bless = (UIButton*)[cell viewWithTag:7];
+    [bless addTarget:self action:@selector(tobless:) forControlEvents:UIControlEventTouchUpInside];
+    
+    // Configure the cell...
+    return cell; 
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section 
+{   if(keys)
+    {
+        return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+    }
+    else
+    {
+        return nil;
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    MBirthday* birthday = (MBirthday*)[temp objectAtIndex:indexPath.row];
+    UserInfo* userinfo = [[UserInfo alloc]  initWithNibName:@"UserInfo" bundle:nil];
+    [userinfo setTitle:birthday.userName];
+    userinfo.userID = birthday.userID;
+    userinfo.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:userinfo animated:YES];
+    [userinfo release];
+}
+#pragma mark - 发送私信
+-(IBAction)tobless:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:[birthdayTableView indexPathForCell:cell].section];
+    MBirthday* birthday = (MBirthday*)[temp objectAtIndex:[birthdayTableView indexPathForCell:cell].row];
+    SendChat* sendchat = [[SendChat alloc] initWithNibName:@"SendChat" bundle:nil];
+    sendchat.toUser=birthday.userName;
+    [sendchat setTitle:@"Send Wishes"];
+    sendchat.toUserID = birthday.userID;
+    sendchat.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:sendchat animated:YES];
+    [sendchat release];
+}
+#pragma mark - 数据解析
+- (void)birthdayList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    keys = [[NSMutableArray alloc] initWithObjects:@"Today",@"Tomorrow",@"Day After Tomorrow" ,nil];
+    values = [[NSMutableArray alloc] init];
+    for (int i=0; i<3; i++) {
+        NSMutableArray* temp = [[NSMutableArray alloc] init];
+        [values addObject:temp];
+    }
+    if (sender.hasError) {
+		NSLog(@"获取birthday数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"birthdayArray"];
+    
+    if ([arr count]==0) {
+//        [[[iToast makeText:NSLocalizedString(@"No friend's birthday is coming, and you shall build more connections via AceBridge.", @"")] setGravity:iToastGravityBottom] show];
+//        return;
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"No friend's birthday is coming, and you shall build more connections via AceBridge." delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+        [alert release];
+        
+        
+        
+        
+    }
+    
+    for (int i=0; i<[arr count]; i++) {
+        MBirthday* mbirthday = [MBirthday mbirthdayWithJsonDictionary:[arr objectAtIndex:i]];
+        if(mbirthday.bDay<=2)
+        {
+            NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:(mbirthday.bDay)];
+            [temp addObject:mbirthday];
+        }
+    }
+    NSMutableArray* valueTemp = [[NSMutableArray alloc] init];
+    for (int j=0,k=0; j<[values count]; j++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:j];
+        if([temp count]>0)
+        {
+            [valueTemp addObject:temp];
+        }
+        else
+        {
+            [keys removeObjectAtIndex:j-k];
+            k++;
+        }
+    }
+    [values removeAllObjects];
+    values = valueTemp;
+    [birthdayTableView reloadData];
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell postName:(NSString*)postName
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%@/%@_medium.jpg",IMAGE_PATH,postName,postName];
+    NSLog(@"%@",path);
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+   
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+-(void) dealloc
+{    
+    [weiboClient release];
+    [super dealloc];
+}
+@end

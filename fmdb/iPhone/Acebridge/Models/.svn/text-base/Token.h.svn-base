@@ -1,0 +1,13 @@
+//
+//  Token.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-19.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#define TOKEN @"a0241f98104133577835204560c02d26" 
+#define TOKEN3 @"6b7ce58930ce0a0c8fdf0e3d7b30bbab"
+@interface Token : NSObject
+@end

@@ -1,0 +1,43 @@
+//
+//  IndustryCell.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-1.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "MIndustry.h"
+@protocol industrySelect;
+
+@interface IndustryCell : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    IBOutlet UITableView *table_View;
+    NSMutableArray *array;
+    WeiboClient*              weiboClient;
+    NSIndexPath *lastIndexPath;
+    NSString *strIndustry;
+    int         _industryID;
+    id<industrySelect> delegate;
+}
+
+@property(nonatomic,retain)  UITableView *table_View;
+@property(nonatomic,retain)  NSMutableArray *array;
+@property(nonatomic,retain)  NSIndexPath *lastIndexPath;
+@property(nonatomic,retain)  NSString *strIndustry;
+@property(nonatomic,assign)int _industryID;
+@property(nonatomic,retain)  id<industrySelect> delegate;
+
+- (void)getindustry:(WeiboClient*)sender obj:(NSObject*)obj;
+
+@end
+
+
+@protocol industrySelect
+
+-(void)industrySelect:(NSString*)industry industryID:(int)_industryID;
+
+
+@end

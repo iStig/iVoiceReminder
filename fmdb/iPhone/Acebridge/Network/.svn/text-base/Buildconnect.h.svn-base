@@ -1,0 +1,30 @@
+//
+//  Buildconnect.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "UnitrueLabel.h"
+#import "ImageCache.h"
+#import "MUser.h"
+#import "WebSearch.h"
+#import "NewInvite.h"
+#import "Myconnections.h"
+#import <MessageUI/MessageUI.h>
+
+@interface Buildconnect : UIViewController<UITableViewDelegate, UITableViewDataSource,UIActionSheetDelegate,UnitrueLabelDelegate,MFMessageComposeViewControllerDelegate>
+{
+    UIActionSheet*              action;
+    NSMutableArray*             listArray;
+}
+
+-(void)initNavigation;
+- (IBAction)composeButtonTouch:(id)sender;
+-(void) sendSMS;
+-(IBAction)currentplace:(id)sender;
+
+@end

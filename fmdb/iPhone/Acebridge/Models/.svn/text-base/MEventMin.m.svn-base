@@ -1,0 +1,63 @@
+//
+//  MEventMin.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MEventMin.h"
+
+@implementation MEventMin
+@synthesize eventID,eventPic,eventName,eventAddress,eventEndTime,eventAbstract,eventCategory,eventDeadline,eventCreatorId,eventStartTime,eventApplyCount,eventCreatorName,commentCount,hot,status,shareCount,likeCount,isapply,eventPublishTime;
++ (MEventMin*)meventminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MEventMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MEventMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        isapply =  ([dic objectForKey:@"applied"]==[NSNull null])?0:[[dic objectForKey:@"applied"] boolValue];
+        eventID =  ([dic objectForKey:@"eventID"]==[NSNull null])?0:[[dic objectForKey:@"eventID"] intValue];
+        eventName = [[dic objectForKey:@"eventName"] retain];
+        eventCreatorId =  ([dic objectForKey:@"eventCreatorId"]==[NSNull null])?0:[[dic objectForKey:@"eventCreatorId"] intValue];
+        eventCreatorName = [[dic objectForKey:@"eventCreatorName"] retain];
+        
+        likeCount =  ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        hot =  ([dic objectForKey:@"hot"]==[NSNull null])?NO:[[dic objectForKey:@"hot"] boolValue];
+        status =  ([dic objectForKey:@"status"]==[NSNull null])?NO:[[dic objectForKey:@"status"] boolValue];
+        eventCategory= [[dic objectForKey:@"eventCategory"] retain];
+        eventAddress= [[dic objectForKey:@"eventAddress"] retain];
+        commentCount = ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        eventPublishTime = [[dic objectForKey:@"eventPublishTime"] retain];
+        eventStartTime = [[dic objectForKey:@"eventStartTime"] retain];
+        eventEndTime =[[dic objectForKey:@"eventEndTime"] retain];
+        eventDeadline = [[dic objectForKey:@"eventDeadline"] retain];
+        eventPic= [[dic objectForKey:@"eventPic"] retain];
+        eventAbstract= [[dic objectForKey:@"eventAbstract"] retain];
+        eventApplyCount =([dic objectForKey:@"eventApplyCount"]==[NSNull null])?0:[[dic objectForKey:@"eventApplyCount"] intValue];
+        if ((id)eventCreatorName == [NSNull null]) eventCreatorName = @"";
+        if ((id)eventName == [NSNull null]) eventName = @"";
+        if ((id)eventCategory == [NSNull null]) eventCategory = @""; 
+        if ((id)eventAddress == [NSNull null]) eventAddress = @""; 
+        if ((id)eventPic == [NSNull null]) eventPic = @"";
+        if ((id)eventAbstract == [NSNull null]) eventAbstract = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [eventName release];
+    [eventPic release];
+    [eventCreatorName release];
+    [eventCategory release];
+    [eventAddress release];
+    [eventEndTime release];
+    [eventStartTime release];
+    [eventDeadline release];
+    [eventAbstract release];
+    [super dealloc];
+}
+@end

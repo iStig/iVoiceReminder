@@ -1,0 +1,132 @@
+//
+//  MUser.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-14.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MUser.h"
+
+@implementation MUser :NSObject
+
+@synthesize userID;
+@synthesize userName;
+@synthesize avatarName;
+@synthesize cityName;
+@synthesize gender;
+@synthesize rank;
+@synthesize email;
+@synthesize point;
+@synthesize mobile;
+@synthesize school;
+@synthesize company;
+@synthesize distance;
+@synthesize connectedStatus;
+@synthesize status;
+@synthesize selfIntrodution;
+@synthesize connectedNum;
+@synthesize eventNum;
+@synthesize careeNum;
+@synthesize groupNum,slogan;
+@synthesize timeSpan,state,birthday,industryID,industryName,locationID,locationName,functionID,functionName,title,statusNum,privacyMsg,privacyInfo,privacyProfile;
+
++ (MUser*)muserWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MUser alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MUser*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        userID = ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        userName = [[dic objectForKey:@"userName"] retain];
+        title = [[dic objectForKey:@"title"] retain];
+        slogan = [[dic objectForKey:@"slogan"] retain];
+        avatarName = [[dic objectForKey:@"avatarName"] retain];
+        cityName = [[dic objectForKey:@"cityName"] retain];
+        gender = [[dic objectForKey:@"gender"] boolValue];
+        rank = [[dic objectForKey:@"rank"] intValue];
+        email = [[dic objectForKey:@"email"] retain];
+        point = [[dic objectForKey:@"point"] intValue];
+        mobile = [[dic objectForKey:@"mobile"] retain];
+        school = [[dic objectForKey:@"school"] retain];
+        company = [[dic objectForKey:@"company"] retain];
+        distance = [[dic objectForKey:@"distance"] doubleValue];
+        connectedStatus = [[dic objectForKey:@"connectedStatus"] intValue];
+        state=[[dic objectForKey:@"state"] retain];
+        status = [[dic objectForKey:@"status"] retain];
+        selfIntrodution=[[dic objectForKey:@"selfIntroduction"] retain];
+        connectedNum=([dic objectForKey:@"connectedNum"]==[NSNull null])?0:[[dic objectForKey:@"connectedNum"] intValue];
+        eventNum=([dic objectForKey:@"eventNum"]==[NSNull null])?0:[[dic objectForKey:@"eventNum"] intValue];
+        careeNum=([dic objectForKey:@"careerNum"]==[NSNull null])?0:[[dic objectForKey:@"careerNum"] intValue];
+        groupNum=([dic objectForKey:@"groupNum"]==[NSNull null])?0:[[dic objectForKey:@"groupNum"] intValue];
+        timeSpan=([dic objectForKey:@"timeSpan"]==[NSNull null])?0:[[dic objectForKey:@"timeSpan"] longLongValue];
+        
+        birthday= [[dic objectForKey:@"birthday"] retain];
+        industryID= ([dic objectForKey:@"industryID"]==[NSNull null])?0:[[dic objectForKey:@"industryID"] intValue];
+        industryName=[[dic objectForKey:@"industryName"] retain];
+        locationID=([dic objectForKey:@"locationID"]==[NSNull null])?0:[[dic objectForKey:@"locationID"] intValue];
+        locationName=[[dic objectForKey:@"locationName"] retain];
+        functionID=([dic objectForKey:@"functionID"]==[NSNull null])?0:[[dic objectForKey:@"functionID"] intValue];
+        functionName=[[dic objectForKey:@"functionName"] retain];
+        statusNum = ([dic objectForKey:@"statusNum"]==[NSNull null])?0:[[dic objectForKey:@"statusNum"] intValue];
+        
+        privacyMsg = [[dic objectForKey:@"privacyMsg"] intValue];
+        
+        
+        privacyProfile = [[dic objectForKey:@"privacyProfile"] intValue];
+        privacyInfo = [[dic objectForKey:@"privacyInfo"] intValue];
+        
+        
+         if ((id)locationName == [NSNull null]) locationName = @"";
+        if ((id)functionName == [NSNull null]) functionName = @"";
+        if ((id)industryName == [NSNull null]) industryName = @"";
+       if ((id)cityName == [NSNull null]) cityName = @"";
+       if ((id)selfIntrodution == [NSNull null]) selfIntrodution = @"";
+       if ((id)state == [NSNull null]) state = @"";
+        
+         if ((id)userName == [NSNull null]) userName = @"";
+         if ((id)avatarName == [NSNull null]) avatarName = @"";
+         if ((id)email == [NSNull null]) email = @"";
+         if ((id)mobile == [NSNull null]) mobile = @"";
+         if ((id)school == [NSNull null]) school = @"";
+         if ((id)company == [NSNull null]) company = @"";
+        if ((id)slogan == [NSNull null]) slogan = @"";
+        if ((id)title == [NSNull null]) title = @"";
+    }
+    return self;
+}
+-(NSString*)getRank:(int)_rank
+{
+    if(_rank==0)
+    {
+        return @"Beginner";
+    }
+    else if(_rank==1)
+        return @"A";
+    else if(_rank==2)
+        return @"AA";
+    else if(_rank==3)
+        return @"AAA";
+    else
+        return @"";
+}
+- (void)dealloc
+{
+    [title release];
+    [slogan release];
+    [industryName release];
+    [locationName release];
+    [functionName release];
+    [userName release];
+    [avatarName release];
+    [cityName release];
+    [email release];
+    [mobile release];
+    [school release];
+    [company release];
+    [state release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,58 @@
+//
+//  NewComment.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "UTTableViewController.h"
+@interface NewComment : UTTableViewController<UIPickerViewDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIActionSheetDelegate>
+{
+    IBOutlet UITextView*      textview;
+    IBOutlet UIView*          atList;
+    IBOutlet UILabel*         labText;
+    
+    IBOutlet    UIButton*       SelectImage;
+    
+    NSMutableArray*           userArray;
+     WeiboClient*                weiboClient;
+    IBOutlet    PullRefreshTableView*    atTableView;
+     BOOL                        isLoading;
+    int         relatedID;
+    int         typeID;
+    int         userID;
+    BOOL         isstatus;
+    BOOL         isSelectImage;
+    IBOutlet UIImageView*   headImage;
+    IBOutlet   UIButton*    sendBtn;
+    UIButton  *rbutton;
+    int     touserID;
+    NSString *touserName;
+    BOOL ispush;
+    
+    NSMutableArray*             keys;
+    NSMutableArray*             values;
+   
+    NSMutableArray*           valuesArray;
+}
+@property(nonatomic,assign)BOOL ispush;
+@property(nonatomic,assign)int         relatedID;
+@property(nonatomic,assign)int         typeID;
+@property(nonatomic,assign)int         userID;
+@property(nonatomic,assign)BOOL         isstatus;
+@property(nonatomic,assign)int     touserID;
+@property(nonatomic,retain)NSString *touserName;
+-(void)InitNavigationBarItems;
+-(void)back;
+-(IBAction)rClicked:(id)sender;
+-(IBAction)atview:(id)sender;
+-(void) requestDate:(int)pageNo;
+- (void)myconnectusers:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)commentResult:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)poststatus:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void) loadData;
+-(void) merger;
+@end

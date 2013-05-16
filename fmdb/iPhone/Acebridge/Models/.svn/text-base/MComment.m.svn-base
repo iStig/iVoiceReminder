@@ -1,0 +1,37 @@
+//
+//  MComment.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MComment.h"
+
+@implementation MComment
+@synthesize time,content,commentID,userID,username;
++ (MComment*)mcommentWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MComment alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MComment*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        userID =  ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        content= [[dic objectForKey:@"content"] retain];
+        username= [[dic objectForKey:@"userName"] retain];
+        time= [[dic objectForKey:@"time"] retain];
+        commentID = ([dic objectForKey:@"commentID"]==[NSNull null])?0:[[dic objectForKey:@"commentID"] intValue];
+        if ((id)content == [NSNull null]) content = @"";
+        if ((id)username == [NSNull null]) username = @"";
+    }
+    return self;
+}
+-(void) dealloc
+{
+    [content release];
+    [username release];
+    [super dealloc];
+}
+@end

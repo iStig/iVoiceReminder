@@ -1,0 +1,295 @@
+//
+//  Promotion.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-25.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Promotion.h"
+#import "TimeUtils.h"
+@implementation Promotion
+@synthesize promotionArray;
+
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+       
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+     promotionArray = [[NSMutableArray alloc] init];
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"promotion_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if (dic!=nil) {
+    NSArray* arr =(NSArray*)[dic objectForKey:@"promotionArray"];
+    for (int i=0; i<[arr count]; i++) {
+        MPromotion* mpro = [MPromotion mpromotionWithJsonDictionary:[arr objectAtIndex:i]];
+        [promotionArray addObject:mpro];
+    }
+}
+    tableView = promotionTableView;
+    tableView.frame = CGRectMake(0, 0, 320, 367);
+    isLoading = NO;
+    
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+     loadCell.hidden=NO;
+    [self requestData:1];
+}
+-(void) requestData:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(promotionList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient promotuinList:-1 discount:-1 title:@"" pageNo:pageNo];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableView事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([promotionArray count]==0||[promotionArray count]==indexPath.row)
+    {
+        if([promotionArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 107;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [promotionArray count]+1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([promotionArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [promotionArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:4];
+        }
+        MPromotion *mpro = (MPromotion*)[promotionArray objectAtIndex:indexPath.row];
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        if([mpro.picName length]>0)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        UILabel* labtitle=(UILabel*)[cell viewWithTag:2];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+        CGFloat width = [mpro.title sizeWithFont:myfont constrainedToSize:CGSizeMake(200, 20) lineBreakMode:UILineBreakModeWordWrap].width;
+        labtitle.frame=CGRectMake(109, 10, width+5, 20);
+        labtitle.text=mpro.title;
+        
+        UIImageView* sex= (UIImageView*)[cell viewWithTag:3];
+        sex.frame=CGRectMake(109+width+5, 13, 20, 10);
+        [sex setImage:[UIImage imageNamed:@"hot.png"]];
+        if (mpro.hot==0) {
+            sex.hidden=YES;
+        }
+        
+        UILabel* labcategory = (UILabel*)[cell viewWithTag:4];
+        labcategory.text=mpro.category;
+        
+        UILabel* labrequiredPoints = (UILabel*)[cell viewWithTag:5];
+        labrequiredPoints.text = [NSString stringWithFormat:@"%d",mpro.requirePoint];
+        
+        UILabel* labdiscount = (UILabel*)[cell viewWithTag:6];
+        if (mpro.discount==0) {
+                labdiscount.text =@"100%off";
+            }
+        else{
+        
+            labdiscount.text = [NSString stringWithFormat:@"%d",(int)(mpro.discount*100)];
+            labdiscount.text=[labdiscount.text stringByAppendingString:@"%off"];
+        
+        }
+        UILabel* labdeadline = (UILabel*)[cell viewWithTag:7];
+        labdeadline.text = [TimeUtils formatDate:mpro.deadline];
+        return cell;
+    }
+	if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestData:[promotionArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    ViewPromotion* viewPromotion = [[ViewPromotion alloc] initWithNibName:@"ViewPromotion" bundle:nil];
+    [viewPromotion setTitle:@"Promotion Details"];
+    MPromotion* pro = [promotionArray objectAtIndex:indexPath.row];
+    viewPromotion.promotionID = pro.promotionID;
+    [self.navigationController pushViewController:viewPromotion animated:YES];
+    [viewPromotion release];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 数据解析
+- (void)promotionList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取promotion数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"promotionArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [promotionArray removeAllObjects];
+          [PublicUtils save:dic name:[NSString stringWithFormat:@"promotion_list_%d.db",[PublicUtils getCurrentUser].userID]];  
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MPromotion* mpro = [MPromotion mpromotionWithJsonDictionary:[arr objectAtIndex:i]];
+        [promotionArray addObject:mpro];
+    }
+    [promotionTableView reloadData];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [promotionArray release];
+    [super dealloc];
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MPromotion *pItem =(MPromotion*) [promotionArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/system/leisure/small/%@",IMAGE_PATH,pItem.picName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+@end

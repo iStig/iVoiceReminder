@@ -1,0 +1,186 @@
+//
+//  FunctionCell.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-1.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "FunctionCell.h"
+
+
+@implementation FunctionCell
+
+@synthesize table_View;
+@synthesize  array;
+@synthesize delegate;
+@synthesize strFunction;
+@synthesize  lastIndexPath,_function;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self setTitle:@"Function"];
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    self.array=[[NSMutableArray alloc]init];
+    
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getfunction:obj:)];
+    [weiboClient getfunction];
+   // array= [[NSMutableArray alloc] initWithObjects:@"Accountant",@"Consultant",@"Corporate Functions",@"Entrepreneur",@"Fund/Buy Side",@"Government",@"IB/Sell Side",@"Lawyer",@"Others", nil];
+    // Do any additional setup after loading the view from its nib.
+}
+
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)viewDidDisappear:(BOOL)animated{
+    
+    if (strFunction==nil) {
+        
+    }
+    else{
+        [self.delegate functionSelect:strFunction functionID:_function];
+        
+    }
+    
+}
+
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return [self.array count];
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"functionAndindustry" owner:nil options:nil] objectAtIndex:0];
+    } 
+	
+    
+    UILabel *functionLbl=(UILabel*)[cell  viewWithTag:1];
+    functionLbl.text=((MFunction*)[array objectAtIndex:indexPath.row]).functionName;
+    _function =((MFunction*)[array objectAtIndex:indexPath.row]).functionID; 
+    return cell;
+}
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    int iNewRow = [indexPath row];
+  	int iOldRow = (lastIndexPath !=nil)?[lastIndexPath row]:-1;
+    //  lastIndexPath = [NSIndexPath indexPathForRow:5 inSection:0];
+    if (iNewRow != iOldRow) {
+        UITableViewCell *newCell = [tableView cellForRowAtIndexPath:indexPath];
+		newCell.accessoryType=UITableViewCellAccessoryCheckmark;
+        UITableViewCell *oldCell = [tableView cellForRowAtIndexPath:lastIndexPath];
+		oldCell.accessoryType = UITableViewCellAccessoryNone;
+        lastIndexPath=[indexPath retain];//indexPath可能在这之前被系统release了  因此我们要手动retain下
+	}
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    MFunction* m = ((MFunction*)[array objectAtIndex:indexPath.row]);
+    strFunction=m.functionName;
+    _function=m.functionID;
+    [self back];   
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+- (void)getfunction:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取function数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        //return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"functionArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MFunction* function = [MFunction mfunctionWithJsonDictionary:[arr objectAtIndex:i]];
+        
+        [self.array addObject:function];
+    }
+    
+        
+    [table_View reloadData];
+}
+-(void)dealloc{
+    [weiboClient release];
+    [table_View release];
+    [self.array release];
+    [strFunction release];
+  [lastIndexPath release];
+    [super dealloc];
+
+}
+
+@end

@@ -1,0 +1,508 @@
+//
+//  Invite.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Invite.h"
+#import "iToast.h"
+#import "PYMethod.h"
+
+@implementation Invite
+@synthesize keys;
+@synthesize values,finkeys,finvalues,eventID;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        userArray = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    self.title=@"My Contacts";
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"全不选.png"] forState:UIControlStateNormal];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"全选.png"] forState:UIControlStateSelected];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42.0);
+    [rbutton addTarget:self action:@selector(checked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 全选
+-(IBAction)checked:(id)sender
+{
+    UIButton*   btn = (UIButton*)sender;
+    btn.selected=!btn.selected;
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[values objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            [temp removeObjectAtIndex:3];
+            NSString* s = @"";
+            s=btn.selected?@"YES":@"NO";
+            [temp insertObject:s atIndex:3];
+        }
+    }
+    [addressTableView reloadData];
+}
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    // Release any cached data, images, etc that aren't in use.
+}
+#pragma mark - 更新
+-(IBAction)leftClicked:(id)sender
+{
+    [self loadRequestData];
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    [self loadRequestData];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) loadRequestData
+{
+    [userArray removeAllObjects];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnection:obj:)];
+    [weiboClient myconnectusers:1];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return [keys count];
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+    return [dic count];
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    UIImage* noCheck =[UIImage imageNamed:@"选择框1.png"] ;
+    UIImage* yesCheck =[UIImage imageNamed:@"选择框2.png"];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:3];
+    } 
+    // Configure the cell...
+    cell.textLabel.font = [UIFont systemFontOfSize:14];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:indexPath.row];
+    NSString* name = [temp objectAtIndex:1];
+    UILabel* lab = (UILabel*)[cell viewWithTag:1];
+    lab.text=name;
+    UIButton* btn = (UIButton*)[cell viewWithTag:2];
+    BOOL isChecked = [[temp objectAtIndex:3] boolValue];
+
+    [btn addTarget:self action:@selector(btnChecked:) forControlEvents:UIControlEventTouchUpInside];
+    [btn setBackgroundImage:noCheck forState:UIControlStateNormal];
+    [btn setBackgroundImage:yesCheck forState:UIControlStateSelected];
+    BOOL isAddressBook = [[temp objectAtIndex:4] boolValue];
+    UIImageView* imageview=(UIImageView*)[cell viewWithTag:3];
+    if(isAddressBook)
+    {
+        imageview.hidden=YES;
+        btn.hidden=NO;
+    }
+    else
+    {
+        imageview.hidden=NO;
+        btn.hidden=YES;
+    }
+    if(isChecked==NO)
+    {
+        btn.selected=NO;
+        NSString* s = [temp objectAtIndex:3];
+        s=@"NO";
+    }
+    else
+    {
+        btn.selected=YES;
+        NSString* s = [temp objectAtIndex:3];
+        s=@"YES";
+    }
+    return cell; 
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section 
+{
+    return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+}
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    if(!keys)
+    {
+        return [[NSArray alloc] init];
+    };
+    return keys;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [tableView cellForRowAtIndexPath:indexPath];
+    UIButton* btn = (UIButton*)[cell viewWithTag:2];
+    [self btnChecked:btn];
+}
+#pragma mark - 点击选择
+-(IBAction)btnChecked:(id)sender
+{
+    UIButton*   btn = (UIButton*)sender;
+    btn.selected=!btn.selected;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:[addressTableView indexPathForCell:cell].section];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:[addressTableView indexPathForCell:cell].row];
+    BOOL isAddressBook = [[temp objectAtIndex:4] boolValue];
+    if(isAddressBook)
+    {
+        [temp removeObjectAtIndex:3];
+        NSString* s = @"";
+        s=btn.selected?@"YES":@"NO";
+        [temp insertObject:s atIndex:3];
+    }
+    else
+    {
+        UserInfo* userinfo = [[UserInfo alloc]  initWithNibName:@"UserInfo" bundle:nil];
+        [userinfo setTitle:[temp objectAtIndex:1]];
+        userinfo.userID = [[temp objectAtIndex:5] intValue];
+        [self.navigationController pushViewController:userinfo animated:YES];
+        [userinfo release];
+    }
+    [addressTableView reloadData];
+}
+
+-(void) loadData
+{
+    NSMutableArray *arrValue;
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    for (int i=0; i<=26; i++) {
+        arrValue = [[NSMutableArray alloc] init];
+        [values addObject:arrValue];
+        if(i==26)
+        {
+            [keys addObject:@"#"];
+        }
+        else
+        {
+            [keys addObject:[NSString stringWithFormat:@"%c",(char)(i+65)]];
+        }
+    }
+    ABAddressBookRef addressBook =ABAddressBookCreate();
+    NSMutableArray* allpeople = (NSMutableArray *)ABAddressBookCopyArrayOfAllPeople (addressBook);
+    for(id person in allpeople)
+    {
+        NSString* firstName = (NSString *)ABRecordCopyValue(person, kABPersonFirstNameProperty);
+        NSString* lastName = (NSString *)ABRecordCopyValue(person, kABPersonLastNameProperty);
+        lastName=lastName==nil?@"":lastName;
+        firstName=firstName==nil?@"":firstName;
+        NSString* fullName = (NSString *)[lastName stringByAppendingFormat:@"%@",firstName];
+        ABMultiValueRef phones = (ABMultiValueRef)ABRecordCopyValue(person, kABPersonPhoneProperty);
+        NSString* phone;
+        if(ABMultiValueGetCount(phones)>0)
+        {
+            phone = (NSString *)ABMultiValueCopyValueAtIndex(phones, 0);
+            phone = [[[[phone stringByReplacingOccurrencesOfString:@" " withString:@""] stringByReplacingOccurrencesOfString:@"-" withString:@""] stringByReplacingOccurrencesOfString:@"(" withString:@""] stringByReplacingOccurrencesOfString:@")" withString:@""];
+            NSMutableArray *infoValue = [[NSMutableArray alloc] init];
+            NSString* pinyingName = [[PYMethod getPinYin:fullName] uppercaseString];
+            char frstChar = [pinyingName characterAtIndex:0];
+            int index = (int)frstChar;
+            [infoValue addObject:pinyingName];
+            [infoValue addObject:fullName];
+            [infoValue addObject:phone];
+            [infoValue addObject:@"NO"];//是否选中 后期使用
+            [infoValue addObject:@"YES"];//非通讯录信息
+            [infoValue addObject:@"0"];
+            if(index>=65&&index<=90)
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+                [tempValue addObject:infoValue];
+            }
+            else
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:26];
+                [tempValue addObject:infoValue];
+            }
+        }
+    }
+    CFRelease(addressBook);
+}
+#pragma mark - 数据交互
+- (void)myconnection:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+    }
+    int userCount =0;
+    userCount = [[dic objectForKey:@"userCount"] intValue];
+    if(userCount==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    userArray = [[NSMutableArray alloc] init];
+    NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+    for (int i=0; i<[arr count]; i++) {
+        MUser* user = [[MUser muserWithJsonDictionary:[arr objectAtIndex:i]] retain];
+        [userArray addObject:user];
+    }
+    [self loadData];
+    [self merger];
+    
+    finkeys = keys.copy;
+    finvalues = values.copy;
+    [keys removeAllObjects];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    [values removeAllObjects];
+    values = finValue;
+    
+    [addressTableView reloadData];
+}
+#pragma mark - 合并
+-(void) merger
+{
+    for (int i=0; i<[userArray count]; i++) 
+    {
+        [self addmerger:(MUser*)[userArray objectAtIndex:i]];
+    }
+    keys = [[NSMutableArray alloc] init];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    values = [[NSMutableArray alloc] init];
+    values = finValue;
+}
+-(void) addmerger:(MUser*) user
+{
+    BOOL b = YES;
+    NSString* pinyingName = [[PYMethod getPinYin:user.userName] uppercaseString];
+    
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[values objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            NSString* phone = [temp objectAtIndex:2];
+            NSRange range1 = [phone rangeOfString:user.mobile];
+            NSRange range2 = [user.mobile rangeOfString:phone];
+            BOOL ismobile = [user.mobile length]>10;
+            if(ismobile&&(range1.location!=NSNotFound||range2.location!=NSNotFound)&&[[temp objectAtIndex:4] isEqualToString:@"YES"])
+            {
+                [arr removeObject:temp];
+            }
+        }
+    }
+    if(b)
+    {
+        NSMutableArray* temp = [[NSMutableArray alloc] init];
+        char frstChar = [pinyingName characterAtIndex:0];
+        int index = (int)frstChar;
+        [temp addObject:pinyingName];
+        [temp addObject:user.userName];
+        [temp addObject:user.mobile];
+        [temp addObject:@"NO"];
+        [temp addObject:@"NO"];
+        [temp addObject:[NSString stringWithFormat:@"%d",user.userID]];
+        if(index>=65&&index<=90)
+        {
+            NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+            [tempValue addObject:temp];
+        }
+        else
+        {
+            NSString* key = [keys objectAtIndex:([keys count]-1)];
+            if([key isEqualToString:@"#"])
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:([values count]-1)];
+                [tempValue addObject:temp];
+            }
+            else
+            {
+                NSMutableArray* t = [[NSMutableArray alloc] init];
+                [t addObject:temp];
+                [keys addObject:@"#"];
+                [values addObject:t];
+            }
+        }
+    }
+}
+
+#pragma mark - 发送短信
+-(IBAction)invite:(id)sender
+{
+    [self sendSMS];
+}
+//内容 收件人
+-(void) sendSMS
+{
+    NSString* str = [[NSString alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* arr =  (NSMutableArray*)[values objectAtIndex:i];
+        for (int j=0; j<[arr count]; j++) {
+            NSMutableArray* temp =  (NSMutableArray*)[arr objectAtIndex:j];
+            BOOL isAddressBook = [[temp objectAtIndex:4] boolValue];
+            if(isAddressBook)
+            {
+                BOOL s = [[temp objectAtIndex:3] boolValue];
+                if(s)
+                {
+                    str = [NSString stringWithFormat:@"%@,%@",str,[temp objectAtIndex:2]];
+                }
+            }
+        }
+    }
+    str =[str stringByReplacingOccurrencesOfString:@"(" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@")" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@"-" withString:@""]; 
+    str =[str stringByReplacingOccurrencesOfString:@" " withString:@""];
+    str =[str stringByReplacingOccurrencesOfString:@"+86" withString:@""];
+    if([str length]>0)
+    {
+        str = [str substringFromIndex:1];
+    }
+    if([str length]>11)
+    {
+        str = [str substringToIndex:str.length-1];
+    }
+    if([str length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please choose your contact", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendCode:obj:)];
+    [weiboClient sendInviteCode:str type:2 eventID:eventID];
+}
+#pragma mark - 数据解析
+- (void)sendCode:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

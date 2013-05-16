@@ -1,0 +1,65 @@
+//
+//  MBlog.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-8.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MBlog.h"
+
+@implementation MBlog
+@synthesize blogID,blogUserID,likeCount,shareCount,commentCount,blogUserName,blogType,blogTime,blogContent,blogTitle,rank,picName;
++ (MBlog*)mblogWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MBlog alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MBlog*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        rank = ([dic objectForKey:@"rank"]==[NSNull null])?0:[[dic objectForKey:@"rank"] intValue];
+        blogID =  ([dic objectForKey:@"blogID"]==[NSNull null])?0:[[dic objectForKey:@"blogID"] intValue];
+        blogUserID =  ([dic objectForKey:@"blogUserID"]==[NSNull null])?0:[[dic objectForKey:@"blogUserID"] intValue];
+        picName = [[dic objectForKey:@"picName"] retain];
+        blogUserName = [[dic objectForKey:@"blogUserName"] retain];
+        blogTitle = [[dic objectForKey:@"blogTitle"] retain];
+        blogType = [[dic objectForKey:@"blogType"] retain];
+        blogContent = [[dic objectForKey:@"blogContent"] retain];
+        blogTime= [[dic objectForKey:@"blogTime"] retain];
+        commentCount = ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount = ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        if ((id)blogUserName == [NSNull null]) blogUserName = @"";
+        if ((id)blogType == [NSNull null]) blogType = @"";
+        if ((id)blogContent == [NSNull null]) blogContent = @"";
+        if ((id)blogTitle == [NSNull null]) blogTitle = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+    }
+    return self;
+    
+}
+-(NSString*)getRank:(int)_rank
+{
+    if(_rank==0)
+    {
+        return @"Beginner";
+    }
+    else if(_rank==1)
+        return @"A";
+    else if(_rank==2)
+        return @"AA";
+    else if(_rank==3)
+        return @"AAA";
+    else
+        return @"";
+}
+- (void)dealloc
+{
+    [picName release];
+    [blogUserName release];
+    [blogType release];
+    [blogContent release];
+    [super dealloc];
+}
+@end

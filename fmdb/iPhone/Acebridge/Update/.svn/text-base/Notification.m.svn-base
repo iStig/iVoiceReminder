@@ -1,0 +1,281 @@
+//
+//  Notification.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Notification.h"
+#import "iToast.h"
+#import "AtCell.h"
+#import "CommentCell.h"
+#import "ShareCell.h"
+#import "EventCell.h"
+#import "CareerCell.h"
+#import "PiebridgeCell.h"
+#import "GroupCell.h"
+#import "Connectreguest.h"
+#import "AppDelegate_iPhone.h"
+
+@implementation Notification
+@synthesize notificationArray;
+#pragma mark -生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        [self.view.layer setCornerRadius:0.5];
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+-(void) connectionrequestCount
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(connectrequestcount:obj:)];
+    [weiboClient connectrequestcount];
+}
+- (void)connectrequestcount:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    userCount=0;
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        return;
+    }
+    userCount = [[dic objectForKey:@"requestCount"] intValue];
+    [cnTableView reloadData];
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [[AppDelegate_iPhone getAppDelegate] setDDMenuEnabled:YES];
+    
+    
+    typeArray = [[NSMutableArray alloc] initWithObjects:@"Connection Request",@"@",@"Comment",@"Share",@"Event",@"Career",@"Piebridge",@"Group", nil];
+    notificationArray = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(countNotification:obj:)];
+    [weiboClient countNotifications];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [typeArray count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:7];
+    }
+    NSString* s = [typeArray objectAtIndex:indexPath.row];
+    
+    //绑定名称
+    UILabel *labName = (UILabel*)[cell viewWithTag:1];
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+    CGFloat width = [s sizeWithFont:myfont constrainedToSize:CGSizeMake(320, 44) lineBreakMode:UILineBreakModeWordWrap].width;
+    labName.frame=CGRectMake(15, 0, width+5, 44);
+    [labName setText:s];
+    UILabel* labCount= (UILabel*)[cell viewWithTag:2];
+    labCount.frame=CGRectMake(25+width, 0, 100, 44);
+    
+//    if(indexPath.row<[notificationArray count])
+//    {
+//        MNotification* countNotification = (MNotification*)[notificationArray objectAtIndex:indexPath.row];
+//        labCount.text=[NSString stringWithFormat:@"(%d)",countNotification.count];
+//    }
+//    else 
+//    {
+//        labCount.text=[NSString stringWithFormat:@"(%d)",userCount];
+//    }
+    
+    NSLog(@"%d",[notificationArray count]);
+    
+    if (indexPath.row==0) {
+        labCount.text=[NSString stringWithFormat:@"(%d)",userCount];
+    }
+    
+    if(indexPath.row>0&& indexPath.row<=[notificationArray count])
+    {
+        MNotification* countNotification = (MNotification*)[notificationArray objectAtIndex:indexPath.row-1];
+        labCount.text=[NSString stringWithFormat:@"(%d)",countNotification.count];
+    }
+ 
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.row==1) {
+        
+        AtCell *atCell = [[AtCell alloc] initWithNibName:@"AtCell" bundle:nil];
+        [atCell setTitle:@"@"];
+        [self.navigationController pushViewController:atCell animated:YES];
+        [atCell release];
+    }
+    
+    if (indexPath.row==2) {
+        
+        CommentCell *commentCell = [[CommentCell alloc] initWithNibName:@"CommentCell" bundle:nil];
+        [commentCell setTitle:@"Comment"];
+        [self.navigationController pushViewController:commentCell animated:YES];
+        [commentCell release];
+    }
+    if (indexPath.row==3) {
+             ShareCell *shareCell = [[ShareCell alloc] initWithNibName:@"ShareCells" bundle:nil];
+        [shareCell setTitle:@"Share"];
+       [self.navigationController pushViewController:shareCell animated:YES];
+       [shareCell release];
+    }
+    if (indexPath.row==4) {
+        
+        EventCell *eventCell = [[EventCell alloc] initWithNibName:@"EventCell" bundle:nil];
+        [eventCell setTitle:@"Event"];
+        [self.navigationController pushViewController:eventCell animated:YES];
+        [eventCell release];
+    }
+    if (indexPath.row==5) {
+        
+        CareerCell *careerCell = [[CareerCell alloc] initWithNibName:@"CareerCell" bundle:nil];
+        [careerCell setTitle:@"Career"];
+        [self.navigationController pushViewController:careerCell animated:YES];
+        [careerCell release];
+    }
+    if (indexPath.row==6) {
+        
+        PiebridgeCell *piebridgeCell = [[PiebridgeCell alloc] initWithNibName:@"PiebridgeCell" bundle:nil];
+        [piebridgeCell setTitle:@"Piebridge"];
+        [self.navigationController pushViewController:piebridgeCell animated:YES];
+        [piebridgeCell release];
+    }
+    if (indexPath.row==7) {
+        
+        GroupCell *groupCell = [[GroupCell alloc] initWithNibName:@"GroupCell" bundle:nil];
+        [groupCell setTitle:@"Group"];
+        [self.navigationController pushViewController:groupCell animated:YES];
+        [groupCell release];
+    }
+    if(indexPath.row==0)
+    {
+        Connectreguest * connectionrequest = [[Connectreguest alloc] initWithNibName:@"Connectreguest" bundle:nil];
+        [connectionrequest setTitle:@"Connection Request"];
+        [self.navigationController pushViewController:connectionrequest animated:YES];
+        [connectionrequest release];
+    }
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+}
+#pragma mark - 数据交互
+- (void)countNotification:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取notification count 错误!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"notificationCountArray"];
+    for (int i=0; i<[arr count]; i++) {
+        MNotification* mpb = [MNotification mnotificationWithJsonDictionary:[arr objectAtIndex:i]];
+        [notificationArray addObject:mpb];
+    }
+    [self connectionrequestCount];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+//    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+//    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+//    //set the frame of the button to the size of the image (see note below)
+//    button.frame = CGRectMake(0, 0, 42, 42.0);
+//    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+//    //create a UIBarButtonItem with the button as a custom view
+//    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+//    self.navigationItem.leftBarButtonItem = customBarItem;
+//    // Cleanup
+//    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

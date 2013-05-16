@@ -1,0 +1,324 @@
+//
+//  EventCell.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-24.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "EventCell.h"
+#import "TimeUtils.h"
+@implementation EventCell
+@synthesize  eventArray;
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.eventArray=[[NSMutableArray alloc] init];
+  
+    
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"event_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"notificationArray"];
+        for (int i=0; i<[arr count]; i++) {
+        AtNotification* atNotification = [AtNotification atboxWithJsonDictionary:[arr objectAtIndex:i]];
+        [eventArray addObject:atNotification];
+    }
+    }
+    tableView = eventTableView;
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    isLoading=NO;
+    [self getItemsWhenPullDownTableView];
+    
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{  
+    loadCell.hidden=NO;
+    [self getList:1];
+}
+-(void) getList:(int)pageNo
+{
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(eventList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient rNotifications:pageNo nTypeID:4 version:2];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+    
+    [self.navigationController  popToRootViewControllerAnimated:YES];
+    
+}
+#pragma mark - tableview事件
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([eventArray count]==0||[eventArray count]==indexPath.row)
+    {
+        if([eventArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 80;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [eventArray count]+1;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([eventArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [eventArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"NotificationCellDetail" owner:nil options:nil] objectAtIndex:1];
+        } 
+        AtNotification *eventInfo =(AtNotification*)[eventArray objectAtIndex:indexPath.row];
+        if ([eventInfo.relatedUserName isEqualToString:@"【AceBridge Reminder】"]) {
+            UILabel *who=(UILabel*)[cell viewWithTag:2];
+            [who setText:@"[AceBridge Reminder]"];
+            UILabel *title=(UILabel*)[cell viewWithTag:3];
+            [title setText:eventInfo.relatedTitle];
+            UILabel *timeRange=(UILabel*)[cell viewWithTag:4];
+            [timeRange setText:eventInfo.nContent];
+            UILabel *time=(UILabel*)[cell viewWithTag:5];
+            time.text=[TimeUtils timestamp:eventInfo.nTime];
+        }
+        else{
+            
+            if ([eventInfo.relatedOperate isEqualToString:@"changed"]) {
+                UILabel *who=(UILabel*)[cell viewWithTag:2];
+                [who setText:@"The event has changed:"];
+                UILabel *title=(UILabel*)[cell viewWithTag:3];
+                [title setText:eventInfo.relatedTitle];
+                UILabel *timeRange=(UILabel*)[cell viewWithTag:4];
+                timeRange.hidden=YES;
+                UILabel *time=(UILabel*)[cell viewWithTag:5];
+                time.text=[TimeUtils timestamp:eventInfo.nTime];
+            }
+            else{
+                UILabel *who=(UILabel*)[cell viewWithTag:2];
+                if([eventInfo.relatedOperate isEqualToString:@"quit"])
+                {
+                    [who setText:[NSString stringWithFormat:@"%@ %@ your event",eventInfo.relatedUserName,eventInfo.relatedOperate]];}
+                else{
+                    [who setText:[NSString stringWithFormat:@"%@ %@ for your event",eventInfo.relatedUserName,eventInfo.relatedOperate]];
+                } 
+                UILabel *title=(UILabel*)[cell viewWithTag:3];
+                [title setText:eventInfo.relatedTitle];
+                UILabel *timeRange=(UILabel*)[cell viewWithTag:4];
+                timeRange.hidden=YES;
+                UILabel *time=(UILabel*)[cell viewWithTag:5];
+                time.text=[TimeUtils timestamp:eventInfo.nTime];
+            }
+        }
+        return cell;   
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self getList:[eventArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    AtNotification *eventInfo =(AtNotification*)[eventArray objectAtIndex:indexPath.row];
+    
+    if ([eventInfo.relatedType isEqualToString:@"blog"]) {
+        BlogInfo* bloginfo = [[BlogInfo alloc] initWithNibName:@"BlogInfo" bundle:nil];
+        [bloginfo setTitle:@"Blog"];
+        bloginfo.blogID = eventInfo.relatedID;
+        [self.navigationController pushViewController:bloginfo animated:YES];
+        [bloginfo release];
+    }
+    if ([eventInfo.relatedType isEqualToString:@"event"]){
+        EventInfo* eventinfo = [[EventInfo alloc] initWithNibName:@"EventInfo" bundle:nil];
+        [eventinfo setTitle:@"Event Details"];
+        eventinfo.eventID = eventInfo.relatedID;
+        [self.navigationController pushViewController:eventinfo animated:YES];
+        [eventinfo release];
+    }
+    if ([eventInfo.relatedType isEqualToString:@"career"]) {
+        CarrerInfo* info = [[CarrerInfo alloc] initWithNibName:@"CarrerInfo" bundle:nil];
+        info.carrerID=eventInfo.relatedID;
+        [info setTitle:@"Career Opportunity"];
+        [self.navigationController pushViewController:info animated:YES];
+        [info release];
+    }
+    if ([eventInfo.relatedType isEqualToString:@"promotion"]) 
+    {
+        ViewPromotion* viewPromotion = [[ViewPromotion alloc] initWithNibName:@"ViewPromotion" bundle:nil];
+        [viewPromotion setTitle:@"Promotion Details"];
+        viewPromotion.promotionID = eventInfo.relatedID;
+        [self.navigationController pushViewController:viewPromotion animated:YES];
+        [viewPromotion release];
+        
+        
+        
+    }
+    if ([eventInfo.relatedType isEqualToString:@"status"]) 
+    {
+        StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+        [statusInfo setTitle:@"Status"];
+        statusInfo.statusID = eventInfo.relatedID;
+        
+        [self.navigationController pushViewController:statusInfo animated:YES];
+        [statusInfo release];
+        
+        
+    }
+    if ([eventInfo.relatedType isEqualToString:@"group"]) 
+    {
+        GroupInfo* groupinfo = [[GroupInfo alloc] initWithNibName:@"GroupInfo" bundle:nil];
+        [groupinfo setTitle:@"Group"];
+        groupinfo.groupID = eventInfo.relatedID;
+        [self.navigationController pushViewController:groupinfo animated:YES];
+        [groupinfo release];
+    }
+    if ([eventInfo.relatedType isEqualToString:@"piebridge"]) 
+    {
+        UserInfo* userinfo = [[UserInfo alloc] initWithNibName:@"UserInfo" bundle:nil];
+        userinfo.userID = eventInfo.relatedID;
+        [self.navigationController pushViewController:userinfo animated:YES];
+        [userinfo release];
+        
+        
+    }
+    
+    
+    
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (void)eventList:(WeiboClient*)sender obj:(NSObject*)obj{
+
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    
+    NSDictionary* dic = (NSDictionary*)obj;
+    NSLog(@"%@",dic);
+    int opresult =[[dic objectForKey:@"opResult"] intValue] ;
+    if(opresult==0){
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    
+    //self.eventArray=[[NSMutableArray alloc] init];
+    NSArray* arr =(NSArray*)[dic objectForKey:@"notificationArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [eventArray removeAllObjects];
+        [PublicUtils save:dic name:[NSString stringWithFormat:@"event_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        AtNotification* atNotification = [AtNotification atboxWithJsonDictionary:[arr objectAtIndex:i]];
+        
+        
+        [eventArray addObject:atNotification];
+    }
+    
+    [eventTableView reloadData];
+    isLoading=NO;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

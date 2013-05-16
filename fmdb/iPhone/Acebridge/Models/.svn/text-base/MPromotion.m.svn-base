@@ -1,0 +1,57 @@
+//
+//  MPromotion.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-25.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MPromotion.h"
+
+@implementation MPromotion
+
+@synthesize applicateNum,picName,content,deadline,itemNum,discount,currentPrice,originalPrice,requirePoint,category,promotionID;
+@synthesize biddingPersonalMaxCount,hot,title,likeCount,shareCount,personalMaxCount;
+
++ (MPromotion*)mpromotionWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MPromotion alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MPromotion*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        biddingPersonalMaxCount =  ([dic objectForKey:@"biddingPersonalMaxCount"]==[NSNull null])?0:[[dic objectForKey:@"biddingPersonalMaxCount"] intValue];
+        hot =  ([dic objectForKey:@"hot"]==[NSNull null])?0:[[dic objectForKey:@"hot"] intValue];
+        likeCount =  ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        personalMaxCount =  ([dic objectForKey:@"personalMaxCount"]==[NSNull null])?0:[[dic objectForKey:@"personalMaxCount"] intValue];
+        title = [[dic objectForKey:@"title"] retain];
+        promotionID =  ([dic objectForKey:@"promotionID"]==[NSNull null])?0:[[dic objectForKey:@"promotionID"] intValue];
+        category= [[dic objectForKey:@"category"] retain];
+        applicateNum = ([dic objectForKey:@"applicateNum"]==[NSNull null])?0:[[dic objectForKey:@"applicateNum"] intValue];
+        picName = [[dic objectForKey:@"picName"] retain];
+        content =[[dic objectForKey:@"content"] retain];
+        deadline = [[dic objectForKey:@"deadline"] retain];
+        itemNum =([dic objectForKey:@"itemNum"]==[NSNull null])?0:[[dic objectForKey:@"itemNum"] intValue];
+        discount =([dic objectForKey:@"discount"]==[NSNull null])?0:[[dic objectForKey:@"discount"] floatValue];
+        currentPrice = ([dic objectForKey:@"currentPrice"]==[NSNull null])?0:[[dic objectForKey:@"currentPrice"] floatValue];
+        originalPrice = ([dic objectForKey:@"originalPrice"]==[NSNull null])?0:[[dic objectForKey:@"originalPrice"] floatValue];
+        requirePoint=([dic objectForKey:@"requirePoint"]==[NSNull null])?0:[[dic objectForKey:@"requirePoint"] intValue];
+        if ((id)category == [NSNull null]) category = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+        if ((id)content == [NSNull null]) content = @""; 
+        if ((id)title == [NSNull null]) title = @""; 
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [category release];
+    [deadline release];
+    [content release];
+    [picName release];
+    [title release];
+    [super dealloc];
+}
+@end

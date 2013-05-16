@@ -1,0 +1,42 @@
+//
+//  Connectreguest.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "UnitrueLabel.h"
+#import "UserInfo.h"
+#import "MUser.h"
+#import "UIImageExtras.h"
+#import "UTTableViewController.h"
+@interface Connectreguest : UTTableViewController<UIActionSheetDelegate>
+{
+    IBOutlet PullRefreshTableView*       crtableView;
+    UIActionSheet*              actionButtonActionSheet;
+    UIActionSheet*              action;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    NSString*                   tel;
+    ImageCache                  *imageCache;
+    MUser*                      selectUser;
+    int userCount;
+    BOOL                        isLoading;
+    NSInteger mSeletedIndex;
+    BOOL mIsShownCellDetail;
+}
+@property (nonatomic,retain) NSMutableArray*             userArray;
+@property(nonatomic,assign)BOOL                         isLoading;
+-(void)initNavigation;
+- (IBAction)composeButtonTouch:(id)sender;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)connectrequest:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)connectrequestcount:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj;
+-(IBAction)chatClicked:(id)sender;
+-(IBAction)declineClicked:(id)sender;
+-(void) getCQList:(int)pageNo;
+- (void)connectrequestcount:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

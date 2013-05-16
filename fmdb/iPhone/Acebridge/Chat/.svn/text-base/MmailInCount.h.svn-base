@@ -1,0 +1,21 @@
+//
+//  MmailInCount.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-9-3.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MmailInCount : NSObject
+{
+
+    int count;
+
+}
+@property(nonatomic,assign)int                 count;
+
++ (MmailInCount*)mmailInCountWithJsonDictionary:(NSDictionary*)dic;
+- (MmailInCount*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

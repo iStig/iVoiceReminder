@@ -1,0 +1,34 @@
+//
+//  MBirthday.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MBirthday : NSObject
+{
+    int                 bDay;
+    NSString*           userName;
+    NSString*           email;
+    NSString*           company;
+    NSDate*             birthday;
+    int                 userID;
+    NSString*           mobile;
+    NSString*           school;
+    NSString*           picName;
+}
+@property(nonatomic,retain)NSString*           picName;
+@property(nonatomic,assign)int                 bDay;
+@property(nonatomic,retain)NSString*           userName;
+@property(nonatomic,retain)NSString*           email;
+@property(nonatomic,retain)NSString*           company;
+@property(nonatomic,retain)NSDate*             birthday;
+@property(nonatomic,assign)int                 userID;
+@property(nonatomic,retain)NSString*           mobile;
+@property(nonatomic,retain)NSString*           school;
++ (MBirthday*)mbirthdayWithJsonDictionary:(NSDictionary*)dic;
+- (MBirthday*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

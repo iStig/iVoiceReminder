@@ -1,0 +1,54 @@
+//
+//  Network.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <CoreLocation/CoreLocation.h>
+#import "WeiboClient.h"
+#import "UnitrueLabel.h"
+#import "ImageCache.h"
+#import "MUser.h"
+#import "UTTableViewController.h"
+#import "MNotification.h"
+@interface Network : UTTableViewController<UIActionSheetDelegate,UnitrueLabelDelegate,CLLocationManagerDelegate>
+{
+    IBOutlet PullRefreshTableView*       nttableView;
+    UIActionSheet*              actionButtonActionSheet;
+    
+    CLLocationManager*          locationManager;
+    CLLocation*                 checkinLocation;
+    double                      latitude,longitude;
+    
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    NSString*                   tel;
+    ImageCache                  *imageCache;
+    MUser*                      selectUser;
+    BOOL                        isLoading;
+    BOOL                        isCount;
+}
+@property (nonatomic,retain) NSMutableArray*             userArray;
+@property(nonatomic,assign)BOOL                         isLoading;
+- (IBAction)composeButtonTouch:(id)sender;
+-(IBAction)telClicked:(id)sender;
+-(IBAction)leftClicked:(id)sender;
+-(IBAction)connectClicked:(id)sender;
+-(void)initNavigation;
+- (void)updateLocation:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)nearbyusers:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)loadData;
+- (void)changeChannel:(id)sender;
+-(IBAction)chatClicked:(id)sender;
+-(void)getCPDate:(int)pageNo;
+- (void)ncountRequest:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)bcountRequest:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void) ncount;
+-(void) bcount;
+-(IBAction)getNext:(id)sender;
+@end

@@ -1,0 +1,37 @@
+//
+//  Currentplace9.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-12.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "ImageCache.h"
+#import "UTTableViewController.h"
+#import "iToast.h"
+#import "WeiboClient.h"
+#import "PublicUtils.h"
+#import <CoreLocation/CoreLocation.h>
+@interface Currentplace9 : UTTableViewController<CLLocationManagerDelegate>
+{
+    UIActionSheet*              action;
+    IBOutlet PullRefreshTableView*      cpTableView;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    ImageCache                  *imageCache;
+    BOOL                        isLoading;
+    CLLocationManager*          locationManager;
+    CLLocation*                 checkinLocation;
+    double                      latitude,longitude;
+}
+@property (nonatomic,retain) NSMutableArray*             userArray;
+
+- (IBAction)composeButtonTouch:(id)sender;
+- (void)updateImage:(UIButton*)userbtn imageName:(NSString*) imageName;
+- (IBAction)leftClicked:(id)sender;
+- (void)initNavigation;
+
+-(void)getCPDate:(int)pageNo;
+-(IBAction)userClicked:(id)sender;
+@end

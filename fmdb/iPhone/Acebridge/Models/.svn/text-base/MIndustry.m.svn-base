@@ -1,0 +1,32 @@
+//
+//  MIndustry.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MIndustry.h"
+
+@implementation MIndustry
+@synthesize industryID,industryName;
+
++ (MIndustry*)mindustryWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MIndustry alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MIndustry*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        industryID =  ([dic objectForKey:@"industryID"]==[NSNull null])?0:[[dic objectForKey:@"industryID"] intValue];
+        industryName= [[dic objectForKey:@"industryName"] retain];
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [industryName release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,27 @@
+//
+//  ShareView.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+@interface ShareView : UIViewController<UITextFieldDelegate>
+{
+    IBOutlet UIView*            sendView;
+    IBOutlet UITextField*       sendText;
+    int                         toUserID;
+    WeiboClient*                weiboClient;
+    int                         type;
+    int                         relatedID;
+}
+@property(nonatomic,assign)int toUserID;
+@property(nonatomic,assign)int type;
+@property(nonatomic,assign)int relatedID;
+-(IBAction)send:(id)sender;
+- (void)InitNavigationBarItems;
+-(void)back;
+- (void)sendShare:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

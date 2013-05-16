@@ -7,20 +7,99 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		621FC7B41727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B11727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png */; };
+		621FC7B51727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B21727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png */; };
+		621FC7B61727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B31727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png */; };
+		627872E41728F4280069A5F9 /* elastoplast_@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872E21728F4280069A5F9 /* elastoplast_@2X.png */; };
+		627872E51728F4280069A5F9 /* elastoplast.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872E31728F4280069A5F9 /* elastoplast.png */; };
+		627872E81728F4460069A5F9 /* grey_wash_wall_@2X.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872E61728F4460069A5F9 /* grey_wash_wall_@2X.png */; };
+		627872E91728F4460069A5F9 /* grey_wash_wall.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872E71728F4460069A5F9 /* grey_wash_wall.png */; };
+		627872EC172B740F0069A5F9 /* 编辑.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872EB172B740F0069A5F9 /* 编辑.png */; };
+		627872EE172B74680069A5F9 /* button.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872ED172B74680069A5F9 /* button.png */; };
+		627872F2172B74820069A5F9 /* 删除.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F1172B74820069A5F9 /* 删除.png */; };
+		627872F4172B74CA0069A5F9 /* 音频.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F3172B74CA0069A5F9 /* 音频.png */; };
+		627872F9172B74F20069A5F9 /* 切换到键盘-s.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F5172B74F20069A5F9 /* 切换到键盘-s.png */; };
+		627872FA172B74F20069A5F9 /* 切换到键盘.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F6172B74F20069A5F9 /* 切换到键盘.png */; };
+		627872FB172B74F20069A5F9 /* 切换到语音-s.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F7172B74F20069A5F9 /* 切换到语音-s.png */; };
+		627872FC172B74F20069A5F9 /* 切换到语音.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872F8172B74F20069A5F9 /* 切换到语音.png */; };
+		627872FE172B768E0069A5F9 /* 返回.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872FD172B768E0069A5F9 /* 返回.png */; };
+		62787300172B79900069A5F9 /* 进入.png in Resources */ = {isa = PBXBuildFile; fileRef = 627872FF172B79900069A5F9 /* 进入.png */; };
+		62787302172B7A140069A5F9 /* 列表.png in Resources */ = {isa = PBXBuildFile; fileRef = 62787301172B7A140069A5F9 /* 列表.png */; };
+		62787304172B7D010069A5F9 /* 搜索下拉1.png in Resources */ = {isa = PBXBuildFile; fileRef = 62787303172B7D010069A5F9 /* 搜索下拉1.png */; };
+		62787306172B7E860069A5F9 /* 设置头像背景.png in Resources */ = {isa = PBXBuildFile; fileRef = 62787305172B7E850069A5F9 /* 设置头像背景.png */; };
+		6278730A172B819C0069A5F9 /* 时钟.png in Resources */ = {isa = PBXBuildFile; fileRef = 62787309172B819B0069A5F9 /* 时钟.png */; };
+		6278730C172B84290069A5F9 /* 设置.png in Resources */ = {isa = PBXBuildFile; fileRef = 6278730B172B84290069A5F9 /* 设置.png */; };
+		6278730E172B93170069A5F9 /* 设置副本.png in Resources */ = {isa = PBXBuildFile; fileRef = 6278730D172B93160069A5F9 /* 设置副本.png */; };
+		62787310172B9A8D0069A5F9 /* 主背景.png in Resources */ = {isa = PBXBuildFile; fileRef = 6278730F172B9A8D0069A5F9 /* 主背景.png */; };
+		6278731E172BB2990069A5F9 /* 话筒.png in Resources */ = {isa = PBXBuildFile; fileRef = 6278731D172BB2990069A5F9 /* 话筒.png */; };
+		62787320172CDF4B0069A5F9 /* 皮卡丘的短信铃声_铃声之家cnwav.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6278731F172CDF4B0069A5F9 /* 皮卡丘的短信铃声_铃声之家cnwav.mp3 */; };
 		62833D80171E83CF00566B23 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D7F171E83CF00566B23 /* UIKit.framework */; };
 		62833D82171E83CF00566B23 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D81171E83CF00566B23 /* Foundation.framework */; };
 		62833D84171E83CF00566B23 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833D83171E83CF00566B23 /* CoreGraphics.framework */; };
 		62833D8A171E83CF00566B23 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 62833D88171E83CF00566B23 /* InfoPlist.strings */; };
 		62833D8C171E83CF00566B23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D8B171E83CF00566B23 /* main.m */; };
 		62833D90171E83CF00566B23 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D8F171E83CF00566B23 /* AppDelegate.m */; };
-		62833D92171E83CF00566B23 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D91171E83CF00566B23 /* Default.png */; };
-		62833D94171E83CF00566B23 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D93171E83CF00566B23 /* Default@2x.png */; };
 		62833D96171E83CF00566B23 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62833D95171E83CF00566B23 /* Default-568h@2x.png */; };
-		62833D99171E83CF00566B23 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D98171E83CF00566B23 /* ViewController.m */; };
-		62833D9C171E83CF00566B23 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62833D9A171E83CF00566B23 /* ViewController.xib */; };
+		62833D99171E83CF00566B23 /* iVoiceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833D98171E83CF00566B23 /* iVoiceController.m */; };
+		62833D9C171E83CF00566B23 /* iVoiceController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62833D9A171E83CF00566B23 /* iVoiceController.xib */; };
+		62833DAD171E8D5500566B23 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833DA4171E8D5500566B23 /* FMDatabase.m */; };
+		62833DAE171E8D5500566B23 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833DA6171E8D5500566B23 /* FMDatabaseAdditions.m */; };
+		62833DAF171E8D5500566B23 /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833DA8171E8D5500566B23 /* FMDatabasePool.m */; };
+		62833DB0171E8D5500566B23 /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833DAA171E8D5500566B23 /* FMDatabaseQueue.m */; };
+		62833DB1171E8D5500566B23 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833DAC171E8D5500566B23 /* FMResultSet.m */; };
+		62833EE9171E8DDF00566B23 /* PathHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833EE8171E8DDF00566B23 /* PathHelper.m */; };
+		62833EFE171FDD0F00566B23 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833EFD171FDD0F00566B23 /* libsqlite3.dylib */; };
+		62833F01171FE39B00566B23 /* ASDepthModalViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62833F00171FE39B00566B23 /* ASDepthModalViewController.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		62833F04171FE8E800566B23 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62833F03171FE8E800566B23 /* QuartzCore.framework */; };
+		62B956751728BD6A00FB88BA /* 背景话筒.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B956741728BD6A00FB88BA /* 背景话筒.png */; };
+		62B956771728BEE300FB88BA /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B956761728BEE300FB88BA /* Default@2x.png */; };
+		62B956791728BEEE00FB88BA /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B956781728BEEE00FB88BA /* Default.png */; };
+		62B956801728F05C00FB88BA /* acconnt_s.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B9567C1728F05C00FB88BA /* acconnt_s.png */; };
+		62B956811728F05C00FB88BA /* acconnt_s@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B9567D1728F05C00FB88BA /* acconnt_s@2x.png */; };
+		62B956821728F05C00FB88BA /* acconnt.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B9567E1728F05C00FB88BA /* acconnt.png */; };
+		62B956831728F05C00FB88BA /* acconnt@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B9567F1728F05C00FB88BA /* acconnt@2x.png */; };
+		62B956851728F0ED00FB88BA /* 侧滑背景.png in Resources */ = {isa = PBXBuildFile; fileRef = 62B956841728F0ED00FB88BA /* 侧滑背景.png */; };
+		62BB80BD1724D0AA007B641F /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62BB80BC1724D0AA007B641F /* AVFoundation.framework */; };
+		62BB80D01724D43D007B641F /* GTMBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 62BB80CF1724D43D007B641F /* GTMBase64.m */; };
+		62BB80D8172501EF007B641F /* VoiceListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62BB80D6172501EF007B641F /* VoiceListViewController.m */; };
+		62BB80D9172501EF007B641F /* VoiceListViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62BB80D7172501EF007B641F /* VoiceListViewController.xib */; };
+		62BB80DD17250BF6007B641F /* VoiceModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 62BB80DC17250BF6007B641F /* VoiceModel.m */; };
+		62BB80DF17251749007B641F /* VoiceCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62BB80DE17251749007B641F /* VoiceCell.xib */; };
+		62DBB5531737490F007ACD26 /* 确定按钮.png in Resources */ = {isa = PBXBuildFile; fileRef = 62DBB5521737490F007ACD26 /* 确定按钮.png */; };
+		62E7FB3B1743383300C66545 /* lunch.png in Resources */ = {isa = PBXBuildFile; fileRef = 62E7FB3A1743383300C66545 /* lunch.png */; };
+		62E7FB3F1743870000C66545 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62E7FB3D174386FF00C66545 /* SettingViewController.m */; };
+		62E7FB401743870000C66545 /* SettingViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 62E7FB3E174386FF00C66545 /* SettingViewController.xib */; };
+		62E7FB44174389A200C66545 /* SMGlowLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 62E7FB43174389A200C66545 /* SMGlowLabel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		621FC7B017279A440054C9C2 /* PublicDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicDef.h; sourceTree = "<group>"; };
+		621FC7B11727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iPhone_Glossy_Icon_icon.png; sourceTree = "<group>"; };
+		621FC7B21727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iPhoneRetina_Glossy_Icon_icon.png; sourceTree = "<group>"; };
+		621FC7B31727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iTunesArtwork_Glossy_Icon_icon.png; sourceTree = "<group>"; };
+		627872E21728F4280069A5F9 /* elastoplast_@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "elastoplast_@2X.png"; sourceTree = "<group>"; };
+		627872E31728F4280069A5F9 /* elastoplast.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = elastoplast.png; sourceTree = "<group>"; };
+		627872E61728F4460069A5F9 /* grey_wash_wall_@2X.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "grey_wash_wall_@2X.png"; sourceTree = "<group>"; };
+		627872E71728F4460069A5F9 /* grey_wash_wall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grey_wash_wall.png; sourceTree = "<group>"; };
+		627872EB172B740F0069A5F9 /* 编辑.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "编辑.png"; sourceTree = "<group>"; };
+		627872ED172B74680069A5F9 /* button.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button.png; sourceTree = "<group>"; };
+		627872F1172B74820069A5F9 /* 删除.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "删除.png"; sourceTree = "<group>"; };
+		627872F3172B74CA0069A5F9 /* 音频.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "音频.png"; sourceTree = "<group>"; };
+		627872F5172B74F20069A5F9 /* 切换到键盘-s.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "切换到键盘-s.png"; sourceTree = "<group>"; };
+		627872F6172B74F20069A5F9 /* 切换到键盘.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "切换到键盘.png"; sourceTree = "<group>"; };
+		627872F7172B74F20069A5F9 /* 切换到语音-s.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "切换到语音-s.png"; sourceTree = "<group>"; };
+		627872F8172B74F20069A5F9 /* 切换到语音.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "切换到语音.png"; sourceTree = "<group>"; };
+		627872FD172B768E0069A5F9 /* 返回.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "返回.png"; sourceTree = "<group>"; };
+		627872FF172B79900069A5F9 /* 进入.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "进入.png"; sourceTree = "<group>"; };
+		62787301172B7A140069A5F9 /* 列表.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "列表.png"; sourceTree = "<group>"; };
+		62787303172B7D010069A5F9 /* 搜索下拉1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "搜索下拉1.png"; sourceTree = "<group>"; };
+		62787305172B7E850069A5F9 /* 设置头像背景.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "设置头像背景.png"; sourceTree = "<group>"; };
+		62787309172B819B0069A5F9 /* 时钟.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "时钟.png"; sourceTree = "<group>"; };
+		6278730B172B84290069A5F9 /* 设置.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "设置.png"; path = "fmdb/设置.png"; sourceTree = "<group>"; };
+		6278730D172B93160069A5F9 /* 设置副本.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "设置副本.png"; sourceTree = "<group>"; };
+		6278730F172B9A8D0069A5F9 /* 主背景.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "主背景.png"; sourceTree = "<group>"; };
+		6278731D172BB2990069A5F9 /* 话筒.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "话筒.png"; sourceTree = "<group>"; };
+		6278731F172CDF4B0069A5F9 /* 皮卡丘的短信铃声_铃声之家cnwav.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "皮卡丘的短信铃声_铃声之家cnwav.mp3"; sourceTree = "<group>"; };
 		62833D7C171E83CF00566B23 /* iVoiceReminder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iVoiceReminder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		62833D7F171E83CF00566B23 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		62833D81171E83CF00566B23 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -31,12 +110,51 @@
 		62833D8D171E83CF00566B23 /* iVoiceReminder-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iVoiceReminder-Prefix.pch"; sourceTree = "<group>"; };
 		62833D8E171E83CF00566B23 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		62833D8F171E83CF00566B23 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		62833D91171E83CF00566B23 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
-		62833D93171E83CF00566B23 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		62833D95171E83CF00566B23 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		62833D97171E83CF00566B23 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		62833D98171E83CF00566B23 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		62833D9B171E83CF00566B23 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+		62833D97171E83CF00566B23 /* iVoiceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iVoiceController.h; sourceTree = "<group>"; };
+		62833D98171E83CF00566B23 /* iVoiceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iVoiceController.m; sourceTree = "<group>"; };
+		62833D9B171E83CF00566B23 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/iVoiceController.xib; sourceTree = "<group>"; };
+		62833DA3171E8D5500566B23 /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabase.h; sourceTree = "<group>"; };
+		62833DA4171E8D5500566B23 /* FMDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabase.m; sourceTree = "<group>"; };
+		62833DA5171E8D5500566B23 /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseAdditions.h; sourceTree = "<group>"; };
+		62833DA6171E8D5500566B23 /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
+		62833DA7171E8D5500566B23 /* FMDatabasePool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabasePool.h; sourceTree = "<group>"; };
+		62833DA8171E8D5500566B23 /* FMDatabasePool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabasePool.m; sourceTree = "<group>"; };
+		62833DA9171E8D5500566B23 /* FMDatabaseQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseQueue.h; sourceTree = "<group>"; };
+		62833DAA171E8D5500566B23 /* FMDatabaseQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseQueue.m; sourceTree = "<group>"; };
+		62833DAB171E8D5500566B23 /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
+		62833DAC171E8D5500566B23 /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMResultSet.m; sourceTree = "<group>"; };
+		62833EE7171E8DDF00566B23 /* PathHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathHelper.h; sourceTree = "<group>"; };
+		62833EE8171E8DDF00566B23 /* PathHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PathHelper.m; sourceTree = "<group>"; };
+		62833EFD171FDD0F00566B23 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
+		62833EFF171FE39B00566B23 /* ASDepthModalViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASDepthModalViewController.h; path = "../../../Downloads/Demos/ASDepthModal 弹出视图/ASDepthModal/ASDepthModalViewController.h"; sourceTree = "<group>"; };
+		62833F00171FE39B00566B23 /* ASDepthModalViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ASDepthModalViewController.m; path = "../../../Downloads/Demos/ASDepthModal 弹出视图/ASDepthModal/ASDepthModalViewController.m"; sourceTree = "<group>"; };
+		62833F03171FE8E800566B23 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		62B956741728BD6A00FB88BA /* 背景话筒.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "背景话筒.png"; path = "../背景话筒.png"; sourceTree = "<group>"; };
+		62B956761728BEE300FB88BA /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		62B956781728BEEE00FB88BA /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		62B9567C1728F05C00FB88BA /* acconnt_s.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = acconnt_s.png; sourceTree = "<group>"; };
+		62B9567D1728F05C00FB88BA /* acconnt_s@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "acconnt_s@2x.png"; sourceTree = "<group>"; };
+		62B9567E1728F05C00FB88BA /* acconnt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = acconnt.png; sourceTree = "<group>"; };
+		62B9567F1728F05C00FB88BA /* acconnt@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "acconnt@2x.png"; sourceTree = "<group>"; };
+		62B956841728F0ED00FB88BA /* 侧滑背景.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "侧滑背景.png"; sourceTree = "<group>"; };
+		62BB80BC1724D0AA007B641F /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		62BB80CE1724D43D007B641F /* GTMBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMBase64.h; sourceTree = "<group>"; };
+		62BB80CF1724D43D007B641F /* GTMBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMBase64.m; sourceTree = "<group>"; };
+		62BB80D11724D460007B641F /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
+		62BB80D5172501EF007B641F /* VoiceListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoiceListViewController.h; sourceTree = "<group>"; };
+		62BB80D6172501EF007B641F /* VoiceListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VoiceListViewController.m; sourceTree = "<group>"; };
+		62BB80D7172501EF007B641F /* VoiceListViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = VoiceListViewController.xib; sourceTree = "<group>"; };
+		62BB80DB17250BF6007B641F /* VoiceModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoiceModel.h; sourceTree = "<group>"; };
+		62BB80DC17250BF6007B641F /* VoiceModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VoiceModel.m; sourceTree = "<group>"; };
+		62BB80DE17251749007B641F /* VoiceCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = VoiceCell.xib; path = ../VoiceCell.xib; sourceTree = "<group>"; };
+		62DBB5521737490F007ACD26 /* 确定按钮.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "确定按钮.png"; path = "fmdb/确定按钮.png"; sourceTree = "<group>"; };
+		62E7FB3A1743383300C66545 /* lunch.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = lunch.png; sourceTree = "<group>"; };
+		62E7FB3C174386FE00C66545 /* SettingViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SettingViewController.h; path = ../SettingViewController.h; sourceTree = "<group>"; };
+		62E7FB3D174386FF00C66545 /* SettingViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SettingViewController.m; path = ../SettingViewController.m; sourceTree = "<group>"; };
+		62E7FB3E174386FF00C66545 /* SettingViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = SettingViewController.xib; path = ../SettingViewController.xib; sourceTree = "<group>"; };
+		62E7FB42174389A200C66545 /* SMGlowLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMGlowLabel.h; sourceTree = "<group>"; };
+		62E7FB43174389A200C66545 /* SMGlowLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMGlowLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +162,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				62BB80BD1724D0AA007B641F /* AVFoundation.framework in Frameworks */,
+				62833F04171FE8E800566B23 /* QuartzCore.framework in Frameworks */,
+				62833EFE171FDD0F00566B23 /* libsqlite3.dylib in Frameworks */,
 				62833D80171E83CF00566B23 /* UIKit.framework in Frameworks */,
 				62833D82171E83CF00566B23 /* Foundation.framework in Frameworks */,
 				62833D84171E83CF00566B23 /* CoreGraphics.framework in Frameworks */,
@@ -53,9 +174,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		627872EA172B73310069A5F9 /* model */ = {
+			isa = PBXGroup;
+			children = (
+				62BB80DB17250BF6007B641F /* VoiceModel.h */,
+				62BB80DC17250BF6007B641F /* VoiceModel.m */,
+			);
+			name = model;
+			sourceTree = "<group>";
+		};
 		62833D73171E83CF00566B23 = {
 			isa = PBXGroup;
 			children = (
+				62B9567A1728EFC300FB88BA /* Resource */,
+				62833EEA171E8E6300566B23 /* TOOLS */,
 				62833D85171E83CF00566B23 /* iVoiceReminder */,
 				62833D7E171E83CF00566B23 /* Frameworks */,
 				62833D7D171E83CF00566B23 /* Products */,
@@ -73,6 +205,9 @@
 		62833D7E171E83CF00566B23 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				62833EFD171FDD0F00566B23 /* libsqlite3.dylib */,
+				62BB80BC1724D0AA007B641F /* AVFoundation.framework */,
+				62833F03171FE8E800566B23 /* QuartzCore.framework */,
 				62833D7F171E83CF00566B23 /* UIKit.framework */,
 				62833D81171E83CF00566B23 /* Foundation.framework */,
 				62833D83171E83CF00566B23 /* CoreGraphics.framework */,
@@ -83,11 +218,11 @@
 		62833D85171E83CF00566B23 /* iVoiceReminder */ = {
 			isa = PBXGroup;
 			children = (
+				62E7FB411743870C00C66545 /* ViewControllers */,
+				627872EA172B73310069A5F9 /* model */,
 				62833D8E171E83CF00566B23 /* AppDelegate.h */,
 				62833D8F171E83CF00566B23 /* AppDelegate.m */,
-				62833D97171E83CF00566B23 /* ViewController.h */,
-				62833D98171E83CF00566B23 /* ViewController.m */,
-				62833D9A171E83CF00566B23 /* ViewController.xib */,
+				62BB80E017251754007B641F /* xib */,
 				62833D86171E83CF00566B23 /* Supporting Files */,
 			);
 			path = iVoiceReminder;
@@ -96,15 +231,172 @@
 		62833D86171E83CF00566B23 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				62B956781728BEEE00FB88BA /* Default.png */,
+				62B956761728BEE300FB88BA /* Default@2x.png */,
+				6278731D172BB2990069A5F9 /* 话筒.png */,
+				62B956741728BD6A00FB88BA /* 背景话筒.png */,
+				6278730F172B9A8D0069A5F9 /* 主背景.png */,
+				62833D95171E83CF00566B23 /* Default-568h@2x.png */,
+				621FC7B017279A440054C9C2 /* PublicDef.h */,
 				62833D87171E83CF00566B23 /* iVoiceReminder-Info.plist */,
 				62833D88171E83CF00566B23 /* InfoPlist.strings */,
 				62833D8B171E83CF00566B23 /* main.m */,
 				62833D8D171E83CF00566B23 /* iVoiceReminder-Prefix.pch */,
-				62833D91171E83CF00566B23 /* Default.png */,
-				62833D93171E83CF00566B23 /* Default@2x.png */,
-				62833D95171E83CF00566B23 /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		62833DA2171E8D5500566B23 /* FMDB */ = {
+			isa = PBXGroup;
+			children = (
+				62833DA3171E8D5500566B23 /* FMDatabase.h */,
+				62833DA4171E8D5500566B23 /* FMDatabase.m */,
+				62833DA5171E8D5500566B23 /* FMDatabaseAdditions.h */,
+				62833DA6171E8D5500566B23 /* FMDatabaseAdditions.m */,
+				62833DA7171E8D5500566B23 /* FMDatabasePool.h */,
+				62833DA8171E8D5500566B23 /* FMDatabasePool.m */,
+				62833DA9171E8D5500566B23 /* FMDatabaseQueue.h */,
+				62833DAA171E8D5500566B23 /* FMDatabaseQueue.m */,
+				62833DAB171E8D5500566B23 /* FMResultSet.h */,
+				62833DAC171E8D5500566B23 /* FMResultSet.m */,
+			);
+			name = FMDB;
+			path = fmdb;
+			sourceTree = "<group>";
+		};
+		62833EEA171E8E6300566B23 /* TOOLS */ = {
+			isa = PBXGroup;
+			children = (
+				62E7FB45174389A900C66545 /* LEDLabel */,
+				62BB80DA172509E9007B641F /* GTMBase64 */,
+				62833F02171FE39F00566B23 /* POPVIEW */,
+				62833DA2171E8D5500566B23 /* FMDB */,
+				62833EEB171E8E9400566B23 /* PathHelper */,
+			);
+			name = TOOLS;
+			sourceTree = "<group>";
+		};
+		62833EEB171E8E9400566B23 /* PathHelper */ = {
+			isa = PBXGroup;
+			children = (
+				62833EE7171E8DDF00566B23 /* PathHelper.h */,
+				62833EE8171E8DDF00566B23 /* PathHelper.m */,
+			);
+			name = PathHelper;
+			sourceTree = "<group>";
+		};
+		62833F02171FE39F00566B23 /* POPVIEW */ = {
+			isa = PBXGroup;
+			children = (
+				62833EFF171FE39B00566B23 /* ASDepthModalViewController.h */,
+				62833F00171FE39B00566B23 /* ASDepthModalViewController.m */,
+			);
+			name = POPVIEW;
+			sourceTree = "<group>";
+		};
+		62833F07171FF5A700566B23 /* icon */ = {
+			isa = PBXGroup;
+			children = (
+				621FC7B11727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png */,
+				621FC7B21727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png */,
+				621FC7B31727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png */,
+			);
+			name = icon;
+			sourceTree = "<group>";
+		};
+		62B9567A1728EFC300FB88BA /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				62DBB5551738949D007ACD26 /* picture */,
+				62DBB55417389483007ACD26 /* 铃声 */,
+				62833F07171FF5A700566B23 /* icon */,
+			);
+			name = Resource;
+			sourceTree = "<group>";
+		};
+		62BB80DA172509E9007B641F /* GTMBase64 */ = {
+			isa = PBXGroup;
+			children = (
+				62BB80D11724D460007B641F /* GTMDefines.h */,
+				62BB80CE1724D43D007B641F /* GTMBase64.h */,
+				62BB80CF1724D43D007B641F /* GTMBase64.m */,
+			);
+			name = GTMBase64;
+			sourceTree = "<group>";
+		};
+		62BB80E017251754007B641F /* xib */ = {
+			isa = PBXGroup;
+			children = (
+				62BB80DE17251749007B641F /* VoiceCell.xib */,
+			);
+			name = xib;
+			sourceTree = "<group>";
+		};
+		62DBB55417389483007ACD26 /* 铃声 */ = {
+			isa = PBXGroup;
+			children = (
+				6278731F172CDF4B0069A5F9 /* 皮卡丘的短信铃声_铃声之家cnwav.mp3 */,
+			);
+			name = "铃声";
+			sourceTree = "<group>";
+		};
+		62DBB5551738949D007ACD26 /* picture */ = {
+			isa = PBXGroup;
+			children = (
+				627872E61728F4460069A5F9 /* grey_wash_wall_@2X.png */,
+				627872E71728F4460069A5F9 /* grey_wash_wall.png */,
+				62787309172B819B0069A5F9 /* 时钟.png */,
+				627872FD172B768E0069A5F9 /* 返回.png */,
+				627872FF172B79900069A5F9 /* 进入.png */,
+				62787305172B7E850069A5F9 /* 设置头像背景.png */,
+				627872F3172B74CA0069A5F9 /* 音频.png */,
+				627872F5172B74F20069A5F9 /* 切换到键盘-s.png */,
+				627872F6172B74F20069A5F9 /* 切换到键盘.png */,
+				627872F7172B74F20069A5F9 /* 切换到语音-s.png */,
+				627872F8172B74F20069A5F9 /* 切换到语音.png */,
+				627872E21728F4280069A5F9 /* elastoplast_@2X.png */,
+				627872E31728F4280069A5F9 /* elastoplast.png */,
+				62B956841728F0ED00FB88BA /* 侧滑背景.png */,
+				6278730D172B93160069A5F9 /* 设置副本.png */,
+				62787303172B7D010069A5F9 /* 搜索下拉1.png */,
+				62B9567C1728F05C00FB88BA /* acconnt_s.png */,
+				62B9567D1728F05C00FB88BA /* acconnt_s@2x.png */,
+				62B9567E1728F05C00FB88BA /* acconnt.png */,
+				62B9567F1728F05C00FB88BA /* acconnt@2x.png */,
+				627872F1172B74820069A5F9 /* 删除.png */,
+				62787301172B7A140069A5F9 /* 列表.png */,
+				62E7FB3A1743383300C66545 /* lunch.png */,
+				627872ED172B74680069A5F9 /* button.png */,
+				627872EB172B740F0069A5F9 /* 编辑.png */,
+				6278730B172B84290069A5F9 /* 设置.png */,
+				62DBB5521737490F007ACD26 /* 确定按钮.png */,
+			);
+			name = picture;
+			sourceTree = "<group>";
+		};
+		62E7FB411743870C00C66545 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				62833D97171E83CF00566B23 /* iVoiceController.h */,
+				62833D98171E83CF00566B23 /* iVoiceController.m */,
+				62833D9A171E83CF00566B23 /* iVoiceController.xib */,
+				62BB80D5172501EF007B641F /* VoiceListViewController.h */,
+				62BB80D6172501EF007B641F /* VoiceListViewController.m */,
+				62BB80D7172501EF007B641F /* VoiceListViewController.xib */,
+				62E7FB3C174386FE00C66545 /* SettingViewController.h */,
+				62E7FB3D174386FF00C66545 /* SettingViewController.m */,
+				62E7FB3E174386FF00C66545 /* SettingViewController.xib */,
+			);
+			name = ViewControllers;
+			sourceTree = "<group>";
+		};
+		62E7FB45174389A900C66545 /* LEDLabel */ = {
+			isa = PBXGroup;
+			children = (
+				62E7FB42174389A200C66545 /* SMGlowLabel.h */,
+				62E7FB43174389A200C66545 /* SMGlowLabel.m */,
+			);
+			name = LEDLabel;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,10 +451,47 @@
 			buildActionMask = 2147483647;
 			files = (
 				62833D8A171E83CF00566B23 /* InfoPlist.strings in Resources */,
-				62833D92171E83CF00566B23 /* Default.png in Resources */,
-				62833D94171E83CF00566B23 /* Default@2x.png in Resources */,
 				62833D96171E83CF00566B23 /* Default-568h@2x.png in Resources */,
-				62833D9C171E83CF00566B23 /* ViewController.xib in Resources */,
+				62833D9C171E83CF00566B23 /* iVoiceController.xib in Resources */,
+				62BB80D9172501EF007B641F /* VoiceListViewController.xib in Resources */,
+				62BB80DF17251749007B641F /* VoiceCell.xib in Resources */,
+				621FC7B41727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png in Resources */,
+				621FC7B51727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png in Resources */,
+				621FC7B61727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png in Resources */,
+				62B956751728BD6A00FB88BA /* 背景话筒.png in Resources */,
+				62B956771728BEE300FB88BA /* Default@2x.png in Resources */,
+				62B956791728BEEE00FB88BA /* Default.png in Resources */,
+				62B956801728F05C00FB88BA /* acconnt_s.png in Resources */,
+				62B956811728F05C00FB88BA /* acconnt_s@2x.png in Resources */,
+				62B956821728F05C00FB88BA /* acconnt.png in Resources */,
+				62B956831728F05C00FB88BA /* acconnt@2x.png in Resources */,
+				62B956851728F0ED00FB88BA /* 侧滑背景.png in Resources */,
+				627872E41728F4280069A5F9 /* elastoplast_@2X.png in Resources */,
+				627872E51728F4280069A5F9 /* elastoplast.png in Resources */,
+				627872E81728F4460069A5F9 /* grey_wash_wall_@2X.png in Resources */,
+				627872E91728F4460069A5F9 /* grey_wash_wall.png in Resources */,
+				627872EC172B740F0069A5F9 /* 编辑.png in Resources */,
+				627872EE172B74680069A5F9 /* button.png in Resources */,
+				627872F2172B74820069A5F9 /* 删除.png in Resources */,
+				627872F4172B74CA0069A5F9 /* 音频.png in Resources */,
+				627872F9172B74F20069A5F9 /* 切换到键盘-s.png in Resources */,
+				627872FA172B74F20069A5F9 /* 切换到键盘.png in Resources */,
+				627872FB172B74F20069A5F9 /* 切换到语音-s.png in Resources */,
+				627872FC172B74F20069A5F9 /* 切换到语音.png in Resources */,
+				627872FE172B768E0069A5F9 /* 返回.png in Resources */,
+				62787300172B79900069A5F9 /* 进入.png in Resources */,
+				62787302172B7A140069A5F9 /* 列表.png in Resources */,
+				62787304172B7D010069A5F9 /* 搜索下拉1.png in Resources */,
+				62787306172B7E860069A5F9 /* 设置头像背景.png in Resources */,
+				6278730A172B819C0069A5F9 /* 时钟.png in Resources */,
+				6278730C172B84290069A5F9 /* 设置.png in Resources */,
+				6278730E172B93170069A5F9 /* 设置副本.png in Resources */,
+				62787310172B9A8D0069A5F9 /* 主背景.png in Resources */,
+				6278731E172BB2990069A5F9 /* 话筒.png in Resources */,
+				62787320172CDF4B0069A5F9 /* 皮卡丘的短信铃声_铃声之家cnwav.mp3 in Resources */,
+				62DBB5531737490F007ACD26 /* 确定按钮.png in Resources */,
+				62E7FB3B1743383300C66545 /* lunch.png in Resources */,
+				62E7FB401743870000C66545 /* SettingViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,7 +504,19 @@
 			files = (
 				62833D8C171E83CF00566B23 /* main.m in Sources */,
 				62833D90171E83CF00566B23 /* AppDelegate.m in Sources */,
-				62833D99171E83CF00566B23 /* ViewController.m in Sources */,
+				62833D99171E83CF00566B23 /* iVoiceController.m in Sources */,
+				62833DAD171E8D5500566B23 /* FMDatabase.m in Sources */,
+				62833DAE171E8D5500566B23 /* FMDatabaseAdditions.m in Sources */,
+				62833DAF171E8D5500566B23 /* FMDatabasePool.m in Sources */,
+				62833DB0171E8D5500566B23 /* FMDatabaseQueue.m in Sources */,
+				62833DB1171E8D5500566B23 /* FMResultSet.m in Sources */,
+				62833EE9171E8DDF00566B23 /* PathHelper.m in Sources */,
+				62833F01171FE39B00566B23 /* ASDepthModalViewController.m in Sources */,
+				62BB80D01724D43D007B641F /* GTMBase64.m in Sources */,
+				62BB80D8172501EF007B641F /* VoiceListViewController.m in Sources */,
+				62BB80DD17250BF6007B641F /* VoiceModel.m in Sources */,
+				62E7FB3F1743870000C66545 /* SettingViewController.m in Sources */,
+				62E7FB44174389A200C66545 /* SMGlowLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -190,12 +531,12 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
-		62833D9A171E83CF00566B23 /* ViewController.xib */ = {
+		62833D9A171E83CF00566B23 /* iVoiceController.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				62833D9B171E83CF00566B23 /* en */,
 			);
-			name = ViewController.xib;
+			name = iVoiceController.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -212,6 +553,7 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jianming Zhang (N9AC739BRU)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -227,6 +569,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = YES;
+				PROVISIONING_PROFILE = "70AA2DE1-B7FC-4C42-B80F-8C07EBDC69BC";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -242,6 +585,7 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jianming Zhang (N9AC739BRU)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -250,6 +594,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				PROVISIONING_PROFILE = "70AA2DE1-B7FC-4C42-B80F-8C07EBDC69BC";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -258,10 +603,14 @@
 		62833DA0171E83CF00566B23 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jianming Zhang (N9AC739BRU)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "iVoiceReminder/iVoiceReminder-Prefix.pch";
 				INFOPLIST_FILE = "iVoiceReminder/iVoiceReminder-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "70AA2DE1-B7FC-4C42-B80F-8C07EBDC69BC";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -269,10 +618,13 @@
 		62833DA1171E83CF00566B23 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer: Jianming Zhang (N9AC739BRU)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "iVoiceReminder/iVoiceReminder-Prefix.pch";
 				INFOPLIST_FILE = "iVoiceReminder/iVoiceReminder-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "70AA2DE1-B7FC-4C42-B80F-8C07EBDC69BC";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -296,6 +648,7 @@
 				62833DA1171E83CF00566B23 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

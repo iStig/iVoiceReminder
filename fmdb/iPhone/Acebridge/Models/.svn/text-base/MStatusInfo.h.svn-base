@@ -1,0 +1,38 @@
+//
+//  MStatusInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-18.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MStatusInfo : NSObject
+{
+    int             statusID;
+    NSString*       statusContent;
+    int             statusUserID;
+    NSString*       statusUserName;
+    NSDate*         statusTime;
+    NSString*       picName;
+    int             likeCount;
+    int             shareCount;
+    int             commentCount;
+    int             rank;
+    
+}
+@property(nonatomic,assign)int             rank;
+@property(nonatomic,assign)int             statusID;
+@property(nonatomic,retain)NSString*       statusContent;
+@property(nonatomic,assign)int             statusUserID;
+@property(nonatomic,retain)NSString*       statusUserName;
+@property(nonatomic,retain)NSDate*         statusTime;
+@property(nonatomic,retain)NSString*       picName;
+@property(nonatomic,assign)int             likeCount;
+@property(nonatomic,assign)int             shareCount;
+@property(nonatomic,assign)int             commentCount;
++ (MStatusInfo*)mstatusinfoWithJsonDictionary:(NSDictionary*)dic;
+- (MStatusInfo*)initWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*)getRank:(int)_rank;
+@end

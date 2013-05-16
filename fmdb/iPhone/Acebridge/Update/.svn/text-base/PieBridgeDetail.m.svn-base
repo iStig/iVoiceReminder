@@ -1,0 +1,377 @@
+//
+//  PieBridgeDetail.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-2.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "PieBridgeDetail.h"
+
+@implementation PieBridgeDetail
+@synthesize pbID;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    [self initNavigation];
+    [active startAnimating];
+    [self pbdetails];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 初始化导航栏点击事件
+-(void)initNavigation{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    //切换九宫格按钮
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)home{
+    [self.navigationController  popToRootViewControllerAnimated:YES];
+}
+-(void)back{
+    [self.navigationController  popViewControllerAnimated:YES];
+}
+#pragma mark - 请求数据
+-(void) pbdetails
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(pbdetailResult:obj:)];
+    [weiboClient piebridgedetail:pbID];
+}
+
+#pragma mark - 数据解析
+- (void)pbdetailResult:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取event数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        mpbdetail = [[MPBDetail mpiebridgeWithJsonDictionary:[dic objectForKey:@"pieBridgeDetail"]] retain];
+        [active stopAnimating];
+        [active setHidden:YES];
+        [self bindHead];
+        [pdTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+-(void)bindHead
+{
+    UIImageView* face = (UIImageView*)[headView viewWithTag:1];
+    [self updateImage:face];
+    UILabel* labName = (UILabel*)[headView viewWithTag:2];
+    labName.text = mpbdetail.publisherName;
+    UILabel* labage = (UILabel*)[headView viewWithTag:3];
+    labage.text=[NSString stringWithFormat:@"%d",mpbdetail.age];
+    UILabel* labCon = (UILabel*)[headView viewWithTag:4];
+    labCon.text = mpbdetail.constellation;
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%@/%@_medium.jpg",IMAGE_PATH,mpbdetail.picName,mpbdetail.picName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+   
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+    
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+#pragma mark - tableview事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+	return 4;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(section==0)
+        return 4;
+    return 1;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(indexPath.section == 0)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"PBDetailCell" owner:nil options:nil] objectAtIndex:0];
+    }
+    if(indexPath.section == 1 || indexPath.section==2)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"PBDetailCell" owner:nil options:nil] objectAtIndex:1];
+    }
+    if(indexPath.section == 3)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"PBDetailCell" owner:nil options:nil] objectAtIndex:2];
+    }
+    if(indexPath.section!=3)
+    {
+        UILabel* labtitle = (UILabel*)[cell viewWithTag:1];
+        UILabel* labvalue = (UILabel*)[cell viewWithTag:2];
+        NSString *value;
+        if(indexPath.section==0)
+        {
+            if(indexPath.row==0)
+            {
+                labtitle.text = @"Location";
+                labvalue.text = mpbdetail.location;
+            }
+            if(indexPath.row==1)
+            {
+                labtitle.text = @"Height";
+                labvalue.text = [NSString stringWithFormat:@"%d",mpbdetail.height];
+            }
+            if(indexPath.row==2)
+            {
+                labtitle.text = @"Weight";
+                labvalue.text = [NSString stringWithFormat:@"%d",mpbdetail.weight];
+            }
+            if(indexPath.row==3)
+            {
+                labtitle.text = @"Income";
+                if (mpbdetail.income==0) {
+                    labvalue.text =@"any";
+                }
+                if (mpbdetail.income==1) {
+                    labvalue.text =@"<100k";
+                }
+                if (mpbdetail.income==2) {
+                    labvalue.text =@"100-250k";
+                }
+                if (mpbdetail.income==3) {
+                    labvalue.text =@"250-500k";
+                }
+                if (mpbdetail.income==4) {
+                    labvalue.text =@"500k-1mn";
+                }
+                if (mpbdetail.income==5) {
+                    labvalue.text =@"1mn-2.5mn";
+                }
+                if (mpbdetail.income==6) {
+                    labvalue.text =@">2.5mn";
+                }
+                
+                //labvalue.text = [NSString stringWithFormat:@"%d",mpbdetail.income];;
+            }
+        }
+        if(indexPath.section==1)
+        {
+            labtitle.text=@"Self-description:";
+            value = mpbdetail.selfintroduction;
+        }
+        if(indexPath.section==2)
+        {
+            labtitle.text =@"I am looking for";
+            value=mpbdetail.pbRequirement;
+        }
+        if(indexPath.section==1||indexPath.section==2)
+        {
+            UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:16];
+            CGSize textsize = [value sizeWithFont:myfont constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            labvalue.numberOfLines = textsize.height/16+1;
+            labvalue.frame=CGRectMake(20, 28, textsize.width, textsize.height);
+            labvalue.text =value;
+        }
+    }
+    if(indexPath.section ==3)
+    {
+        UIButton* btn = (UIButton*)[cell viewWithTag:1];
+        btn.hidden=NO;
+        if(mpbdetail.like)
+        {
+            [btn setTitle:@"Dislike" forState:UIControlStateNormal];
+            [btn setBackgroundImage:[UIImage imageNamed:@"button07.png"] forState:UIControlStateNormal];
+            [btn setBackgroundImage:[UIImage imageNamed:@"button07.png"] forState:UIControlStateSelected];
+        }
+        //[cell setBackgroundColor:[UIColor clearColor]];
+        UIView* view = [[UIView alloc] init];
+        [cell setBackgroundView:view];
+        [btn addTarget:self action:@selector(likeOp:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    // Configure the cell...
+    return cell; 
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.section == 1||indexPath.section==2)
+    {
+        NSString* str;
+        if(indexPath.section==1)
+        {
+            str = mpbdetail.selfintroduction;
+        }
+        if(indexPath.section==2)
+        {
+            str=mpbdetail.pbRequirement;
+        }
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:18];
+        CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(280, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        return 65-21+textsize.height;
+    }
+    if(indexPath.section==3)
+        return 40;
+    return 44;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+-(IBAction)likeOp:(id)sender
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(like:obj:)];
+    int cmd = 0;
+    if(mpbdetail.like)
+    {
+        cmd=2;
+    }
+    else
+    {
+        cmd=1;
+    }
+    [weiboClient like:[mpbdetail.picName intValue] opCmd:cmd];
+}
+#pragma mark - 数据解析
+- (void)like:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        mpbdetail.like = !mpbdetail.like;
+        [pdTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - 获取用户信息
+-(IBAction)userinfo:(id)sender
+{
+    UserInfo* userinfo = [[UserInfo alloc] initWithNibName:@"UserInfo" bundle:nil];
+    userinfo.userID = [mpbdetail.picName intValue];
+    [userinfo setTitle:mpbdetail.publisherName];
+    [self.navigationController pushViewController:userinfo animated:YES];
+    [userinfo release];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,49 @@
+//
+//  MCareerMin.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MCareerMin : NSObject
+{
+    int                 careerID;
+    NSString*           careerName;
+    NSString*           position;
+    NSDate*             deadline;
+    int                 creatorID;
+    NSString*           creatorName;
+    BOOL                status;
+    NSString*           posterName;
+    BOOL                hot;
+    int                 shareCount;
+    int                 likeCount;
+    BOOL                 isapply;
+    
+    NSString*           industry;
+    NSString*           location; 
+    NSDate*             publishTimeDate;
+    int commentCount; 
+}
+@property(nonatomic,retain)NSDate*             publishTimeDate;
+@property(nonatomic,assign)BOOL                 isapply;
+@property(nonatomic,assign)int                 careerID;
+@property(nonatomic,retain)NSString*           careerName;
+@property(nonatomic,retain)NSString*           position;
+@property(nonatomic,retain)NSDate*             deadline;
+@property(nonatomic,assign)int                 creatorID;
+@property(nonatomic,retain)NSString*           creatorName;
+@property(nonatomic,assign)BOOL                status;
+@property(nonatomic,retain)NSString*           posterName;
+@property(nonatomic,assign)BOOL                hot;
+@property(nonatomic,assign)int                 shareCount;
+@property(nonatomic,assign)int                 likeCount;
+@property(nonatomic,retain)NSString*           industry;
+@property(nonatomic,retain)NSString*           location; 
+@property(nonatomic,assign)int commentCount; 
++ (MCareerMin*)mcareerminWithJsonDictionary:(NSDictionary*)dic;
+- (MCareerMin*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

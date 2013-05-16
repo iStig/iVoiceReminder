@@ -1,0 +1,53 @@
+//
+//  MMember.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MMember : NSObject
+{
+
+    int userID;
+    NSString *userName;
+    BOOL gender;
+    NSString *school;
+    NSString *company;
+    NSString *cityName;
+  
+    int point;
+    int rank;
+    NSString *email;
+    NSString *mobile;
+    int connectedStatus;
+    NSString *avatarName;
+
+    NSDate *joinDate;
+    BOOL apply;
+    BOOL admin;
+    NSDate *applyDate;
+    NSString *reason;
+   }
+
+@property(nonatomic) int userID;
+@property(nonatomic,retain) NSString *userName;
+@property(nonatomic) BOOL gender;
+@property(nonatomic,retain) NSString *school;
+@property(nonatomic,retain) NSString *company;
+@property(nonatomic,retain) NSString *cityName;
+
+@property(nonatomic) int point;
+@property(nonatomic) int rank;
+@property(nonatomic,retain) NSString *email;
+@property(nonatomic,retain) NSString *mobile;
+@property(nonatomic) int connectedStatus;
+@property(nonatomic,retain) NSString *avatarName;
+
+- (MMember*)initWithJsonDictionary:(NSDictionary*)dic;
++ (MMember*)mMemberWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*)getRank:(int)rank;
+
+@end

@@ -1,0 +1,75 @@
+//
+//  MStatus.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-17.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MStatus.h"
+
+@implementation MStatus
+
+@synthesize comment,commentCount,share,eventParticipate,updateID,updatePic,updateTime,updateType,updateTitle,updateAbstract,createUserName,likeCount,relatedID,shareCount,shareUserName,createUserID,shareUserID,rank,shareID,belongUserID,fromUserID,belongUserName,fromUserName;
+
++ (MStatus*)mstatusWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MStatus alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MStatus*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        shareID= ([dic objectForKey:@"shareID"]==[NSNull null])?0:[[dic objectForKey:@"shareID"] intValue];
+        rank = ([dic objectForKey:@"rank"]==[NSNull null])?0:[[dic objectForKey:@"rank"] intValue];
+        createUserID = ([dic objectForKey:@"belongUserID"]==[NSNull null])?0:[[dic objectForKey:@"belongUserID"] intValue];
+        shareUserID = ([dic objectForKey:@"fromUserID"]==[NSNull null])?0:[[dic objectForKey:@"fromUserID"] intValue];
+        updateID =  ([dic objectForKey:@"updateID"]==[NSNull null])?0:[[dic objectForKey:@"updateID"] intValue];
+        updateType =  ([dic objectForKey:@"updateType"]==[NSNull null])?0:[[dic objectForKey:@"updateType"] intValue];
+        eventParticipate =  ([dic objectForKey:@"eventParticipate"]==[NSNull null])?0:[[dic objectForKey:@"eventParticipate"] boolValue];
+        relatedID =  ([dic objectForKey:@"relatedID"]==[NSNull null])?0:[[dic objectForKey:@"relatedID"] intValue];
+        share =  ([dic objectForKey:@"share"]==[NSNull null])?0:[[dic objectForKey:@"share"] boolValue];
+        commentCount =  ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount =  ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        
+        fromUserID =  ([dic objectForKey:@"fromUserID"]==[NSNull null])?0:[[dic objectForKey:@"fromUserID"] intValue];
+        belongUserID =  ([dic objectForKey:@"belongUserID"]==[NSNull null])?0:[[dic objectForKey:@"belongUserID"] intValue];
+        
+        createUserName=[[dic objectForKey:@"belongUserName"] retain];
+        shareUserName=[[dic objectForKey:@"fromUserName"] retain];
+        updateTime = [[dic objectForKey:@"updateTime"] retain];
+        updatePic = [[dic objectForKey:@"updatePic"] retain];
+        comment = [[dic objectForKey:@"comment"] retain];
+        updateAbstract = [[dic objectForKey:@"updateAbstract"] retain];
+        updateTitle = [[dic objectForKey:@"updateTitle"] retain];
+        fromUserName=[[dic objectForKey:@"fromUserName"] retain];
+        belongUserName=[[dic objectForKey:@"belongUserName"] retain];
+                
+        if ((id)updateTitle == [NSNull null]) updateTitle = @"";
+        if ((id)updatePic == [NSNull null]) updatePic = @"";
+        if ((id)comment == [NSNull null]) comment = @"";
+        if ((id)updateAbstract == [NSNull null]) updateAbstract = @"";
+        if ((id)shareUserName == [NSNull null]) shareUserName = @"";
+        
+        if ((id)fromUserName == [NSNull null]) fromUserName = @"";
+        if ((id)belongUserName == [NSNull null]) belongUserName = @"";
+        
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [updatePic release];
+    [updateAbstract release];
+    [updateTitle release];
+    [comment release];
+    [shareUserName release];
+    [createUserName release];
+    [belongUserName release];
+    [fromUserName release];
+    [super dealloc];
+}
+
+
+@end

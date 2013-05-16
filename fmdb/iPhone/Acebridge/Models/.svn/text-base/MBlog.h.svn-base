@@ -1,0 +1,42 @@
+//
+//  MBlog.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-8.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MBlog : NSObject
+{
+    int                 blogID;
+    NSString*           blogContent;
+    NSString*           blogType;
+    NSDate*             blogTime;
+    int                 blogUserID;
+    NSString*           blogUserName;
+    NSString*           blogTitle;
+    int                 commentCount;
+    int                 shareCount;
+    int                 likeCount;
+    int rank;
+    NSString*           picName;
+}
+@property(nonatomic,retain)NSString*           picName;
+@property(nonatomic,assign)int                 rank;
+@property(nonatomic,assign)int                 blogID;
+@property(nonatomic,retain)NSString*           blogContent;
+@property(nonatomic,retain)NSString*           blogTitle;
+@property(nonatomic,retain)NSString*           blogType;
+@property(nonatomic,retain)NSDate*             blogTime;
+@property(nonatomic,assign)int                 blogUserID;
+@property(nonatomic,retain)NSString*           blogUserName;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,assign)int                 shareCount;
+@property(nonatomic,assign)int                 likeCount;
++ (MBlog*)mblogWithJsonDictionary:(NSDictionary*)dic;
+- (MBlog*)initWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*)getRank:(int)_rank;
+@end
+

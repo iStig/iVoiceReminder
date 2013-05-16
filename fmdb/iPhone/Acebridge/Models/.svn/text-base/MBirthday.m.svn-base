@@ -1,0 +1,49 @@
+//
+//  MBirthday.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MBirthday.h"
+@implementation MBirthday
+@synthesize userID,userName,company,bDay,birthday,email,mobile,school,picName;
++ (MBirthday*)mbirthdayWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MBirthday alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MBirthday*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        userID =  ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        bDay =  ([dic objectForKey:@"bDay"]==[NSNull null])?0:[[dic objectForKey:@"bDay"] intValue];
+        userName = [[dic objectForKey:@"userName"] retain];
+        picName = [[dic objectForKey:@"picName"] retain];
+        company = [[dic objectForKey:@"company"] retain];
+        birthday = [[dic objectForKey:@"birthday"] retain];
+        email = [[dic objectForKey:@"email"] retain];
+        mobile= [[dic objectForKey:@"mobile"] retain];
+        school =[[dic objectForKey:@"school"] retain];
+        if ((id)userName == [NSNull null]) userName = @"";
+        if ((id)company == [NSNull null]) company = @"";
+        if ((id)email == [NSNull null]) email = @"";
+        if ((id)mobile == [NSNull null]) mobile = @"";
+        if ((id)school == [NSNull null]) school = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+    }
+    return self;
+
+}
+- (void)dealloc
+{
+    [picName release];
+    [userName release];
+    [company release];
+    [email release];
+    [mobile release];
+    [school release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,207 @@
+//
+//  Category.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Category.h"
+#import "iToast.h"
+
+@implementation Category
+@synthesize type,name,cid;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        type=-1;
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) viewWillAppear:(BOOL)animated
+{
+    [dataArray removeAllObjects];
+    cid = 0;
+    name =[[NSString alloc] init];
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(categoryList:obj:)];
+    if(type == 1)
+    {
+        [weiboClient category:2];
+    }
+    if(type==2)
+    {
+        [weiboClient getcity];
+    }
+    if(type == 3)
+    {
+        dataArray = [[[NSMutableArray alloc] initWithObjects:@"All People",@"My connections",@"Only me", nil] retain];
+        [dataTableView reloadData];
+    }
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [dataArray count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	static NSString *CellIdentifier = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ComposeCell" owner:nil options:nil] objectAtIndex:0];
+    }
+    NSString* str ;
+    if(type == 1)
+    {
+        MCategory* mc = (MCategory*)[dataArray objectAtIndex:indexPath.row];
+        str = mc.categoryName;
+    }
+    if(type == 2)
+    {
+        MCity* mc = (MCity*)[dataArray objectAtIndex:indexPath.row];
+        str = mc.cityName;
+    }
+    if(type == 3)
+    {
+        str = [dataArray objectAtIndex:indexPath.row];
+    }
+    UILabel* lab = (UILabel*)[cell viewWithTag:1];
+    lab.text = str;
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if(type == 1)
+    {
+        MCategory* mc = [(MCategory*)[dataArray objectAtIndex:indexPath.row] retain];
+        cid=mc.categoryID;
+        name = [mc.categoryName.copy retain];
+    }
+    if(type == 2)
+    {
+        MCity* mc = [(MCity*)[dataArray objectAtIndex:indexPath.row] retain];
+        cid=mc.cityID;
+        name = [mc.cityName.copy retain];
+    }
+    if(type == 3)
+    {
+        name =[dataArray objectAtIndex:indexPath.row] ;
+        cid=indexPath.row+1;
+    }
+    [self back];
+}
+- (void)categoryList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    dataArray = [[NSMutableArray alloc] init];
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    if(type == 1)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"categoryArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MCategory* mcategory = [[MCategory mcategoryWithJsonDictionary:[arr objectAtIndex:i]] retain];
+            [dataArray addObject:mcategory];
+        }
+    }
+    if(type ==2)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"cityArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MCity* mcity = [[MCity mcityWithJsonDictionary:[arr objectAtIndex:i]] retain];
+            [dataArray addObject:mcity];
+        }
+    }
+    [dataTableView reloadData];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 40.0);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

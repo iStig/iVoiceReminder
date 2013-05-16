@@ -1,0 +1,61 @@
+//
+//  MStatusInfo.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-18.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MStatusInfo.h"
+
+@implementation MStatusInfo
+@synthesize picName,likeCount,commentCount,statusID,shareCount,statusTime,statusUserID,statusContent,statusUserName,rank;
+
++ (MStatusInfo*)mstatusinfoWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MStatusInfo alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MStatusInfo*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        rank = ([dic objectForKey:@"rank"]==[NSNull null])?0:[[dic objectForKey:@"rank"] intValue];
+        statusID =  ([dic objectForKey:@"statusID"]==[NSNull null])?0:[[dic objectForKey:@"statusID"] intValue];
+        statusUserID=  ([dic objectForKey:@"statusUserID"]==[NSNull null])?0:[[dic objectForKey:@"statusUserID"] intValue];
+        statusContent = [[dic objectForKey:@"statusContent"] retain];
+        picName = [[dic objectForKey:@"picName"] retain];
+        statusTime = [[dic objectForKey:@"statusTime"] retain];
+        commentCount =  ([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount =  ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        statusUserName=[[dic objectForKey:@"statusUserName"] retain];
+        
+        if ((id)statusUserName == [NSNull null]) statusUserName = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+        if ((id)statusContent == [NSNull null]) statusContent = @"";
+    }
+    return self;
+}
+-(NSString*)getRank:(int)_rank
+{
+    if(_rank==0)
+    {
+        return @"Beginner";
+    }
+    else if(_rank==1)
+        return @"A";
+    else if(_rank==2)
+        return @"AA";
+    else if(_rank==3)
+        return @"AAA";
+    else
+        return @"";
+}
+- (void)dealloc
+{
+    [statusUserName release];
+    [statusContent release];
+    [picName release];
+    [super dealloc];
+}
+@end

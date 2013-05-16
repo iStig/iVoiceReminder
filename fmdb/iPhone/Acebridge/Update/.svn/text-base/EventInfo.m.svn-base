@@ -1,0 +1,521 @@
+//
+//  EventInfo.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "EventInfo.h"
+#import "Comment.h"
+#import "ShareView.h"
+#import "PublicUtils.h"
+#import "TimeUtils.h"
+@implementation EventInfo
+@synthesize eventID,mevent;
+#pragma mark -生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    [active startAnimating];
+    
+    UIView *view=[[[NSBundle mainBundle]   loadNibNamed:@"showView" owner:nil options:nil] objectAtIndex:1];
+  view.frame=CGRectMake(105, -2, 200, 130);
+    [view setHidden:YES];
+    view.tag=1000;
+    for (int i=1; i<=3; i++) {
+        
+        if (i==1) {
+            UIButton *btn=(UIButton*)[view viewWithTag:1];
+            [btn addTarget:self action:@selector(like:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        if (i==2) {
+            UIButton *btn=(UIButton*)[view viewWithTag:i];
+            [btn addTarget:self action:@selector(share:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        if (i==3) {
+            UIButton *btn=(UIButton*)[view viewWithTag:i];
+            [btn addTarget:self action:@selector(comment:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    [self.view addSubview:view];
+
+    
+    
+    
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    UIButton* apply = (UIButton*)[headView viewWithTag:11];
+    apply.hidden=YES;
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(eventdetails:obj:)];
+    [weiboClient event_detail:eventID];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+//    if(self.tabBarController.selectedIndex==1)
+//    {
+//        [self.navigationController popToRootViewControllerAnimated:YES];
+//    }
+//    else {
+//        self.tabBarController.selectedIndex=1;
+//    }
+    
+    UIView *view=[self.view viewWithTag:1000];
+    
+    
+    UIButton*rBtn=(UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if(rBtn.selected){
+        view.hidden=YES;
+        rBtn.selected=NO;
+    }
+    else{
+        view.hidden=NO;
+        rBtn.selected=YES;
+    }
+
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/event/small/%@",IMAGE_PATH,mevent.organizerID,mevent.posterName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+-(void)eventdetails:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取event detail失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    NSLog(@"%@",obj);
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+     mevent= [[MEvent meventWithJsonDictionary:(NSDictionary*)[dic objectForKey:@"mEventD"]] retain];
+    [active stopAnimating];
+    [active setHidden:YES];
+    [self binddata];
+}
+#pragma mark - 绑定数据
+-(void)binddata
+{
+    UIImageView* face = (UIImageView*)[headView viewWithTag:1];
+    [face setImage:[UIImage imageNamed:@"默认头像.png"]];
+    if([mevent.posterName length]>0)
+    {
+        [self updateImage:face];
+    }
+    UILabel* labTitle = (UILabel*)[headView viewWithTag:2];
+    labTitle.text = mevent.eventName;
+    
+    UILabel* labCount = (UILabel*)[headView viewWithTag:3];
+    labCount.text =[NSString stringWithFormat:@"%d",mevent.applyCount];
+    
+    UILabel* labOrganizer = (UILabel*)[headView viewWithTag:4];
+    labOrganizer.text = mevent.organizer;
+    
+    UILabel* labLocation = (UILabel*)[headView viewWithTag:5];
+    labLocation.text = mevent.cityName;
+    
+    //改
+    UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+
+    CGSize textsize = [mevent.cityName sizeWithFont:myfont1 constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    labLocation.numberOfLines = textsize.height/15+1;
+    labLocation.frame=CGRectMake(69, 146.5, textsize.width, textsize.height);
+
+    
+    
+    
+    UILabel* labStartTime = (UILabel*)[headView viewWithTag:6];
+    labStartTime.text = [self timeString:mevent.startTime];
+    
+    UILabel* labEndTime = (UILabel*)[headView viewWithTag:7];
+    labEndTime.text = [self timeString:mevent.endTime];
+    
+    UILabel* labBudget = (UILabel*)[headView viewWithTag:8];
+    labBudget.text = mevent.budget;
+    
+    UILabel* labPhone = (UILabel*)[headView viewWithTag:9];
+    labPhone.text=mevent.contactNumber;
+    
+ 
+     CGRect labPhoneSize= labPhone.frame;
+     labPhone.frame=CGRectMake(107, 162.5+textsize.height-15, labPhoneSize.size.width, labPhoneSize.size.height);
+   
+     UILabel* contactLbl = (UILabel*)[headView viewWithTag:100];
+     CGRect contactSize= contactLbl.frame;
+     contactLbl.frame=CGRectMake(11, 162.5+textsize.height-15, contactSize.size.width, contactSize.size.height);;
+    
+    
+    UILabel* labDeadline = (UILabel*)[headView viewWithTag:10];
+    labDeadline.text=[self timeString1:mevent.deadline];
+    
+    UIButton* apply = (UIButton*)[headView viewWithTag:11];
+    
+    if (mevent.status) {
+        apply.hidden=NO;
+   
+    if(mevent.organizerID==[PublicUtils getCurrentUser].userID)
+    {
+        [apply setBackgroundImage:[UIImage imageNamed:@"button02.png"] forState:UIControlStateNormal];
+        [apply setTitle:@"Invite" forState:UIControlStateNormal];
+        [apply addTarget:self action:@selector(opCmd:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    else
+    {
+        if(mevent.isapply)
+        {
+            [apply setBackgroundImage:[UIImage imageNamed:@"button08.png"] forState:UIControlStateNormal];
+            [apply setTitle:@"Quit" forState:UIControlStateNormal];
+            [apply addTarget:self action:@selector(quitrequest:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        else
+        {
+            [apply setBackgroundImage:[UIImage imageNamed:@"button02.png"] forState:UIControlStateNormal];
+            [apply setTitle:@"Apply" forState:UIControlStateNormal];
+            [apply addTarget:self action:@selector(applyrequest:) forControlEvents:UIControlEventTouchUpInside];
+        }        
+    }    
+}
+    else{
+    apply.hidden=YES;
+    };
+    
+    UILabel* labTime = (UILabel*)[bottomView viewWithTag:1];
+    labTime.text = [TimeUtils timestamp:mevent.publishTime];
+    
+    UILabel* labLike = (UILabel*)[bottomView viewWithTag:2];
+    labLike.text = [NSString stringWithFormat:@"%d",mevent.likeCount];
+    
+    UILabel* labForward = (UILabel*)[bottomView viewWithTag:3];
+    labForward.text = [NSString stringWithFormat:@"%d",mevent.shareCount];
+    
+    UILabel* labComment = (UILabel*)[bottomView viewWithTag:4];
+    labComment.text = [NSString stringWithFormat:@"%d",mevent.commentCount];
+    
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+    CGSize textsize1 = [mevent.eventDetails sizeWithFont:myfont constrainedToSize:CGSizeMake(300, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    labText.numberOfLines = textsize1.height/18;
+    labText.frame=CGRectMake(11, headView.frame.size.height+5+textsize.height-15, textsize1.width, textsize1.height);
+    labText.text = mevent.eventDetails;
+    
+    headView.frame = CGRectMake(0, 0, 320, 180);
+    [scrollview addSubview:headView];
+    
+    [scrollview addSubview:labText];
+    
+    bottomView.frame = CGRectMake(0, headView.frame.size.height+textsize1.height+10+textsize.height-15, 310,60);
+    [scrollview addSubview:bottomView];
+    scrollview.contentSize=CGSizeMake(320, headView.frame.size.height+15+textsize1.height+bottomView.frame.size.height);
+}
+-(IBAction)applyrequest:(id)sender
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendResponse:obj:)];
+    weiboClient.context =[[NSString alloc] initWithFormat:@"1"];
+    [weiboClient applyquitevent:mevent.eventID opCmd:1];
+}
+-(IBAction)quitrequest:(id)sender
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(sendResponse:obj:)];
+    weiboClient.context =[[NSString alloc] initWithFormat:@"2"];
+    [weiboClient applyquitevent:mevent.eventID opCmd:2];
+}
+-(IBAction)opCmd:(id)sender
+{
+    Invite* invite =[[Invite alloc] initWithNibName:@"Invite" bundle:nil];
+    invite.eventID = mevent.eventID;
+    [invite setTitle:@"My Contacts"];
+    invite.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:invite animated:YES];
+    [invite release];
+}
+
+#pragma mark - 数据解析
+- (void)sendResponse:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        int op = [weiboClient.context intValue];
+        if(op==1)
+        {
+            mevent.isapply=YES;
+        }
+        if(op==2)
+        {
+            mevent.isapply=NO;
+        }
+        [self binddata];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+
+#pragma mark - 日期转换
+- (NSString *)timeString:(NSDate*)date {
+    NSString* s = (NSString*)date;
+    if(s==nil||!s||[s length]<1)
+    {
+        return @"";
+    }
+    NSString* timeString=[s stringByReplacingOccurrencesOfString:@"T" withString:@" "];
+    timeString = [timeString substringToIndex:timeString.length-3];
+    return timeString;
+}
+
+- (NSString *)timeString1:(NSDate*)date {
+    NSString* s = (NSString*)date;
+    if(s==nil||!s||[s length]<1)
+    {
+        return @"";
+    }
+    NSString* timeString=[s stringByReplacingOccurrencesOfString:@"T" withString:@" "];
+    timeString = [timeString substringToIndex:timeString.length-9];
+    return timeString;
+}
+#pragma mark - like
+-(IBAction)like:(id)sender
+{
+    
+    UIView *view=[self.view viewWithTag:1000];
+    
+    
+    UIButton*rBtn=(UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if(rBtn.selected){
+        view.hidden=YES;
+        rBtn.selected=NO;
+    }
+    else{
+        view.hidden=NO;
+        rBtn.selected=YES;
+    }
+
+    
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(like:obj:)];
+    [weiboClient postLike:4 relatedID:eventID];
+}
+- (void)like:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"You already liked this item", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - forward
+-(IBAction)share:(id)sender
+{
+    UIView *view=[self.view viewWithTag:1000];
+    
+    
+    UIButton*rBtn=(UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if(rBtn.selected){
+        view.hidden=YES;
+        rBtn.selected=NO;
+    }
+    else{
+        view.hidden=NO;
+        rBtn.selected=YES;
+    }
+
+    
+    ShareView* shareview =[[ShareView alloc] initWithNibName:@"ShareView" bundle:nil];
+    shareview.type = 4;
+    shareview.relatedID = eventID;
+    [shareview setTitle:@"Share Remarks"];
+    [self.navigationController pushViewController:shareview animated:YES];
+    [shareview release];
+}
+#pragma mark - comment
+-(IBAction)comment:(id)sender
+{
+    
+    UIView *view=[self.view viewWithTag:1000];
+    
+    
+    UIButton*rBtn=(UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if(rBtn.selected){
+        view.hidden=YES;
+        rBtn.selected=NO;
+    }
+    else{
+        view.hidden=NO;
+        rBtn.selected=YES;
+    }
+
+    Comment* comment = [[Comment alloc] initWithNibName:@"Comment" bundle:nil];
+    [comment setTitle:@"Comment"];
+    comment.typeID = 4;
+    comment.relatedID =eventID;
+    comment.userID =mevent.organizerID;
+    [self.navigationController pushViewController:comment animated:YES];
+    [comment release];
+}
+-(IBAction)userList:(id)sender
+{
+    EventMembers* eventm = [[EventMembers alloc] initWithNibName:@"EventMembers" bundle:nil];
+    eventm.eventID = eventID;
+    [eventm setTitle:@"Attendees"];
+    [self.navigationController pushViewController:eventm animated:YES];
+    [eventm release];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,668 @@
+//
+//  StatusList.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-7.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "StatusList.h"
+#import "MStatus.h"
+#import "AceBridgeAppDelegate.h"
+#import "StatusInfo.h"
+@implementation StatusList
+
+@synthesize homeArray,targetUserID;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        targetUserID = 1;
+        
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    action = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                otherButtonTitles:@"View",@"Delete",nil];
+    tableView=homeTableView;
+    homeArray = [[NSMutableArray alloc] init];
+    imageCache=[ImageCache sharedCache];
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"status_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"updateArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MStatus* mstatus = [MStatus mstatusWithJsonDictionary:[arr objectAtIndex:i]];
+            [homeArray addObject:mstatus];
+    }
+    }
+    
+    [self InitNavigationBarItems];
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"edit.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(newstatus:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(IBAction)newstatus:(id)sender
+{
+    NewComment* newcomment = [[NewComment alloc] initWithNibName:@"NewComment" bundle:nil];
+    newcomment.isstatus = YES;
+    [newcomment setTitle:@"Status"];
+    [self.navigationController pushViewController:newcomment animated:YES];
+    [newcomment release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 显示大图事件
+-(IBAction)showImage:(id)sender{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    MStatus* min = (MStatus*) [homeArray objectAtIndex:[tableView indexPathForCell:cell].row];
+    PhotoViewController *photoViewController = [[PhotoViewController alloc] init];
+    photoViewController.hidesBottomBarWhenPushed = YES;
+    Photo *p = [Photo photoWithStatus:min];
+    [self.navigationController pushViewController:photoViewController animated:YES];
+    [photoViewController showImage:p];
+}
+
+#pragma mark - 发送微博事件
+- (IBAction)composeButtonTouch:(id)sender {
+	[[AceBridgeAppDelegate getAppDelegate]composeNewTweet];
+}
+#pragma mark - tableview事件
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [homeArray count]+1; 
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([homeArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [homeArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        MStatus* min = (MStatus*) [homeArray objectAtIndex:indexPath.row];
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:13];
+        } 
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        UIImageView *imageBottomview=(UIImageView*)[cell viewWithTag:100];
+        UIButton *showImageBtn=(UIButton*)[cell viewWithTag:20];
+     [showImageBtn addTarget:self action:@selector(showImage:) forControlEvents:UIControlEventTouchUpInside];
+        if(min.createUserID)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        showImageBtn.hidden=YES;
+        
+        //改
+        UIFont* myfont2 = [UIFont fontWithName:@"Helvetica" size:12];
+        CGSize textsize2 = [min.createUserName sizeWithFont:myfont2 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        UILabel* labCreateName = (UILabel*)[cell viewWithTag:2];
+        labCreateName.text = min.createUserName;
+        labCreateName.frame=CGRectMake(56, 10, textsize2.width, 15);
+        
+                
+        CGFloat shareH = 0;
+        UILabel* labName = (UILabel*)[cell viewWithTag:4];
+        UILabel* labLast = (UILabel*)[cell viewWithTag:10];
+        UILabel* labcomment = (UILabel*)[cell viewWithTag:11];
+        UILabel* labShareName =(UILabel*)[cell viewWithTag:12];
+        NSString* str ;
+        if(min.share)
+        {
+            str = min.updateTitle;
+            UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+            CGSize textsize1 = [min.comment sizeWithFont:myfont1 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            if([min.comment length]>0)
+            {
+                shareH = textsize1.height;
+                labcomment.numberOfLines = textsize1.height/16+1;
+                labcomment.frame=CGRectMake(56,33, textsize1.width+3, textsize1.height);
+                labcomment.text=min.comment;
+                shareH+=5;
+                
+                
+                labName.text = @"shared ";
+                labName.frame=CGRectMake(56+textsize2.width+4, 10, 45, 15);
+                UIFont* myfontShareName = [UIFont fontWithName:@"Helvetica" size:12];
+                CGSize textsizeShareName = [min.shareUserName sizeWithFont:myfontShareName constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                labShareName.frame=CGRectMake(labName.frame.origin.x+45, 10, textsizeShareName.width, 15);
+                labShareName.text = min.shareUserName;
+                labLast.frame = CGRectMake(labShareName.frame.origin.x+textsizeShareName.width+2, 10, 45, 15);
+                labLast.text=@"’s status";
+                
+                UILabel* labTime = (UILabel*)[cell viewWithTag:3];
+                labTime.text = [TimeUtils timestamp:min.updateTime];
+                UILabel* labText = (UILabel*)[cell viewWithTag:5];
+                UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+                CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                labText.numberOfLines = textsize.height/16+1;
+                labText.frame=CGRectMake(56,33+textsize1.height, textsize.width, textsize.height);
+                labText.text = str;
+                
+                if([min.updatePic length]>0)
+                {   
+                    [imageBottomview setHidden:NO];
+                    [self updateBottomImageForCell:cell AtIndex:indexPath.row];
+                    showImageBtn.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                     imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                    picHight=81;
+                    showImageBtn.hidden=NO;
+                }
+                else{
+                     imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 0, 0);
+                    picHight=0;
+                }
+               
+                UIView* view = (UIView*)[cell viewWithTag:9];
+                view.frame = CGRectMake(56, 34+textsize.height+shareH+imageBottomview.frame.size.height, 264, 25);
+            }
+            else
+            {
+                labcomment.frame=CGRectMake(0, 0, 0, 0);
+                labcomment.text =@"";
+                
+                labName.text = @"shared ";
+                labName.frame=CGRectMake(56+textsize2.width+4, 10, 45, 15);
+                UIFont* myfontShareName = [UIFont fontWithName:@"Helvetica" size:12];
+                CGSize textsizeShareName = [min.shareUserName sizeWithFont:myfontShareName constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                labShareName.frame=CGRectMake(labName.frame.origin.x+45, 10, textsizeShareName.width, 15);
+                labShareName.text = min.shareUserName;
+                labLast.frame = CGRectMake(labShareName.frame.origin.x+textsizeShareName.width+2, 10, 45, 15);
+                labLast.text=@"’s status";
+                
+                UILabel* labTime = (UILabel*)[cell viewWithTag:3];
+                labTime.text = [TimeUtils timestamp:min.updateTime];
+                UILabel* labText = (UILabel*)[cell viewWithTag:5];
+                UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+                CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                labText.numberOfLines = textsize.height/16+1;
+                labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+                labText.text = str;
+                
+                
+                if([min.updatePic length]>0)
+                {   
+                    [imageBottomview setHidden:NO];
+                    [self updateBottomImageForCell:cell AtIndex:indexPath.row];
+                    showImageBtn.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                    imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                     picHight=81;
+                    showImageBtn.hidden=NO;
+                }
+                else{
+                    imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 0, 0);
+                    picHight=0;
+                    
+                }
+
+                
+                UIView* view = (UIView*)[cell viewWithTag:9];
+                view.frame = CGRectMake(56, 37+textsize.height+shareH+imageBottomview.frame.size.height, 264, 25);
+            }
+            
+    
+        }
+        else
+        {
+            
+            // 改
+            //labName.frame=CGRectMake(56, 26, 39, 15);
+            labName.text = @"posted";
+            //labLast.frame=CGRectMake(97, 25, 36, 15);
+            labLast.text = @"status";
+            UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+            CGSize textsize1 = [labName.text  sizeWithFont:myfont1 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            labName.frame=CGRectMake(56+textsize2.width+4,10, textsize1.width, 15);
+            labLast.frame=CGRectMake(56+textsize2.width+4+textsize1.width+4, 10, textsize1.width, 15);
+            labcomment.frame=CGRectMake(0, 0, 0, 0);
+            labShareName.frame=CGRectMake(0, 0, 0, 0);
+            labcomment.text =@"";
+            labShareName.text =@"";
+            str = min.updateAbstract;
+            
+            UILabel* labTime = (UILabel*)[cell viewWithTag:3];
+            labTime.text = [TimeUtils timestamp:min.updateTime];
+            UILabel* labText = (UILabel*)[cell viewWithTag:5];
+            UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+            CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            labText.numberOfLines = textsize.height/16+1;
+            labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+            labText.text = str;
+            
+            if([min.updatePic length]>0)
+            {   
+                [imageBottomview setHidden:NO];
+                [self updateBottomImageForCell:cell AtIndex:indexPath.row];
+                showImageBtn.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 81, 81);
+                picHight=81;
+                 showImageBtn.hidden=NO;
+            }
+            else{
+                [imageBottomview setHidden:YES];
+                imageBottomview.frame=CGRectMake(56, 34+textsize.height+shareH, 0, 0);
+                picHight=0;
+                
+            }
+            
+            UIView* view = (UIView*)[cell viewWithTag:9];
+            view.frame = CGRectMake(56, 33+textsize.height+shareH+imageBottomview.frame.size.height, 264, 25);
+            
+        }
+
+        UILabel* labLike = (UILabel*)[cell viewWithTag:6];
+        labLike.text = [NSString stringWithFormat:@"%d",min.likeCount];
+        
+        UILabel* labForward = (UILabel*)[cell viewWithTag:7];
+        labForward.text = [NSString stringWithFormat:@"%d",min.shareCount];
+        
+        UILabel* labComment = (UILabel*)[cell viewWithTag:8];
+        labComment.text = [NSString stringWithFormat:@"%d",min.commentCount];
+      
+        
+        
+        
+        
+        // Configure the cell...
+        return cell;
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            MStatus* min = (MStatus*) [homeArray objectAtIndex:[homeArray count]-1];
+            findex = min.updateID;
+            lindex = -1;
+            [self getStatusList:[homeArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([homeArray count]==0||[homeArray count]==indexPath.row)
+    {
+        if([homeArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    MStatus* min = (MStatus*) [homeArray objectAtIndex:indexPath.row];
+    NSString* str;
+    CGFloat shareH = 0;
+    if(min.share)
+    {
+        UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+        CGSize textsize1 = [min.comment sizeWithFont:myfont1 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        shareH = textsize1.height+5;
+        str = min.updateTitle;
+    }
+    else
+    {
+        str = min.updateAbstract;
+    }
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+    CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    
+    if([min.updatePic length]>0){
+        picHight=81;
+    }else{
+        picHight=0;
+    }
+    
+    return 90-30+textsize.height+shareH+picHight;
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    
+    
+    
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+     mins = [(MStatus*)[homeArray objectAtIndex:indexPath.row] retain];
+    if ([PublicUtils getCurrentUser].userID==mins.createUserID) {
+        NSLog(@"nihao");
+        
+        
+        [action showInView:self.view.superview];
+        if (mins.share) {
+            
+            user_ID=mins.createUserID;
+            nowUserID=mins.shareID;
+            typeID=1;
+            
+        }
+        else{
+            user_ID=mins.createUserID;
+            nowUserID=mins.relatedID;
+            typeID=0;
+        }
+        
+        
+
+    }
+    else{ 
+        
+        
+        NSLog(@"nibuhao");
+        StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+        [statusInfo setTitle:@"Status"];
+        statusInfo.statusID = mins.relatedID;
+        statusInfo.mstatus = mins;
+        statusInfo.perUserID=mins.createUserID;
+        statusInfo.commentNmb=mins.commentCount;
+        [self.navigationController pushViewController:statusInfo animated:YES];
+        [statusInfo release];
+    }
+
+}
+#pragma mark - 数据解析
+- (void)homeList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取home数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+    if(opresult==0)
+    {
+        if (errCode==12) {
+            [[[iToast makeText:NSLocalizedString(@"No access due to user’s setting.", @"")] setGravity:iToastGravityBottom] show];
+
+        }
+        else{
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+       
+        }
+        
+         return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"updateArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    if([arr count]<1)
+        return;
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [homeArray removeAllObjects];
+        [PublicUtils save:dic name:[NSString stringWithFormat:@"status_list_%d%d.db",[PublicUtils getCurrentUser].userID,targetUserID]];
+        
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MStatus* mstatus = [MStatus mstatusWithJsonDictionary:[arr objectAtIndex:i]];
+        [homeArray addObject:mstatus];
+    }
+    
+    [tableView reloadData];
+    isLoading=NO;
+}
+
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MStatus *pItem =(MStatus*) [homeArray objectAtIndex:index];
+     NSString *path = @"";
+    path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.createUserID,pItem.createUserID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+
+#pragma mark - 下载底部图片
+- (void)updateBottomImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MStatus *pItem =(MStatus*) [homeArray objectAtIndex:index];
+ 
+     NSString *path = @"";
+    if(!pItem.share)
+    {
+        path = [NSString stringWithFormat:@"%@/data/%d/status/small/%@",IMAGE_PATH,pItem.createUserID,pItem.updatePic];
+    }
+    else {
+        path = [NSString stringWithFormat:@"%@/data/%d/status/small/%@",IMAGE_PATH,pItem.shareUserID,pItem.updatePic];
+    }
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:100];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:100];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+#pragma mark - 数据解析
+- (void)deleteIndex:(WeiboClient*)sender obj:(NSObject*)obj{
+    
+    
+    if (sender.hasError) {
+		NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    [self getItemsWhenPullDownTableView];
+
+    
+    
+    
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+
+    if(buttonIndex == 0)
+    {
+     
+        StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+        [statusInfo setTitle:@"Status"];
+        statusInfo.statusID = mins.relatedID;
+        statusInfo.mstatus = mins;
+        statusInfo.commentNmb=mins.commentCount;
+        statusInfo.perUserID=user_ID;
+        [self.navigationController pushViewController:statusInfo animated:YES];
+        [statusInfo release];
+        
+        
+        
+        
+    }
+    if(buttonIndex == 1)
+    {
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(deleteIndex:obj:)];
+      
+        [weiboClient deleteStatus:nowUserID type:typeID];
+    }
+
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+-(void)getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    findex = -1;
+    lindex = 0;
+    [self getStatusList:1];
+    
+}
+-(void) getStatusList:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(homeList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient home:targetUserID updateType:5 firstIndex:findex lastIndex:lindex pageNo:pageNo];
+}
+@end

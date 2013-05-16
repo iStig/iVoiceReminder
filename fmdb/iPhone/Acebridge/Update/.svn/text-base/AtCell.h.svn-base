@@ -1,0 +1,37 @@
+//
+//  At.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-24.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "AtNotification.h"
+
+#import "BlogInfo.h"
+#import "CarrerInfo.h"
+#import "GroupInfo.h"
+#import "EventInfo.h"
+#import "StatusInfo.h"
+#import "ViewPromotion.h"
+#import "UserInfo.h"
+#import "TimeUtils.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface AtCell : UTTableViewController
+{ 
+    IBOutlet PullRefreshTableView *atTableView;
+    WeiboClient*          weiboClient;    
+    NSMutableArray*       atArray;   
+    BOOL isLoading;
+}
+@property(nonatomic,retain)NSMutableArray *atArray;
+
+
+- (void)atList:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void) getList:(int)pageNo;
+
+@end

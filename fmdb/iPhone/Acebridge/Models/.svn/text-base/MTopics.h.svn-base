@@ -1,0 +1,32 @@
+//
+//  MTopics.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MTopics : NSObject
+{
+    NSString*           posterName;
+    int                 postUserID;
+    NSString*           postUserName;
+    NSString*           category;
+    NSString*           content;
+    NSString*           title;
+    NSDate*             postTime;
+    int                 commentCount;
+}
+@property(nonatomic,retain)NSString*           posterName;
+@property(nonatomic,assign)int                 postUserID;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,retain)NSString*           postUserName;
+@property(nonatomic,retain)NSString*           category;
+@property(nonatomic,retain)NSString*           content;
+@property(nonatomic,retain)NSString*           title;
+@property(nonatomic,retain)NSDate*             postTime;
++ (MTopics*)mtopicsWithJsonDictionary:(NSDictionary*)dic;
+- (MTopics*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

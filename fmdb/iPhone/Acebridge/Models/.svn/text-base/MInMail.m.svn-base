@@ -1,0 +1,46 @@
+//
+//  MInMail.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-19.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MInMail.h"
+
+@implementation MInMail
+
+@synthesize userName,userID,whoSent,time,mailID,content,picName,fileName,type;
++ (MInMail*)minmailWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MInMail alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MInMail*)initWithJsonDictionary:(NSDictionary*)dic;
+{
+    if(self = [super init])
+    {
+        userID =  ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        whoSent =  ([dic objectForKey:@"whoSent"]==[NSNull null])?0:[[dic objectForKey:@"whoSent"] boolValue];
+        picName = [[dic objectForKey:@"picName"] retain];
+        userName = [[dic objectForKey:@"userName"] retain];
+        content = [[dic objectForKey:@"content"] retain];
+        time = [[dic objectForKey:@"time"] retain];
+        mailID = ([dic objectForKey:@"mailID"]==[NSNull null])?0:[[dic objectForKey:@"mailID"] intValue];
+        type= ([dic objectForKey:@"type"]==[NSNull null])?0:[[dic objectForKey:@"type"] intValue];
+        fileName=[[dic objectForKey:@"fileName"] retain];
+        if ((id)userName == [NSNull null]) userName = @"";
+        if ((id)picName == [NSNull null]) picName = @"";
+        if ((id)content == [NSNull null]) content = @"";
+        if ((id)fileName == [NSNull null]) fileName = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [content release];
+    [userName release];
+    [picName release];
+    [fileName release];
+    [super dealloc];
+}
+@end

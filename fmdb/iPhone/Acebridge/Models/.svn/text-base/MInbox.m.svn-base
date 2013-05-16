@@ -1,0 +1,41 @@
+//
+//  MInbox.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-18.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MInbox.h"
+
+@implementation MInbox
+@synthesize count,lastTime,lastContent,lastWhoSent,userID,userName,userPic;
++ (MInbox*)minboxWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MInbox alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MInbox*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        userID =  ([dic objectForKey:@"userID"]==[NSNull null])?0:[[dic objectForKey:@"userID"] intValue];
+        lastWhoSent =  ([dic objectForKey:@"lastWhoSent"]==[NSNull null])?0:[[dic objectForKey:@"lastWhoSent"] boolValue];
+        userPic = [[dic objectForKey:@"userPic"] retain];
+        userName = [[dic objectForKey:@"userName"] retain];
+        lastContent = [[dic objectForKey:@"lastContent"] retain];
+        lastTime = [[dic objectForKey:@"lastTime"] retain];
+        count = ([dic objectForKey:@"count"]==[NSNull null])?0:[[dic objectForKey:@"count"] intValue];
+        if ((id)userName == [NSNull null]) userName = @"";
+        if ((id)userPic == [NSNull null]) userPic = @"";
+        if ((id)lastContent == [NSNull null]) lastContent = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [userPic release];
+    [userName release];
+    [lastContent release];
+    [super dealloc];
+}
+@end

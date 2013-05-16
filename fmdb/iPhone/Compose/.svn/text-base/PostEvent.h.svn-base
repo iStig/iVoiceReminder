@@ -1,0 +1,61 @@
+//
+//  PostEvent.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "Category.h"
+#import "WeiboClient.h"
+@class  Category;
+@interface PostEvent : UIViewController<UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,UIImagePickerControllerDelegate,UIActionSheetDelegate,UINavigationControllerDelegate>
+{
+    IBOutlet UITableViewCell*       cellTitle;
+    IBOutlet UITableViewCell*       cellCategory;
+    IBOutlet UITableViewCell*       cellLocation;
+    IBOutlet UITableViewCell*       cellStartTime;
+    IBOutlet UITableViewCell*       cellEndTime;
+    IBOutlet UITableViewCell*       cellAddress;
+    IBOutlet UITableViewCell*       cellBudget;
+    IBOutlet UITableViewCell*       cellTotalCount;
+    IBOutlet UITableViewCell*       cellDescription;
+    IBOutlet UITableViewCell*       cellPhone;
+    IBOutlet UITableViewCell*       cellPoster;
+    IBOutlet UITableViewCell*       cellDeadline;
+    IBOutlet UITableViewCell*       cellPrivacy;
+    IBOutlet UITableViewCell*       cellPost;
+    IBOutlet UITableView*           eventTableView;
+    int categoryID;
+    NSString* categoryName;
+    Category* category;
+    int         postcategory;
+    int         postlocation;
+    int         postprivacy;
+     WeiboClient*                weiboClient;
+    
+    CGPoint     point;
+    IBOutlet UIView *selectView;
+    IBOutlet UIDatePicker *datePicker;
+    IBOutlet UIButton     *pickerBtn;
+    int         type;
+    int         number;
+    NSString   *start;
+    NSString   *end;
+    NSString   *deadLine;
+    BOOL isselectImage;
+    CGFloat txtFieldH;
+    CGFloat inputHeight;
+    IBOutlet  UIButton   *sendBtn;
+    UIButton *rightButton; 
+    
+}
+-(void)InitNavigationBarItems;
+-(void)back;
+-(void)home;
+-(IBAction)postEvent:(id)sender;
+- (void)requestEvent:(WeiboClient*)sender obj:(NSObject*)obj;
+-(NSDate *)NSStringDateToNSDate:(NSString *)string;
+-(IBAction)pickDate:(id)sender;
+@end

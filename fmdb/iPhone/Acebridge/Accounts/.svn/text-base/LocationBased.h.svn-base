@@ -1,0 +1,20 @@
+//
+//  LocationBased.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-31.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface LocationBased : UIViewController
+{
+    IBOutlet UISegmentedControl* sex;
+    IBOutlet UISegmentedControl* day;
+    NSMutableArray* days;
+}
+- (void)InitNavigationBarItems;
+-(void)back;
+-(IBAction)save:(id)sender;
+@end

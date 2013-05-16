@@ -1,0 +1,386 @@
+//
+//  WebSearch.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "WebSearch.h"
+#import "iToast.h"
+
+@implementation WebSearch
+
+@synthesize lacaArray,funArray,induArray;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        lacaArray = [[NSMutableArray alloc] init];
+        funArray = [[NSMutableArray alloc] init];
+        induArray = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    MCity* city = [[MCity alloc] init];
+    city.cityID = 0;
+    city.cityName =@"";
+    [lacaArray addObject:city];
+    MIndustry* industry = [[MIndustry alloc] init];
+    industry.industryID = 0;
+    industry.industryName =@"";
+    [induArray addObject:industry];
+    MFunction* fun = [[MFunction alloc] init];
+    fun.functionID=0;
+    fun.functionName = @"";
+    [funArray addObject:fun];
+    selectView.hidden=YES;
+    [self InitNavigationBarItems];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getindustry:obj:)];
+    [weiboClient getindustry];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 搜索
+-(IBAction)searchUser:(id)sender
+{
+    UserList* userlist = [[UserList alloc] initWithNibName:@"UserList" bundle:nil];
+    userlist.targetUserName=textName.text;
+    userlist.targetUniversity = textUniversity.text;
+    userlist.functionID=functionid;
+    userlist.cityID = locationid;
+    userlist.targetCompany=textCompany.text;
+    userlist.userID=0;
+    userlist.industryID = industryid;
+    [userlist setTitle:@"Search Result"];
+    [self.navigationController pushViewController:userlist animated:YES];
+    [userlist release];
+    
+}
+#pragma mark -键盘事件
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    [theTextField resignFirstResponder];
+    return YES;
+}
+#pragma mark - tableview事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 2;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 3;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        if(indexPath.section==0)
+        {
+            if(indexPath.row==0)
+            {
+                cell=cellName;
+            }
+            if(indexPath.row==1)
+            {
+                cell=cellUniversity;
+            }
+            if(indexPath.row==2)
+            {
+                cell=cellCompany;
+            }
+        }
+        if(indexPath.section==1)
+        {
+            if(indexPath.row==0)
+            {
+                cell=cellLocation;
+            }
+            if(indexPath.row==1)
+            {
+                cell=cellIndustry;
+            }
+            if(indexPath.row==2)
+            {
+                cell=cellFunction;
+            }
+        }
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if(indexPath.section==1)
+    {
+        if(indexPath.row==0&&[lacaArray count]==0)
+        {
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            return;
+        }
+        if(indexPath.row==1&&[induArray count]==0)
+        {
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            return;
+        }
+        if(indexPath.row==2&&[funArray count]==0)
+        {
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            return;
+        }
+        type = indexPath.row;
+        [pickerView reloadAllComponents];
+        selectView.hidden=NO;
+    }
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    self.title=@"Search Friends";
+    
+    //search
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"search.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(searchUser:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - 选择
+-(IBAction)confirm:(id)sender
+{
+    int selectIndex = [pickerView selectedRowInComponent:0];
+    if(type==0)
+    {
+        MCity* city = (MCity*)[lacaArray objectAtIndex:selectIndex];
+        locationid = city.cityID;
+        textloca.text = city.cityName;
+    }
+    else if(type==1)
+    {
+        MIndustry* indu = (MIndustry*)[induArray objectAtIndex:selectIndex];
+        industryid = indu.industryID;
+        textindu.text = indu.industryName;
+    }
+    else
+    {
+        MFunction* fun = (MFunction*)[funArray objectAtIndex:selectIndex];
+        functionid = fun.functionID;
+        textfun.text = fun.functionName;
+    }
+    selectView.hidden=YES;
+}
+#pragma mark - 加载选择框数据
+-(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+-(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    if(type==0)
+    {
+        return [lacaArray count];
+    }
+    else if(type==1)
+    {
+        return [induArray count];
+    }
+    else
+    {
+        return [funArray count];
+    }
+}
+-(NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
+{
+    if(type==0)
+    {
+        return ((MCity*)[lacaArray objectAtIndex:row]).cityName;
+    }
+    else if(type==1)
+    {
+        return ((MIndustry*)[induArray objectAtIndex:row]).industryName;
+    }
+    else
+    {
+        return ((MFunction*)[funArray objectAtIndex:row]).functionName;
+    }
+}
+
+
+
+#pragma mark - 选择数据绑定
+- (void)getindustry:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取industry数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        //return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"industryArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MIndustry* industry = [MIndustry mindustryWithJsonDictionary:[arr objectAtIndex:i]];
+        [induArray addObject:industry];
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getcity:obj:)];
+    [weiboClient getcity];
+}
+- (void)getcity:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取city数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        //return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"cityArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MCity* city = [MCity mcityWithJsonDictionary:[arr objectAtIndex:i]];
+        [lacaArray addObject:city];
+    }
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getfunction:obj:)];
+    [weiboClient getfunction];
+}
+- (void)getfunction:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取function数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        //return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"functionArray"];
+    int count = [arr count];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MFunction* function = [MFunction mfunctionWithJsonDictionary:[arr objectAtIndex:i]];
+        [funArray addObject:function];
+    }
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

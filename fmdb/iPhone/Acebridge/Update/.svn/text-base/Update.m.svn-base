@@ -1,0 +1,787 @@
+//
+//  Update.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Update.h"
+#import "Promotion.h"
+#import "Events.h"
+#import "Piebridge.h"
+#import "Notification.h"
+#import "Career.h"
+#import "Birthday.h"
+#import "Blog.h"
+#import "StatusList.h"
+#import "Group.h"
+#import "NewComment.h"
+#import "PublicUtils.h"
+#import "BlogInfo.h"
+#import "EventInfo.h"
+#import "CarrerInfo.h"
+#import "StatusInfo.h"
+@implementation Update
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+        
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+-(void)viewWillAppear:(BOOL)animated{
+
+    [self ncount];
+
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    tableView=_tableView;
+    [self.view.layer setCornerRadius:0.7];
+    [self initNavigation];
+    
+      imageCache=[ImageCache sharedCache];
+    
+    updateArray= [[NSMutableArray alloc] init];
+    //CountView.hidden=YES;
+    //bCountView.hidden=YES;
+    [self navigationController].tabBarItem.badgeValue=nil;
+//    self.rootViewController=self;
+//    LeftMenuViewController *leftController = [[LeftMenuViewController alloc] init];
+//      self.leftViewController = leftController;
+    
+   
+  
+    
+    // Do any additional setup after loading the view from its nib.
+}
+-(void)viewDidAppear:(BOOL)animated{
+
+  [[AppDelegate_iPhone getAppDelegate] setDDMenuEnabled:YES];
+}
+
+
+-(void) ncount
+{
+    [self navigationController].tabBarItem.badgeValue = nil;
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(ncountRequest:obj:)];
+    [weiboClient countNotifications];
+}
+-(void) connectionrequestCount
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(connectrequestcount:obj:)];
+    [weiboClient connectrequestcount];
+}
+-(void) bcount
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(bcountRequest:obj:)];
+    [weiboClient birthday:2];
+}
+
+- (void)ncountRequest:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult>0)
+    {
+        int icount=0;
+        NSArray* arr =(NSArray*)[dic objectForKey:@"notificationCountArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MNotification* mpb = [MNotification mnotificationWithJsonDictionary:[arr objectAtIndex:i]];
+            icount+=mpb.count;
+            
+        
+        }
+          ncount = icount;
+    }
+    [self connectionrequestCount];
+}
+- (void)bcountRequest:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult>0)
+    {
+        int icount = [[dic objectForKey:@"count"] intValue];
+        if(icount>0)
+        {
+            UILabel* labcount =(UILabel*)[bCountView viewWithTag:1];
+            labcount.text = [NSString stringWithFormat:@"%d",icount];
+           // bCountView.hidden=NO;//改
+            bcount = icount;
+            int oldcount = [[self navigationController].tabBarItem.badgeValue intValue];
+            [self navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", icount+oldcount];
+        }
+        else {
+            UILabel* labcount =(UILabel*)[bCountView viewWithTag:1];
+            labcount.text = @"";
+            //bCountView.hidden=YES;
+        }
+    }
+}
+- (void)connectrequestcount:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        return;
+    }
+    int userCount = [[dic objectForKey:@"requestCount"] intValue];
+   UILabel* labcount =(UILabel*)[CountView viewWithTag:1];
+        int oldcount = ncount;
+        if(userCount+oldcount>0)
+        {
+            [self navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", userCount+oldcount];
+            
+            labcount.text = [NSString stringWithFormat:@"%d",userCount+oldcount];
+            //CountView.hidden=NO;
+        }
+        
+       // int btncount = [labcount.text intValue];
+//        if(userCount+oldcount>0)
+//        {
+//            labcount.text = [NSString stringWithFormat:@"%d",userCount+btncount];
+//            CountView.hidden=NO; 
+//        }
+        else{
+            labcount.text = @"";
+            //CountView.hidden=YES;
+        
+        }
+    //[self bcount];
+    
+    [self getItemsWhenPullDownTableView];
+}
+-(void)initNavigation{
+    
+    //适用ios5.0以后
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif  
+
+    //navigationBarRightBtn按钮
+     UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"edit.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(newstatus:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    
+   /*
+    //navigationBarLeftBtn按钮
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"Locate.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(currentplace:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+   */
+}
+-(IBAction)newstatus:(id)sender
+{
+    NewComment* newcomment = [[NewComment alloc] initWithNibName:@"NewComment" bundle:nil];
+    newcomment.isstatus = YES;
+    [newcomment setTitle:@"Status"];
+    [self.navigationController pushViewController:newcomment animated:YES];
+    [newcomment release];
+}
+-(IBAction)currentplace:(id)sender
+{
+    [[AceBridgeAppDelegate getAppDelegate] networkcp:0];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 切换界面
+-(IBAction)getNext:(id)sender
+{
+    int oldcount = [[self navigationController].tabBarItem.badgeValue intValue];
+    int tag = [(UIButton*)sender tag];
+    if(tag==1)
+    {
+        Notification* not = [[Notification alloc] initWithNibName:@"Notification" bundle:nil];
+        [not setTitle:@"Notification"];
+        not.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:not animated:YES];
+        if(oldcount-ncount>0)
+        {
+            [self navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", oldcount-ncount];
+        }
+        else {
+            [self navigationController].tabBarItem.badgeValue=nil;
+        }
+        //CountView.hidden=YES;
+        [not release];
+    }
+    if(tag==2)
+    {
+        Birthday* birthday = [[Birthday alloc] initWithNibName:@"Birthday" bundle:nil];
+        [birthday setTitle:@"Birthday"];
+        birthday.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:birthday animated:YES];
+        if(oldcount - bcount>0)
+        {
+            [self navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", oldcount-bcount];
+        }
+        else {
+           [self navigationController].tabBarItem.badgeValue=nil;
+        }
+       // bCountView.hidden=YES;
+        [birthday release];
+    }
+    if(tag==3)
+    {
+        Group* group = [[Group alloc] initWithNibName:@"Group" bundle:nil];
+        [group setTitle:@"Group"];
+        group.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:group animated:YES];
+        [group release];
+    }
+    if(tag==4)
+    {
+        StatusList* statuslist = [[StatusList alloc] initWithNibName:@"StatusList" bundle:nil];
+        [statuslist setTitle:@"Status"]; 
+        statuslist.targetUserID=0;
+        statuslist.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:statuslist animated:YES];
+        [statuslist release];
+    }
+    if(tag==5)
+    {
+        Blog* blog = [[Blog alloc] initWithNibName:@"Blog" bundle:nil];
+        [blog setTitle:@"Blog"];
+        blog.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:blog animated:YES];
+        [blog release];
+    }
+    if(tag==6)
+    {
+        Events* event = [[Events alloc] initWithNibName:@"Events" bundle:nil];
+        [event setTitle:@"Event"];
+        event.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:event animated:YES];
+        [event release];
+    }
+    if(tag==7)
+    {
+        Career* carrer = [[Career alloc] initWithNibName:@"Career" bundle:nil];
+        [carrer setTitle:@"Career"];
+        carrer.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:carrer animated:YES];
+        [carrer release];
+    }
+    if(tag==8)
+    {
+        Piebridge* pb = [[Piebridge alloc] initWithNibName:@"Piebridge" bundle:nil];
+        [pb setTitle:@"Piebridge"];
+        pb.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:pb animated:YES];
+        [pb release];
+    }
+    if(tag==9)
+    {
+        Promotion* promotion = [[Promotion alloc] initWithNibName:@"Promotion" bundle:nil];
+        [promotion setTitle:@"Promotion"];
+        promotion.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:promotion animated:YES];
+        [promotion release];
+    }
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MStatus *pItem =(MStatus*) [updateArray objectAtIndex:index];
+    NSString *path = @"";
+    path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.createUserID,pItem.createUserID];
+    
+    
+     //path = [NSString stringWithFormat:@"%@/data/%d/status/small/%@",IMAGE_PATH,pItem.createUserID,pItem.updatePic];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path])
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+                    
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });
+    }
+    [pool release];
+}
+
+
+
+#pragma mark UPdate 升级界面
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+
+    return [updateArray count]+1;
+
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    if ([updateArray count]== 0) {
+        return loadCell;
+    }
+    
+    if(  indexPath.row +1 <= [updateArray count]){
+	static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        cell = cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:16];
+    }
+        
+        MStatus* min = (MStatus*) [updateArray objectAtIndex:indexPath.row];
+        
+        
+     
+
+        
+        
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像42.png"]];
+        
+        if(min.updatePic)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        
+       // UILabel *title=(UILabel*)[cell viewWithTag:2];
+        UILabel* action = (UILabel*)[cell viewWithTag:4];
+        UILabel* categray = (UILabel*)[cell viewWithTag:5];
+         UILabel* labShareName =(UILabel*)[cell viewWithTag:12];
+        
+        
+        //改
+        UIFont* myfont2 = [UIFont fontWithName:@"Helvetica" size:12];
+        CGSize textsize2 = [min.belongUserName sizeWithFont:myfont2 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        UILabel* labCreateName = (UILabel*)[cell viewWithTag:2];
+        labCreateName.text = min.belongUserName;
+        labCreateName.frame=CGRectMake(56, 10, textsize2.width, 15);
+        
+  
+      
+       //title.text=[NSString stringWithFormat:@"%d__%@__%d__%@__%d",min.fromUserID,min.fromUserName,min.belongUserID,min.belongUserName,min.updateType];
+        if (min.updateType==5) {
+            // StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+            
+            if(min.share)
+            {
+              NSString *str=nil;
+              str = min.updateTitle;
+              
+              UILabel* labText = (UILabel*)[cell viewWithTag:20];
+              UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+              CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+              labText.numberOfLines = textsize.height/16+1;
+              
+              labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+              labText.text = str;
+              cell_height=textsize.height;
+              
+              
+                action.text = @"shared ";
+                action.frame=CGRectMake(56+textsize2.width+4, 10, 45, 15);
+                UIFont* myfontShareName = [UIFont fontWithName:@"Helvetica" size:12];
+                CGSize textsizeShareName = [min.fromUserName sizeWithFont:myfontShareName constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                   labShareName.hidden=NO;
+                labShareName.frame=CGRectMake(action.frame.origin.x+45, 10, textsizeShareName.width, 15);
+                labShareName.text = min.fromUserName;
+                categray.frame = CGRectMake(labShareName.frame.origin.x+textsizeShareName.width+2, 10, 45, 15);
+                categray.text=@"’s status";
+//              labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+//              labText.text = str;
+
+            
+            }else{
+              
+              NSString *str=nil;
+              str = min.updateAbstract;
+              
+              UILabel* labText = (UILabel*)[cell viewWithTag:20];
+              UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+              CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+              labText.numberOfLines = textsize.height/16+1;
+              
+              labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+              labText.text = str;
+              cell_height=textsize.height;
+            
+                action.text = @"posted";
+              
+                categray.text = @"status";
+                UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+                CGSize textsize1 = [action.text  sizeWithFont:myfont1 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                action.frame=CGRectMake(56+textsize2.width+4,10, textsize1.width, 15);
+                categray.frame=CGRectMake(56+textsize2.width+4+textsize1.width+4, 10, textsize1.width, 15);
+                labShareName.hidden=YES;
+//              labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+//              labText.text = str;
+              
+            
+            }
+            
+        }
+        else {
+          NSString *str=nil;
+          str = min.updateAbstract;
+          
+          UILabel* labText = (UILabel*)[cell viewWithTag:20];
+          UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+          CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+          labText.numberOfLines = textsize.height/16+1;
+          
+          labText.frame=CGRectMake(56, 33, textsize.width, textsize.height);
+          labText.text = str;
+          cell_height=textsize.height;
+          
+          
+            action.text = @"posted";
+            
+          
+            UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:12];
+            CGSize textsize1 = [action.text  sizeWithFont:myfont1 constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            
+            action.frame=CGRectMake(56+textsize2.width+4,10, textsize1.width, 15);
+        
+
+        if (min.updateType==2) {
+            //BlogInfo* bloginfo = [[BlogInfo alloc] initWithNibName:@"BlogInfo" bundle:nil];
+            categray.text = @"blog";
+            categray.frame=CGRectMake(56+textsize2.width+4+textsize1.width+4, 10, textsize1.width, 15);
+        }
+        if (min.updateType==3) {
+            //CarrerInfo* info = [[CarrerInfo alloc] initWithNibName:@"CarrerInfo" bundle:nil];
+            categray.text = @"carrer";
+            categray.frame=CGRectMake(56+textsize2.width+4+textsize1.width+4, 10, textsize1.width, 15);
+        }
+        if (min.updateType==4) {
+            // EventInfo* eventinfo = [[EventInfo alloc] initWithNibName:@"EventInfo" bundle:nil];
+            categray.text = @"event";
+            categray.frame=CGRectMake(56+textsize2.width+4+textsize1.width+4, 10, textsize1.width, 15);
+        }
+        }
+        UILabel *time=(UILabel*)[cell viewWithTag:3];
+        time.frame=CGRectMake(56, 38+cell_height, time.frame.size.width, time.frame.size.height);
+        time.text = [TimeUtils timestamp:min.updateTime];
+        
+        
+        return cell;
+        
+     
+
+    }
+    
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            MStatus* min = (MStatus*) [updateArray objectAtIndex:[updateArray count]-1];
+            findex = min.updateID;
+            lindex = -1;
+            [self getStatusList:[updateArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+    
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    NSLog(@"%d,%d",[updateArray count],indexPath.row);
+  
+ 
+  
+  
+
+  
+if([updateArray count]==0||[updateArray count]==indexPath.row)
+{
+    if([updateArray count]%20!=0)
+    {
+        return 0;
+    }
+    return 44;
+}
+  
+  MStatus* min = (MStatus*) [updateArray objectAtIndex:indexPath.row];
+  NSString *str=nil;
+  
+  if(min.share)
+  {
+
+    str = min.updateTitle;
+  }
+  else
+  {
+    str = min.updateAbstract;
+  }
+
+  
+
+  UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+  CGSize textsize = [str sizeWithFont:myfont constrainedToSize:CGSizeMake(250, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+  cell_height=textsize.height;
+   NSLog(@"%d",cell_height);
+    return 60+cell_height;
+ 
+    
+    
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+
+
+    
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+   MStatus *min = (MStatus*)[updateArray objectAtIndex:indexPath.row] ;
+    if (min.updateType==2) {
+        BlogInfo* bloginfo = [[BlogInfo alloc] initWithNibName:@"BlogInfo" bundle:nil];
+        [bloginfo setTitle:@"Blog"];
+        bloginfo.blogID = min.relatedID;
+      
+        [self.navigationController pushViewController:bloginfo animated:YES];
+        [bloginfo release];
+    }
+    if (min.updateType==3) {
+        CarrerInfo* info = [[CarrerInfo alloc] initWithNibName:@"CarrerInfo" bundle:nil];
+        //info.status=min.status;
+        info.carrerID=min.relatedID;
+        
+        [info setTitle:@"Career Opportunity"];
+        [self.navigationController pushViewController:info animated:YES];
+        [info release];
+    }
+    if (min.updateType==4) {
+        EventInfo* eventinfo = [[EventInfo alloc] initWithNibName:@"EventInfo" bundle:nil];
+        [eventinfo setTitle:@"Event Details"];
+        eventinfo.eventID = min.relatedID;
+        [self.navigationController pushViewController:eventinfo animated:YES];
+        [eventinfo release];
+    }
+    if (min.updateType==5) {
+        StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+        [statusInfo setTitle:@"Status"];
+        statusInfo.statusID = min.relatedID;
+        statusInfo.mstatus = min;
+        statusInfo.perUserID=min.createUserID;
+       statusInfo.commentNmb=min.commentCount;
+        [self.navigationController pushViewController:statusInfo animated:YES];
+        [statusInfo release];
+    }
+}
+
+
+//- (void)doneLoadingTableViewData {
+//	//  model should call this when its done loading
+//	[self dataSourceDidFinishLoadingNewData];
+//}
+-(void)getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    findex = -1;
+    lindex = 0;
+    [self getStatusList:1];
+    
+}
+
+-(void) getStatusList:(int)pageNo
+{
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self
+                                               action:@selector(homeList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient home:0 updateType:0 firstIndex:findex lastIndex:lindex pageNo:pageNo];
+}
+
+#pragma mark - 数据解析
+- (void)homeList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取home数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+    if(opresult==0)
+    {
+        if (errCode==12) {
+            [[[iToast makeText:NSLocalizedString(@"No access due to user’s setting.", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        else{
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"updateArray"];
+    
+    if ([arr count]>=1) {
+        
+        for (int i=0;i<[arr count]; i++) {
+            MStatus* mstatus = [MStatus mstatusWithJsonDictionary:[arr objectAtIndex:i]];
+            [updateArray addObject:mstatus];
+        }
+   
+        
+        loadCell.hidden=YES;
+  
+    }else{
+        
+     
+        
+    }
+   
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [updateArray removeAllObjects];
+        [PublicUtils save:dic name:[NSString stringWithFormat:@"updates__list_%d.db",[PublicUtils getCurrentUser].userID]];
+        
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MStatus* mstatus = [MStatus mstatusWithJsonDictionary:[arr objectAtIndex:i]];
+        [updateArray addObject:mstatus];
+    }
+    
+    [tableView reloadData];
+    isLoading=NO;
+
+    
+    
+
+}
+
+
+@end

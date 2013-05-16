@@ -1,0 +1,56 @@
+//
+//  MCareerMin.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-3.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MCareerMin.h"
+
+@implementation MCareerMin
+@synthesize careerID,creatorID,careerName,creatorName,hot,position,posterName,status,shareCount,likeCount,deadline,isapply,industry,location,publishTimeDate,commentCount;
++ (MCareerMin*)mcareerminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MCareerMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MCareerMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        
+        isapply =  ([dic objectForKey:@"applied"]==[NSNull null])?0:[[dic objectForKey:@"applied"] boolValue];
+        careerID =  ([dic objectForKey:@"careerID"]==[NSNull null])?0:[[dic objectForKey:@"careerID"] intValue];
+        creatorID =  ([dic objectForKey:@"creatorID"]==[NSNull null])?0:[[dic objectForKey:@"creatorID"] intValue];
+        careerName = [[dic objectForKey:@"careerName"] retain];
+        publishTimeDate = [[dic objectForKey:@"publishTimeDate"] retain];
+        creatorName = [[dic objectForKey:@"creatorName"] retain];
+        hot = ([dic objectForKey:@"hot"]==[NSNull null])?0:[[dic objectForKey:@"hot"] boolValue];
+        position = [[dic objectForKey:@"position"] retain];
+        
+        industry=[[dic objectForKey:@"industry"] retain];
+        location=[[dic objectForKey:@"cityName"] retain];
+        
+        posterName = [[dic objectForKey:@"posterName"] retain];
+        deadline= [[dic objectForKey:@"deadline"] retain];
+        status = ([dic objectForKey:@"status"]==[NSNull null])?0:[[dic objectForKey:@"status"] boolValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        likeCount = ([dic objectForKey:@"likeCount"]==[NSNull null])?0:[[dic objectForKey:@"likeCount"] intValue];
+        commentCount=([dic objectForKey:@"commentCount"]==[NSNull null])?0:[[dic objectForKey:@"commentCount"] intValue];
+        
+        if ((id)careerName == [NSNull null]) careerName = @"";
+        if ((id)creatorName == [NSNull null]) creatorName = @"";
+        if ((id)position == [NSNull null]) position = @"";
+        if ((id)posterName == [NSNull null]) posterName = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [careerName release];
+    [creatorName release];
+    [posterName release];
+    [position release];
+    [super dealloc];
+}
+@end

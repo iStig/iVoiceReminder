@@ -1,0 +1,48 @@
+//
+//  CurrentEvent.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-29.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MEventMin.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "Invite.h"
+#import "UIImageExtras.h"
+#import "UTTableViewController.h"
+#import "Network.h"
+@class Network;
+@interface CurrentEvent : UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             eventArray;
+    IBOutlet  PullRefreshTableView*      eventTableView; 
+    ImageCache                  *imageCache;
+    BOOL                        isLoading;
+    MEventMin                   *selectevent;
+    int                         appint;
+    IBOutlet    UIImageView*    imageSelect;
+    IBOutlet    UIButton*       buttonAll;
+    IBOutlet    UIButton*       button2;
+    IBOutlet    UIButton*       button3;
+    Network* cuser;
+}
+@property(nonatomic,retain) Network* cuser;
+@property(nonatomic,retain) NSMutableArray* eventArray;
+- (void)InitNavigationBarItems;
+-(void)back;
+-(void)post;
+- (void)eventList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+
+-(void)requestData:(int)loaduserID pageNo:(int)pageNo;
+-(IBAction)getNext:(id)sender;
+-(IBAction)applyrequest:(id)sender;
+- (void)sendResponse:(WeiboClient*)sender obj:(NSObject*)obj;
+-(IBAction)leftClicked:(id)sender;
+- (IBAction)composeButtonTouch:(id)sender;
+@end

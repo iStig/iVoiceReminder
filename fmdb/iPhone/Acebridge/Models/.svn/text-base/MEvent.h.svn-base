@@ -1,0 +1,60 @@
+//
+//  MEvent.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MEvent : NSObject
+{
+    int                 eventID;
+    NSString*           eventName;
+    NSString*           organizer;
+    int                 organizerID;
+    NSString*           categoryName;
+    NSDate*             publishTime;
+    NSString*           cityName;
+    NSDate*             startTime;
+    NSDate*             endTime;
+    NSString*           budget;
+    NSString*                 contactNumber;
+    NSDate*             deadline;
+    NSString*           posterName;
+    NSString*           eventDetails;
+    int                 attendeeCount;
+    int                 commentCount;
+    int                 count;
+    int                 applyCount;
+    int                 likeCount;
+    int                 shareCount;
+    BOOL                 isapply;
+    BOOL                 status;
+}
+@property(nonatomic,assign)BOOL                 status;
+@property(nonatomic,assign)BOOL                 isapply;
+@property(nonatomic,assign)int                 eventID;
+@property(nonatomic,retain)NSString*           eventName;
+@property(nonatomic,retain)NSString*           organizer;
+@property(nonatomic,assign)int                 organizerID;
+@property(nonatomic,retain)NSString*           categoryName;
+@property(nonatomic,retain)NSDate*             publishTime;
+@property(nonatomic,retain)NSString*           cityName;
+@property(nonatomic,retain)NSDate*             startTime;
+@property(nonatomic,retain)NSDate*             endTime;
+@property(nonatomic,retain)NSString*           budget;
+@property(nonatomic,retain)NSString*                 contactNumber;
+@property(nonatomic,retain)NSDate*             deadline;
+@property(nonatomic,retain)NSString*           posterName;
+@property(nonatomic,retain)NSString*           eventDetails;
+@property(nonatomic,assign)int                 attendeeCount;
+@property(nonatomic,assign)int                 commentCount;
+@property(nonatomic,assign)int                 count;
+@property(nonatomic,assign)int                 applyCount;
+@property(nonatomic,assign)int                 likeCount;
+@property(nonatomic,assign)int                 shareCount;
++ (MEvent*)meventWithJsonDictionary:(NSDictionary*)dic;
+- (MEvent*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

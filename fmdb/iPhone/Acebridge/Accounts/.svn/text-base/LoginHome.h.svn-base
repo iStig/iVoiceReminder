@@ -1,0 +1,15 @@
+//
+//  LoginHome.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@interface LoginHome : UIViewController
+{
+    IBOutlet UIImageView*    bgView;
+}
+-(IBAction)getNext:(id)sender;
+@end

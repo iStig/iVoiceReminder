@@ -1,0 +1,222 @@
+//
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-20.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "ImportContacets.h"
+#import <AddressBook/AddressBook.h>
+#import "AddressBookUI/AddressBookUI.h"
+@implementation ImportContacets
+@synthesize keys,values;
+
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    NSMutableArray *arrValue;
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    for (int i=0; i<=26; i++) {
+        arrValue = [[NSMutableArray alloc] init];
+        [values addObject:arrValue];
+        if(i==26)
+        {
+            [keys addObject:@"#"];
+        }
+        else
+        {
+            [keys addObject:[NSString stringWithFormat:@"%c",(char)(i+65)]];
+        }
+    }
+    ABAddressBookRef addressBook =ABAddressBookCreate();
+    NSMutableArray* allpeople = (NSMutableArray *)ABAddressBookCopyArrayOfAllPeople (addressBook);
+    for(id person in allpeople)
+    {
+        NSString* firstName = (NSString *)ABRecordCopyValue(person, kABPersonFirstNameProperty);
+        NSString* lastName = (NSString *)ABRecordCopyValue(person, kABPersonLastNameProperty);
+        lastName=lastName==nil?@"":lastName;
+        firstName=firstName==nil?@"":firstName;
+        NSString* fullName = (NSString *)[lastName stringByAppendingFormat:@"%@",firstName];
+        ABMultiValueRef phones = (ABMultiValueRef)ABRecordCopyValue(person, kABPersonPhoneProperty);
+        NSString* phone;
+        if(ABMultiValueGetCount(phones)>0)
+        {
+            phone = (NSString *)ABMultiValueCopyValueAtIndex(phones, 0);
+            NSMutableArray *infoValue = [[NSMutableArray alloc] init];
+            NSString* pinyingName = [[PYMethod getPinYin:fullName] uppercaseString];
+            char frstChar = [pinyingName characterAtIndex:0];
+            int index = (int)frstChar;
+            [infoValue addObject:pinyingName];
+            [infoValue addObject:fullName];
+            [infoValue addObject:phone];
+            [infoValue addObject:@"NO"];//是否选中 后期使用
+            if(index>=65&&index<=90)
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+                [tempValue addObject:infoValue];
+            }
+            else
+            {
+                NSMutableArray *tempValue=[values objectAtIndex:26];
+                [tempValue addObject:infoValue];
+            }
+        }
+    }
+    CFRelease(addressBook);
+    [keys removeAllObjects];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    [values removeAllObjects];
+    values = finValue;
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    self.title=@"Import Contacts";
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"添加好友.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42.0);
+    [rbutton addTarget:self action:@selector(add) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return [keys count];
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+    return [dic count];
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"Cell";
+    
+    NSMutableArray *key = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:2];
+    } 
+    // Configure the cell...
+    cell.textLabel.font = [UIFont systemFontOfSize:14];
+    NSMutableArray* temp = (NSMutableArray*)[key objectAtIndex:indexPath.row];
+    NSString* name = [temp objectAtIndex:1];
+    UILabel* lab = (UILabel*)[cell viewWithTag:1];
+    lab.text=name;
+    return cell; 
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section 
+{
+    return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+}
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    return keys;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+#pragma mark - 进入选择界面
+-(void)add
+{
+    MyConnectSelected *ics = [[MyConnectSelected alloc] initWithNibName:@"MyConnectSelected" bundle:nil];
+    ics.keys=keys;
+    ics.values = values;
+    
+    [ics setTitle:@"Contacts Book Import"];
+    [self.navigationController pushViewController:ics animated:YES];
+    [ics release];
+//    ImportContacetsSelected* ics = [[ImportContacetsSelected alloc] initWithNibName:@"ImportContacetsSelected" bundle:nil];
+//    ics.keys = keys;
+//    ics.values = values;
+//    ics.title=@"Contacts Book Import";
+//    [self.navigationController pushViewController:ics animated:YES];
+//    [ics release];
+}
+#pragma mark - 释放资源
+-(void) dealloc
+{
+    [keys release];
+    [values release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,550 @@
+//
+//  UserInfo.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "UserInfo.h"
+#import "UIImageExtras.h"
+#import "UserList.h"
+#import "SendChat.h"
+#import "iToast.h"
+#import "StatusList.h"
+#import "Group.h"
+#import "Events.h"
+@implementation UserInfo
+@synthesize userID;
+@synthesize user,userName;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    [activity startAnimating];
+    activity.hidden=NO;
+    UIButton* btnTel = (UIButton*)[headView viewWithTag:8];
+    btnTel.hidden=YES;
+    [self InitNavigationBarItems];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(getUserInfo:obj:)];
+    [weiboClient getUserInfo:userID];
+    scetionCount = 3;
+    UIButton* btnConnect = (UIButton*)[headView viewWithTag:4];
+    btnConnect.hidden=YES;
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableview事件
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if(section==0)
+    {
+        return headView;
+    }
+    return nil;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if(section==0)
+    {
+        return [headView frame].size.height;
+    }
+    return  5;
+}
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+	return scetionCount;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+{
+	if(section==0)
+    {
+        return 4;
+    }
+    else
+    {
+        return 1;
+    }
+        
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(indexPath.section==1)
+    {
+        return 60;
+    }
+    if(indexPath.section==2)
+    {
+        return 50;
+    }
+    if(indexPath.section== 3)
+    {
+        return 38;
+    }
+    return 40;
+}
+-(UITableViewCell*) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell;
+    if(indexPath.section==0)
+    {
+        if(indexPath.row==0)
+        {
+            cell = location;
+        }
+        if(indexPath.row==1)
+        {
+            cell = university;
+        }
+        if(indexPath.row==2)
+        {
+            cell = company;
+        }
+        if(indexPath.row==3)
+        {
+            cell = titlecell;
+        }
+    }
+    if(indexPath.section==1)
+    {
+        if(indexPath.row==0)
+        {
+            cell = selfinfroduction;
+        }
+    }
+    if(indexPath.section==2)
+    {
+        if(indexPath.row==0)
+        {
+            cell = info;
+        }
+    }
+    if(indexPath.section == 3)
+    {
+        if(indexPath.row==0)
+        {
+            cell = op;
+            UIView* view = [[UIView alloc] init];
+            [cell setBackgroundView:view];
+        }
+    }
+    return cell;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{     
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(update:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(IBAction)update:(id)sender{
+    if(self.tabBarController.selectedIndex==1)
+    {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+    }
+    else {
+        self.tabBarController.selectedIndex=1;
+    }
+}
+#pragma mark 头像图片大图
+-(IBAction)viewBigPicture:(id)sender{
+
+    NSLog(@"bigPicture");
+    
+    
+    PhotoViewController *photoViewController = [[PhotoViewController alloc] init];
+    photoViewController.hidesBottomBarWhenPushed = YES;
+    
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_big.jpg",IMAGE_PATH,userID,userID];
+
+    
+    Photo *p = [Photo photoWithURL:path];
+    [self.navigationController pushViewController:photoViewController animated:YES];
+    [photoViewController showImage:p];
+    
+}
+
+#pragma mark - 获取用户信息
+- (void)getUserInfo:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"用户信息获取失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    user = [[MUser muserWithJsonDictionary:dic] retain];
+    [self bindData];
+    [uiTableView reloadData];
+    [activity stopAnimating];
+    activity.hidden=YES;
+}
+//发私信
+-(IBAction)chatClicked:(id)sender
+{
+    SendChat* sendchat = [[SendChat alloc] initWithNibName:@"SendChat" bundle:nil];
+    sendchat.toUser=user.userName;
+    [sendchat setTitle:@"Message"];
+    sendchat.toUserID = userID;
+    sendchat.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:sendchat animated:YES];
+    [sendchat release];
+}
+#pragma mark - 填充数据
+-(void) bindData
+{
+    
+  
+    
+    //绑定table页头
+    UIButton* btnTel = (UIButton*)[headView viewWithTag:8];
+    
+    if (![user.mobile length]>0) {
+        
+        btnTel.hidden=YES;
+        
+    }else{
+    [btnTel addTarget:self action:@selector(telClicked:) forControlEvents:UIControlEventTouchUpInside];
+        tel=user.mobile.copy;
+    }
+    //发私信
+    UIButton* btnChat = (UIButton*)[headView viewWithTag:10];
+    [btnChat addTarget:self action:@selector(chatClicked:) forControlEvents:UIControlEventTouchUpInside];
+    UIImageView* face = (UIImageView*)[headView viewWithTag:1];
+    UIImageView*imageview=(UIImageView*)[headView viewWithTag:1];
+    [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+    if(userID)
+    {
+        [self updateImage:face];
+    }
+    
+    UILabel *labUserName = (UILabel*)[headView viewWithTag:2];
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:16];
+    CGFloat width = [user.userName sizeWithFont:myfont constrainedToSize:CGSizeMake(170, 20) lineBreakMode:UILineBreakModeWordWrap].width;
+    labUserName.frame=CGRectMake(100, 8, width+15, 20);
+    [labUserName setText:user.userName];
+    userName = user.userName.copy;
+    UIImageView* sex= (UIImageView*)[headView viewWithTag:3];
+    sex.frame=CGRectMake(100+width+5+9, 10, 15, 15);
+    if(user.gender)
+    {
+        [sex setImage:[UIImage imageNamed:@"male.png"]];
+    }
+    else
+    {
+        [sex setImage:[UIImage imageNamed:@"female.png"]];
+    }
+    UILabel* labRank = (UILabel*)[headView viewWithTag:5];
+    [labRank setText:[user getRank:user.rank]];
+    UILabel* labPoint = (UILabel*)[headView viewWithTag:6];
+    [labPoint setText:[NSString stringWithFormat:@"$%d",user.point]];
+    UILabel* labStatus = (UILabel*)[headView viewWithTag:7];
+    [labStatus setText:user.state];
+    //绑定列表
+    UILabel* labLocation = (UILabel*)[location viewWithTag:1];
+    [labLocation setText:user.locationName];
+    UILabel* labUni = (UILabel*)[university viewWithTag:1];
+    [labUni setText:user.school];
+    UILabel* labCompany = (UILabel*)[company viewWithTag:1];
+    [labCompany setText:user.company];
+    UILabel* labSelf = (UILabel*)[selfinfroduction viewWithTag:1];
+    [labSelf setText:user.selfIntrodution];
+    
+    UILabel* tit = (UILabel*)[titlecell viewWithTag:1];
+    tit.text = user.title;
+    
+    
+    //绑定底部按钮数据
+    UILabel* labUpdates = (UILabel*)[info viewWithTag:1];
+    [labUpdates setText:[NSString stringWithFormat:@"%d",user.statusNum]];
+    UILabel* labNetwork = (UILabel*)[info viewWithTag:2];
+    [labNetwork setText:[NSString stringWithFormat:@"%d",user.connectedNum]];
+    UILabel* labEvents = (UILabel*)[info viewWithTag:3];
+    [labEvents setText:[NSString stringWithFormat:@"%d",user.eventNum]];
+    UILabel* labGroups = (UILabel*)[info viewWithTag:4];
+    [labGroups setText:[NSString stringWithFormat:@"%d",user.groupNum]];
+    UIButton* btnConnect = (UIButton*)[headView viewWithTag:4];
+    btnConnect.hidden = NO;
+    if(user.connectedStatus ==0)
+    {
+        btnConnect.hidden = YES;
+        btnTel.hidden=NO;
+    }
+    if(user.connectedStatus==2)
+    {
+        [btnConnect addTarget:self action:@selector(connectClicked:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    else if(user.connectedStatus==1)
+    {
+        btnConnect.hidden=YES;
+        UIImageView* link = [[UIImageView alloc] initWithFrame:CGRectMake(286, 7, 23, 23)];
+        [link setImage:[UIImage imageNamed:@"link.png"]];
+        [link setTag:100];
+        [headView addSubview:link];
+        [link release];
+        scetionCount = 4;
+        btnTel.hidden=NO;
+    }
+    else
+    {
+        btnTel.hidden=YES;
+        [btnConnect setTitle:@"Pending" forState:UIControlStateNormal];
+        [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateNormal];
+        [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateSelected];
+    }
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,userID,userID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+        
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+       
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+#pragma mark - connect请求
+-(IBAction)connectClicked:(id)sender
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(changeconnect:obj:)];
+   weiboClient.context = [[NSString alloc] initWithFormat:@"%d",1];
+    [weiboClient changeconnect:userID opCmd:1];
+}
+#pragma mark - 发送connect请求返回数据
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"发送connect失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary *dic = (NSDictionary*)obj;
+    int opResult = [[dic objectForKey:@"opResult"] intValue];
+    if(opResult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        if([sender.context intValue]==1)
+        {
+            user.connectedStatus=3;
+        }
+        if([sender.context intValue]==2)
+        {
+            user.connectedStatus=2;
+            scetionCount = 3 ;
+            UIImageView* link = (UIImageView*)[headView viewWithTag:100];
+            link.hidden = YES;
+        }
+        [self bindData];
+        [uiTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - 弹出是否打电话
+-(IBAction)telClicked:(id)sender
+{
+    if (![actionButtonActionSheet isVisible]) {
+        actionButtonActionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self
+                                                     cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                                     otherButtonTitles:@"Make a call",nil];
+        [actionButtonActionSheet showInView:self.view];
+    }
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (buttonIndex==0) {
+            UIApplication *app = [UIApplication sharedApplication];
+            NSString *urlString = [NSString stringWithFormat:@"tel://%@",tel];
+            NSURL *url = [NSURL URLWithString:urlString];
+            [app openURL:url];
+    }
+}
+#pragma mark - 连接network
+-(IBAction)networkClicked:(id)sender
+{
+    if([sender tag]==7)
+    {
+        UserList* userlist = [[UserList alloc] initWithNibName:@"UserList" bundle:nil];
+        [userlist setTitle:userName];
+        userlist.userID = userID;
+        userlist.targetUserName=@"";
+        userlist.targetUniversity=@"";
+        [self.navigationController pushViewController:userlist animated:YES];
+        [userlist release];
+    }
+    if([sender tag]==6)
+    {
+        StatusList* satausList = [[StatusList alloc] initWithNibName:@"StatusList" bundle:nil];
+        [satausList setTitle:@"Status"];
+        satausList.targetUserID = userID;
+        [self.navigationController pushViewController:satausList animated:YES];
+        [satausList release];
+    }
+    if([sender tag]==5)
+    {
+        Events* events = [[Events alloc] initWithNibName:@"Events" bundle:nil];
+        events.targetUserID = userID;
+        events.type=2;
+        [events setTitle:@"Events"];
+        [self.navigationController pushViewController:events animated:YES];
+        [events release];
+    }
+    if([sender tag]==8)
+    {
+        Group* group = [[Group alloc] initWithNibName:@"Group" bundle:nil];
+        [group setTitle:@"Groups"];
+        group.targetUserID = userID;
+        group.type=2;
+        [self.navigationController pushViewController:group animated:YES];
+        [group release];
+    }
+}
+#pragma mark - 操作
+-(IBAction)opClicked:(id)sender
+{
+    if([sender tag] == 1)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Are you sure to disconnect?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Confirm", nil];
+        [alert show];
+        [alert release];
+    }
+    if([sender tag] == 2)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Are you sure to report?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Confirm", nil];
+        [alert show];
+        [alert release];
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (buttonIndex==1) {
+        
+        if (weiboClient) { 
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(changeconnect:obj:)];
+        weiboClient.context = [[NSString alloc] initWithFormat:@"%d",2];
+        [weiboClient changeconnect:userID opCmd:2];
+    }
+
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

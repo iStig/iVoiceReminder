@@ -1,0 +1,59 @@
+//
+//  StatusInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-18.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MStatusInfo.h"
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "MStatus.h"
+#import "JSCoreTextView.h"
+#import "JSTwitterCoreTextView.h"
+#import "PhotoViewController.h"
+@class JSTwitterCoreTextView;
+
+@interface StatusInfo : UIViewController<JSCoreTextViewDelegate>
+{
+    IBOutlet UIScrollView* scrollview;
+    IBOutlet UIView*        headView;
+    IBOutlet UIView*        bottomView;
+    MStatusInfo*            mstatusInfo;
+    int                         statusID;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    MStatus*                    mstatus;
+    IBOutlet UIActivityIndicatorView *active;
+    int userid;
+    int commentNmb;
+    NSString* username;
+    CGFloat                 picHight;
+    IBOutlet  UIImageView*  bottom;
+    IBOutlet  UIButton*     showImageBtn;
+    int     typeID;
+    int  perUserID;
+    BOOL isFromCommentCell;
+}
+@property(nonatomic,retain)MStatusInfo*     mstatusInfo;
+@property(nonatomic,retain)MStatus*         mstatus;
+@property(nonatomic,assign)int              statusID;
+@property(nonatomic,assign)int commentNmb;
+@property(nonatomic,assign)int  perUserID;
+@property(nonatomic,assign) BOOL isFromCommentCell;
+-(void) bindStatus;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)statusview:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImage:(UIImageView*)face;
+-(IBAction)userinfo:(id)sender;
+-(IBAction)share:(id)sender;
+-(IBAction)comment:(id)sender;
+-(IBAction)like:(id)sender;
+- (void)like:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateBottomImage:(UIImageView*)bottom;
+-(IBAction)showImage:(id)sender;
+@end

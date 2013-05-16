@@ -1,0 +1,565 @@
+//
+//  NewComment.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "NewComment.h"
+#import "MUser.h"
+#import "PublicUtils.h"
+#import "iToast.h"
+#import "PYMethod.h"
+@implementation NewComment
+@synthesize relatedID,typeID,userID,isstatus,touserID,touserName,ispush;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    ispush=NO;
+    isSelectImage=NO;
+    headImage.hidden=YES;
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillShown:) name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(keyboardWillHiden:) name:UIKeyboardDidHideNotification object:nil];
+    userArray = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    tableView = atTableView;
+    tableView.frame = CGRectMake(0, 0, 320, 345);
+    [textview becomeFirstResponder];
+    isLoading = NO;
+    atList.frame = CGRectMake(0, 35, 320, 420);
+    [self.view addSubview:atList];
+    atList.hidden = YES;
+    if(isstatus)
+    {
+        labText.text = @"Status contacts";
+        SelectImage.hidden=NO;
+    }
+    else
+    {
+        labText.text = @"Common contacts";
+        SelectImage.hidden=YES;
+        
+        if ([touserName length]>0) {
+            
+        
+        textview.text = [NSString stringWithFormat:@"@%@:",touserName];
+        }
+        //touserName,touserID
+    }
+    // Do any additional setup after loading the view from its nib.
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+//下拉刷新
+-(void)getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self requestDate:1];
+}
+-(void) requestDate:(int)pageNo
+{
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(myconnectusers:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient myconnectusers:pageNo ];
+}
+- (void)myconnectusers:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        return;
+    }
+    
+    NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    if(arr==nil)
+    {
+        return;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [userArray removeAllObjects];
+    }
+    
+    for (int i=0; i<[arr count]; i++) {
+        MUser* user = [MUser muserWithJsonDictionary:[arr objectAtIndex:i]];
+        [userArray addObject:user];
+    }
+    [self loadData];
+    [self merger];
+    [atTableView reloadData];
+    isLoading=NO;
+}
+
+-(void) loadData{
+    
+    NSMutableArray *arrValue;
+    keys = [[NSMutableArray alloc] init];
+    values = [[NSMutableArray alloc] init];
+    valuesArray = [[NSMutableArray alloc] init];;
+    for (int i=0; i<=26; i++) {
+        arrValue = [[NSMutableArray alloc] init];
+        [values addObject:arrValue];
+        if(i==26)
+        {
+            [keys addObject:@"#"];
+        }
+        else
+        {
+            [keys addObject:[NSString stringWithFormat:@"%c",(char)(i+65)]];
+        }
+    }
+    NSLog(@"%d",[values count]);
+    
+    for (MUser *user in userArray) {
+        
+        
+        NSMutableArray *infoValue = [[NSMutableArray alloc] init];
+        NSString* pinyingName = [[PYMethod getPinYin:user.userName] uppercaseString];
+        char frstChar = [pinyingName characterAtIndex:0];
+        int index = (int)frstChar;
+        [infoValue addObject:pinyingName];
+        [infoValue addObject:user.userName];
+        [infoValue addObject:[NSString stringWithFormat:@"%d",user.userID]];          
+        if(index>=65&&index<=90)
+        {
+            NSMutableArray *tempValue=[values objectAtIndex:(index-65)];
+            [tempValue addObject:infoValue];
+        }
+        else
+        {
+            NSMutableArray *tempValue=[values objectAtIndex:26];
+            [tempValue addObject:infoValue];
+        }
+        
+    }
+    valuesArray=values;
+    NSLog(@"%d",[values count]);
+}
+
+#pragma mark - 合并
+-(void) merger
+{
+    
+    keys = [[NSMutableArray alloc] init];
+    NSMutableArray *finValue = [[NSMutableArray alloc] init];
+    for (int i=0; i<[values count]; i++) {
+        NSMutableArray* temp = (NSMutableArray*)[values objectAtIndex:i];
+        if(!(temp ==nil||temp==NULL||[temp count]==0))
+        {
+            char fristChar =[(NSString*)[[temp objectAtIndex:0] objectAtIndex:0] characterAtIndex:0];
+            int  index =(int)fristChar;
+            [finValue addObject:temp.copy];
+            if(index>=65&&index<=90)
+            {
+                [keys addObject:[NSString stringWithFormat:@"%c",fristChar]];
+            }
+            else
+            {
+                [keys addObject:@"#"];
+            }
+        }
+    }
+    values = [[NSMutableArray alloc] init];
+    values = finValue;
+    NSLog(@"%d",[values count]);
+}
+
+
+
+
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"send.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42);
+    [rbutton addTarget:self action:@selector(rClicked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+-(IBAction)rClicked:(id)sender
+{
+    sendBtn.enabled=NO;
+    rbutton.enabled=NO;
+    if(isstatus)
+    {
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(poststatus:obj:)];
+        NSData* picStr = nil;
+        if(isSelectImage)
+        {
+            picStr = [UIImageJPEGRepresentation([headImage image], 0.5) retain];
+        }
+        [weiboClient postStatus:textview.text privacy:2 picStr:picStr];
+    }
+    else
+    {
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(commentResult:obj:)];
+        int newtype=0;
+        if(typeID==6){
+            newtype=7;
+        }
+        else{
+            
+            if(typeID==7){
+                newtype=6;}
+            else{
+                newtype=typeID;
+            }
+        }
+        
+        NSLog(@"typeID:%d,relatedID:%d,touserID:%d,context:%@",newtype,relatedID,userID,textview.text);
+        
+        [weiboClient postComment:newtype relatedID:relatedID toUserID:userID Content:textview.text];
+    }
+}
+- (void)poststatus:(WeiboClient*)sender obj:(NSObject*)obj
+{
+   sendBtn.enabled=YES;
+   rbutton.enabled=YES;
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent.", @"")] setGravity:iToastGravityBottom] show];
+        [self back];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityTop] show];
+       
+    }
+}
+-(void)commentResult:(WeiboClient *)sender obj:(NSObject *)obj
+{
+    sendBtn.enabled=YES;
+
+    rbutton.enabled=YES;
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+       [[[iToast makeText:NSLocalizedString(@"Request sent.", @"")] setGravity:iToastGravityBottom] show];
+        self.ispush=YES;
+        [self back];
+    }
+    else
+    {
+         [[[iToast makeText:NSLocalizedString(@"Sorry, emotion is not supported at the moment.", @"")] setGravity:iToastGravityTop] show];
+        
+    }
+}
+-(IBAction)atview:(id)sender
+{
+    if(atList.hidden)
+    {
+        [self getItemsWhenPullDownTableView];
+        [textview resignFirstResponder];
+        atList.hidden=NO;
+    }
+    else
+    {
+       atList.hidden=YES; 
+    }
+}
+#pragma mark-键盘事件
+- (void)keyboardWillShown:(NSNotification*)aNotification {
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    textview.frame = CGRectMake(0, 35, 320,416 - kbSize.height- 70);
+    sendBtn.frame =CGRectMake(35, 416 - kbSize.height-35, 250, 30);
+}
+- (void)keyboardWillHiden:(NSNotification*)aNotification
+{
+    textview.frame = CGRectMake(0, 35, 320, 130);
+    sendBtn.frame =CGRectMake(35, 165, 250, 30);
+}
+//#pragma mark - tableview 事件
+//- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+//{
+//	return 1;
+//}
+#pragma mark - tableView事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    if([keys count]==0){
+        
+        return 0;
+    }
+    else{   
+        return [keys count];
+    }
+}
+
+//- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+//{
+//    return [userArray count]+1;
+//}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    if ([keys count]==0) {
+        return 0;
+    }
+    else{
+        NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:section];
+        return [dic count];
+    }
+}  
+    
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([values count]==0)
+    {
+        return loadCell;
+    }
+    
+    NSMutableArray* dic = (NSMutableArray*)[values objectAtIndex:indexPath.section];
+    if(indexPath.row +1 <= [dic count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"CommentListCell" owner:nil options:nil] objectAtIndex:1];
+        }
+       // MUser* muser = (MUser*)[userArray objectAtIndex:indexPath.row];
+        
+        
+        
+        NSString *name=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:1];
+        
+        UILabel* labName = (UILabel*)[cell viewWithTag:1];
+       labName.text = name;
+        return cell;
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestDate:[values count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    //MUser* muser = (MUser*)[userArray objectAtIndex:indexPath.row];
+    
+    NSString *name=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:1];
+    NSString *userid=[[[values objectAtIndex:indexPath.section] objectAtIndex:indexPath.row ] objectAtIndex:2];
+    
+    textview.text = [NSString stringWithFormat:@"%@ @%@(%@) ",textview.text,name,userid];
+    atList.hidden = YES;
+    [textview becomeFirstResponder];
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    if ([keys count]==0) {
+        return nil;
+    }
+    else{
+        return [NSString stringWithFormat:@"%@",[keys objectAtIndex:section]];
+    }
+}
+
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView{
+    if(!keys)
+    {
+        return [[NSArray alloc] init];
+    };
+    return keys;
+}
+
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([userArray count]==0||[userArray count]==indexPath.row)
+    {
+        if([userArray count]%20!=0)
+        {
+            return 0;
+        }
+    }
+    return 44;
+}
+#pragma mark  -调用照相机和本地图片
+
+
+-(IBAction)changeHeadIcon:(id)sender{
+    // 创建时不指定按钮  
+    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@""  
+                                                       delegate:self  
+                                              cancelButtonTitle:nil  
+                                         destructiveButtonTitle:nil  
+                                              otherButtonTitles:nil];  
+    // 逐个添加按钮（比如可以是数组循环）  
+    [sheet addButtonWithTitle:@"Take Photo"];  
+    [sheet addButtonWithTitle:@"Choose From Library"];  
+    // 同时添加一个取消按钮  
+    [sheet addButtonWithTitle:@"Cancel"];  
+    // 将取消按钮的index设置成我们刚添加的那个按钮，这样在delegate中就可以知道是那个按钮  
+    sheet.destructiveButtonIndex = sheet.numberOfButtons-1;  
+    //[sheet showInView:self.view.superview];
+    [sheet showInView:[UIApplication sharedApplication].keyWindow];
+    [sheet release];
+}
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex  
+{  
+    if (buttonIndex == actionSheet.cancelButtonIndex)  
+    { return; }  
+    switch (buttonIndex)  
+    {  
+        case 0: {  
+            UIImagePickerControllerSourceType sourceType=UIImagePickerControllerSourceTypeCamera;
+            if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            }
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=sourceType;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+        case 1: { 
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+    }  
+}  
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo {
+	[picker dismissModalViewControllerAnimated:YES];
+    headImage.image=image;
+    isSelectImage=YES;
+    headImage.hidden=NO;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

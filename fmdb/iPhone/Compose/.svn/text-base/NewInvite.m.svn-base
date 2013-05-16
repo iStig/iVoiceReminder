@@ -1,0 +1,217 @@
+//
+//  NewInvite.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "NewInvite.h"
+
+@implementation NewInvite
+@synthesize invite_Code;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [active setHidden:YES];
+    [self InitNavigationBarItems];
+    [textview becomeFirstResponder];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) viewWillAppear:(BOOL)animated
+{
+    [textview becomeFirstResponder];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"send.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42, 42);
+    [rbutton addTarget:self action:@selector(rClicked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+
+#pragma mark - 数据交互
+-(IBAction)rClicked:(id)sender
+{
+    [textview resignFirstResponder];
+    [active setHidden:NO];
+    [active startAnimating];
+    
+    phonestr = [textview.text stringByReplacingOccurrencesOfString:@"#" withString:@","];
+    if([textview.text length]<1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Please fill in mobile number", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                       
+                                               
+                                               
+                                               action:@selector(postMessage:obj:)];
+    [weiboClient sendInviteCode:phonestr type:1 eventID:0];
+    
+    
+}
+//messageUI  delegate;
+- (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result
+{
+    
+    [self dismissModalViewControllerAnimated:YES];
+    
+    if (result == MessageComposeResultCancelled)
+        NSLog(@"Message cancelled");
+    else if (result == MessageComposeResultSent)
+        NSLog(@"Message sent") ;
+    else
+        NSLog(@"Message failed") ;
+    [textview becomeFirstResponder];
+    [self back];
+}
+
+
+- (void)postMessage:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    invite_Code=(NSString*)[dic objectForKey:@"inviteCode"];
+    _name=(NSString*)[dic objectForKey:@"name"];
+    
+    if(opresult==1)
+    {
+        if( [MFMessageComposeViewController canSendText] )
+            
+        {
+            
+            MFMessageComposeViewController * controller = [[MFMessageComposeViewController alloc] init]; //autorelease];
+            
+            controller.recipients = [NSArray arrayWithObject:phonestr];
+            
+            controller.body =[NSString stringWithFormat:@"%@ invited you to join AceBridge, a young elite professional network. Please download the App via the link below: http://itunes.apple.com/cn/app/acebridge/id542634233?mt=8 for Iphone users, and https://play.google.com/store/apps/details?id=net.acebridge.android for Android users. Invitation code:%@ (to be used when you sign up).(www.AceBridge.net)",_name,invite_Code];
+            
+            controller.messageComposeDelegate = self;
+            
+            
+            
+            [self presentModalViewController:controller animated:YES];
+            
+            //        [[[[controller viewControllers] lastObject] navigationItem] setTitle:@"SomethingElse"];//修改短信界面标题
+            
+            [controller release];
+            
+        }
+        
+        else
+            
+        {
+            
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示信息" 
+                                  
+                                                            message:@"该设备不支持短信功能" 
+                                  
+                                                           delegate:self 
+                                  
+                                                  cancelButtonTitle:nil
+                                  
+                                                  otherButtonTitles:@"确定", nil];
+            
+            [alert show];
+            
+            [alert release];
+            
+        }
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+    
+    [active setHidden:YES];
+    [active stopAnimating];
+    
+}
+#pragma mark-键盘事件
+- (void)keyboardWillShown:(NSNotification*)aNotification {
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    textview.frame = CGRectMake(0, 35, 320,416 - kbSize.height- 35);
+    sendBtn.frame =CGRectMake(35, 416 - kbSize.height- 55, 250, 30);
+}
+- (void)keyboardWillHiden:(NSNotification*)aNotification
+{
+    textview.frame = CGRectMake(0, 35, 320, 416);
+    sendBtn.frame =CGRectMake(35, 180, 250, 30);
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

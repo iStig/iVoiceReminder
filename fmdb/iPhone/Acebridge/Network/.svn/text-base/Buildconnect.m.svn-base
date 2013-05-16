@@ -1,0 +1,334 @@
+//
+//  Buildconnect.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Buildconnect.h"
+#import "AceBridgeAppDelegate.h"
+#import "ImportContacets.h"
+#import "iToast.h"
+#import <AddressBook/AddressBook.h>
+#import <AddressBookUI/AddressBookUI.h>
+
+@implementation Buildconnect
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View 生命周期
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self initNavigation];  
+    listArray = [[NSMutableArray alloc] initWithObjects:@"   Search Friends",@"   Import Contacts",@"   Invite Friends", nil];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 发送微博事件
+- (IBAction)composeButtonTouch:(id)sender {
+	[[AceBridgeAppDelegate getAppDelegate]composeNewTweet];
+}
+#pragma mark - 初始化导航栏点击事件
+-(void)initNavigation{
+    
+    
+    //发送微博按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"search.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(touchUpInside) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    
+    //navigationBarLeftBtn按钮
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"Locate.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(currentplace:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    
+    UIView*titleView=[[UIView alloc]initWithFrame: CGRectMake(0, 0, 200, 40)];
+//    UIButton* titleBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 2, 200, 35)];
+//    [titleBtn setImage:[UIImage imageNamed:@"button01.png"] forState:UIControlStateNormal];
+//    [titleBtn setImage:[UIImage imageNamed:@"button01_s.png"] forState:UIControlStateSelected];
+//    [titleBtn addTarget:self action:@selector(touchUpInside) forControlEvents:UIControlEventTouchUpInside];
+    
+    UILabel* labTitle = [[UILabel alloc] initWithFrame:CGRectMake(0, 3, 200, 30)];
+    labTitle.text =@"Build Connection";
+    labTitle.backgroundColor=[UIColor clearColor];
+    labTitle.font = [UIFont fontWithName:@"Helvetica-Bold" size:16];
+    labTitle.textColor = [UIColor whiteColor];
+    labTitle.textAlignment = UITextAlignmentCenter;
+//    [titleBtn addSubview:labTitle];
+//    [titleView addSubview:titleBtn];
+    
+//    UIButton* titlebtn= [UIButton buttonWithType:UIButtonTypeCustom];
+//    [titlebtn setFrame:CGRectMake(160, 7, 28, 28)];
+//    [titlebtn setImage:[UIImage imageNamed:@"展开.png"] forState:UIControlStateNormal];
+//    [titlebtn setSelected:NO];
+//    titlebtn.tag=1;
+//    [titleView addSubview:titlebtn];
+    
+    [titleView addSubview:labTitle];
+    self.navigationItem.titleView = titleView;
+    
+    //设置选择界面
+    UIView*view = [[[NSBundle mainBundle] loadNibNamed:@"showView" owner:nil options:nil] objectAtIndex:0];
+    for (int i=1; i<5; i++) {
+        // [[view viewWithTag:i].class isSubclassOfClass:[UIButton class]];
+        UIButton*btn=(UIButton*)[view viewWithTag:i];
+        [btn setSelected:NO];
+        [btn addTarget:self action:@selector(changeChannel:) forControlEvents:(UIControlEventTouchUpInside)];
+        
+    }
+    view.frame=CGRectMake(105, -2, 200, 130);
+    [view setHidden:YES];
+    view.tag=10000;
+    [self.view addSubview:view];
+}
+- (void)changeChannel:(id)sender {
+    UIImageView*view=(UIImageView*)[self.view viewWithTag:10000];
+    [view setHidden:YES];
+    
+    //UIButton* btn=(UIButton*) [view viewWithTag:1];
+    UIButton* titlebtn=(UIButton*) (UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if (!titlebtn.isSelected) {
+        titlebtn.selected=YES;
+       // [titlebtn setImage:[UIImage imageNamed:@"展开.png"] forState:UIControlStateSelected];
+    }
+    else{
+         titlebtn.selected=NO;
+        
+        //[titlebtn setImage:[UIImage imageNamed:@"收起.png"] forState:UIControlStateNormal];
+    }
+    [[AceBridgeAppDelegate getAppDelegate] showChatColum:((UIButton*)sender).tag-1 withObject:nil];
+}
+
+-(IBAction)currentplace:(id)sender
+{
+    [[AceBridgeAppDelegate getAppDelegate] networkcp:0];
+}
+
+#pragma mark - 切换界面
+-(void)touchUpInside{
+    UIImageView*view=(UIImageView*)[self.view viewWithTag:10000];
+    UIImageView *focus=(UIImageView*)[view viewWithTag:10];
+    focus.frame=CGRectMake(170, 52, 24, 24);
+    [view addSubview:focus];
+   // UIButton* titlebtn=(UIButton*) [self.navigationItem.titleView viewWithTag:1];
+    UIButton* titlebtn=(UIButton*)self.navigationItem.rightBarButtonItem.customView;
+    if (!titlebtn.isSelected) {
+        
+        //[titlebtn setImage:[UIImage imageNamed:@"收起.png"] forState:UIControlStateSelected];
+        [titlebtn setSelected:YES];
+        UIImageView*view=(UIImageView*)[self.view viewWithTag:10000];
+        [view setHidden:NO];
+    }
+    else{
+       // [titlebtn setImage:[UIImage imageNamed:@"展开.png"] forState:UIControlStateNormal];
+        [titlebtn setSelected:NO];
+        UIImageView*view=(UIImageView*)[self.view viewWithTag:10000];
+        [view setHidden:YES];
+    }
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if(actionSheet.tag==2)
+    {
+        UIButton* titlebtn=(UIButton*) [self.navigationItem.titleView viewWithTag:1];
+        [titlebtn setSelected:NO];
+        [[AceBridgeAppDelegate getAppDelegate] showChatColum:buttonIndex withObject:nil];
+    }
+}
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 3;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        cell = cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:1];
+    }
+    UILabel*    lab = (UILabel*)[cell viewWithTag:1];
+    lab.text=[listArray objectAtIndex:indexPath.row];
+    
+    UIImageView* imgview =(UIImageView*)[cell viewWithTag:2];
+    if(indexPath.row == 1)
+    {
+        [imgview setImage:[UIImage imageNamed:@"import contacts.png"]];
+    }
+    if(indexPath.row==0)
+    {
+        [imgview setImage:[UIImage imageNamed:@"search friends.png"]];
+    }
+    if(indexPath.row==2)
+    {
+        [imgview setImage:[UIImage imageNamed:@"invite friend.png"]];
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+//    if(indexPath.row==0)
+//    {
+//        ImportContacets* ic = [[ImportContacets alloc] initWithNibName:@"ImportContacets" bundle:nil];
+//        [ic setTitle:@"Contaces Book Import"];
+//        ic.hidesBottomBarWhenPushed=YES;
+//        [self.navigationController pushViewController:ic animated:YES];
+//        [ic release];
+//    }
+    if(indexPath.row==1)
+    {
+        Myconnections* ic = [[Myconnections alloc] initWithNibName:@"Myconnections" bundle:nil];
+        [ic setTitle:@"Import Contacts"];
+        ic.hidesBottomBarWhenPushed=YES;
+        ic.type=1;
+        [self.navigationController pushViewController:ic animated:YES];
+        [ic release];
+    }
+    if(indexPath.row==0)
+    {
+        WebSearch* websearch = [[WebSearch alloc] initWithNibName:@"WebSearch" bundle:nil];
+        [websearch setTitle:@"Search"];
+        websearch.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:websearch animated:YES];
+        [websearch release];
+    }
+    if(indexPath.row==2)
+    {
+        [self sendSMS];
+    }
+}
+#pragma mark - 发送短信
+//内容 收件人
+-(void) sendSMS
+{
+    NewInvite* newinvite = [[NewInvite alloc] initWithNibName:@"NewInvite" bundle:nil];
+    [newinvite setTitle:@"Invitation"];
+    [self.navigationController pushViewController:newinvite animated:YES];
+    [newinvite release];
+    
+//    if( [MFMessageComposeViewController canSendText] )
+//        
+//    {
+//        
+//        MFMessageComposeViewController * controller = [[MFMessageComposeViewController alloc] init]; //autorelease];
+//        
+////        controller.recipients = [NSArray arrayWithObject:@"15988888888"];
+////        
+////        controller.body = @"请直接将此条认证短信发送给我们，以完成手机安全绑定。(9qzkd27953ma)";
+//        
+//        controller.messageComposeDelegate = self;
+//        
+//        
+//        
+//        [self presentModalViewController:controller animated:YES];
+//        
+//        //        [[[[controller viewControllers] lastObject] navigationItem] setTitle:@"SomethingElse"];//修改短信界面标题
+//        
+//        [controller release];
+//        
+//    }
+//    
+//    else
+//        
+//    {
+//        
+//        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示信息" 
+//                              
+//                                                        message:@"该设备不支持短信功能" 
+//                              
+//                                                       delegate:self 
+//                              
+//                                              cancelButtonTitle:nil
+//                              
+//                                              otherButtonTitles:@"确定", nil];
+//        
+//        [alert show];
+//        
+//        [alert release];
+//        
+//    }
+}
+
+
+////短信
+//- (void)sendSMS:(NSString *)bodyOfMessage recipientList:(NSArray *)recipients
+//{
+//    MFMessageComposeViewController *controller = [[[MFMessageComposeViewController alloc] init] autorelease];
+//    if([MFMessageComposeViewController canSendText])
+//    {
+//        controller.body = bodyOfMessage;   
+//        controller.recipients = recipients;
+//        controller.messageComposeDelegate = self;
+//        [self presentModalViewController:controller animated:YES];
+//    }   
+//}
+
+// 处理发送完的响应结果
+- (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result
+{
+    [self dismissModalViewControllerAnimated:YES];
+    
+    if (result == MessageComposeResultCancelled)
+        NSLog(@"Message cancelled");
+    else if (result == MessageComposeResultSent)
+        NSLog(@"Message sent") ;
+    else
+        NSLog(@"Message failed") ;
+}
+
+@end

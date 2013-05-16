@@ -1,0 +1,65 @@
+//
+//  MStatus.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-17.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MStatus : NSObject
+{
+    int         updateID;
+    NSString*   updateTitle;
+    int         updateType;
+    bool        eventParticipate;
+    int         relatedID;
+    bool        share;
+    NSDate*     updateTime;
+    NSString*   updatePic;
+    NSString*   comment;
+    NSString*   updateAbstract;
+    int         commentCount;
+    int         shareCount;
+    int         likeCount;
+    int   createUserID;
+    NSString*   createUserName;
+    int shareUserID;
+    NSString*   shareUserName;
+    int rank;
+    int shareID;
+    
+    
+    int  fromUserID;
+    NSString  *fromUserName;
+    int belongUserID;
+    NSString *belongUserName;
+}
+@property(nonatomic,assign)int shareID;
+@property(nonatomic,assign)int rank;
+@property(nonatomic,assign)int   createUserID;
+@property(nonatomic,assign)int shareUserID;
+@property(nonatomic,assign)int         updateID;
+@property(nonatomic,retain)NSString*   updateTitle;
+@property(nonatomic,assign)int         updateType;
+@property(nonatomic,assign)bool        eventParticipate;
+@property(nonatomic,assign)int         relatedID;
+@property(nonatomic,assign)bool        share;
+@property(nonatomic,retain)NSDate*     updateTime;
+@property(nonatomic,retain)NSString*   updatePic;
+@property(nonatomic,retain)NSString*   comment;
+@property(nonatomic,retain)NSString*   updateAbstract;
+@property(nonatomic,assign)int         commentCount;
+@property(nonatomic,assign)int         shareCount;
+@property(nonatomic,assign)int         likeCount;
+@property(nonatomic,retain)NSString*   createUserName;
+@property(nonatomic,retain)NSString*   shareUserName;
+@property(nonatomic,assign) int  fromUserID;
+@property(nonatomic,assign)  int belongUserID;
+@property(nonatomic,retain) NSString  *fromUserName;
+@property(nonatomic,retain)  NSString *belongUserName;
+
++ (MStatus*)mstatusWithJsonDictionary:(NSDictionary*)dic;
+- (MStatus*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

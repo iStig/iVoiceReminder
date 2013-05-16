@@ -1,0 +1,39 @@
+//
+//  EventMembers.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-25.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "UnitrueLabel.h"
+#import "UserInfo.h"
+#import "MUser.h"
+#import "UIImageExtras.h"
+#import "ChatInfo.h"
+#import "UTTableViewController.h"
+#import "LoadMoreCell.h"
+@interface EventMembers : UIViewController<UIActionSheetDelegate>
+{
+    IBOutlet UITableView*       ultableView;
+    UIActionSheet*              actionButtonActionSheet;
+    UIActionSheet*              action;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    NSString*                   tel;
+    ImageCache                  *imageCache;
+    MUser*                      selectUser;
+    int                         eventID;
+    BOOL                        isLoading;
+    LoadMoreCell* loadCell;
+}
+@property (nonatomic,retain) NSMutableArray*             userArray;
+@property (nonatomic,assign) int eventID;
+- (void)InitNavigationBarItems;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)queryfriends:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj;
+-(IBAction)chatClicked:(id)sender;
+-(void) getUserList:(int)pageNo;
+@end

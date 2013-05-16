@@ -1,0 +1,81 @@
+//
+//  ChatInfo.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-19.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "PublicUtils.h"
+#import "TimeUtils.h"
+#import "MInMail.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+#import <AVFoundation/AVFoundation.h>
+#import "ASIHTTPRequest.h"
+#import "ASINetworkQueue.h"
+#import <AudioToolbox/AudioToolbox.h>
+@interface ChatInfo : UTTableViewController<UITextFieldDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,AVAudioRecorderDelegate,ASIHTTPRequestDelegate,AVAudioPlayerDelegate>
+{
+    IBOutlet    PullRefreshTableView*    inmailTableView;
+    NSMutableArray*             chatArray;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    IBOutlet    UIView*    bomView;
+    IBOutlet    UITextField*    sendText;
+    int                         userID;
+    UIActionSheet*              action;
+    MInMail*                    minmail;
+    BOOL    isLoading;
+    
+    
+    IBOutlet UIButton *sendBtn;
+    
+    //new add
+    IBOutlet UIActivityIndicatorView  *activeView;
+    IBOutlet UIButton *changeTypeBtn;
+    IBOutlet UIButton *recordVoiceBtn;
+    IBOutlet UIButton *choosePhotoBtn;
+    IBOutlet UIButton *takePhotoBtn;
+    
+    BOOL isShow;//用于判别当前是否要显示选取／拍摄照片按钮  yes表示显示  no表示不显示
+    BOOL isShowViewAppear;
+    
+    UIImage *postImage;
+    
+    AVAudioRecorder * recorder;
+    
+    NSURL *recordedTmpFile;
+   ASINetworkQueue*netWorkQueue;
+      SystemSoundID                 soundID;
+    NSString *audioPath;
+        AVAudioPlayer *audioPlayer;
+    
+}
+@property(nonatomic,retain)NSMutableArray*             chatArray;
+@property(nonatomic,assign)int                         userID;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)chatList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)keyboardWillShown:(NSNotification*)aNotification ;
+- (void)keyboardWillHiden:(NSNotification*)aNotification ;
+-(IBAction)send:(id)sender;
+- (void)sendInMail:(WeiboClient*)sender obj:(NSObject*)obj;
+
+//- (void)sendInMailPic:(WeiboClient*)sender obj:(NSObject*)obj;
+//- (void)sendInMailAudio:(WeiboClient*)sender obj:(NSObject*)obj;
+
+-(void) loadChatData:(int)pageNo;
+- (void)deleteInMail:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell;
+-(IBAction)recordVoice:(UIButton*)sender;
+-(IBAction)choosePhotoButton:(UIButton*)sender;
+
+-(IBAction)takePhotoButton:(UIButton*)sender;
+-(IBAction)changeType:(UIButton*)sender;
+@end

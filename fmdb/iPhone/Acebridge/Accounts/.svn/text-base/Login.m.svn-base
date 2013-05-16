@@ -1,0 +1,303 @@
+//
+//  Login.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Login.h"
+#import "AceBridgeAppDelegate.h"
+#import <Commoncrypto/commonDigest.h>
+#import "iToast.h"
+#import "PublicUtils.h"
+
+@implementation Login
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    id usernameid = [PublicUtils get:@"userloginname.db" type:@"userinfo"];
+    if(usernameid!=nil)
+    {
+        usernameField.text = (NSString*)usernameid;
+        [passwordField becomeFirstResponder];
+    }
+    else {
+        [usernameField becomeFirstResponder];
+    }
+    [active setHidden:YES];
+    self.navigationController.navigationBarHidden=NO;
+    [self setTitle:@"AceBridge"];
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void)back {
+    self.navigationController.navigationBarHidden=YES;
+	[self.navigationController popViewControllerAnimated:YES];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 2;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	
+    UITableViewCell *cell;
+    if (indexPath.row == 0) {
+		cell = username;
+	}
+	else  if (indexPath.row == 1){
+		cell = password;
+	}
+    return cell;
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+
+#pragma Btn Action
+
+-(IBAction)forgotPassword:(id)sender{
+    
+    if ([usernameField.text length]==0) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"Enter Your Account" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:nil, nil];
+        [alert show];
+        [alert release];
+        return;
+    }
+
+    
+    [active setHidden:NO];
+    [active startAnimating];
+    NSLog(@"FORGOT");
+    if (weiboClient) {
+		weiboClient.delegate = nil;
+        [weiboClient release];
+		weiboClient = nil;
+	}
+weiboClient=[[WeiboClient alloc] initWithTarget:self action:@selector(forgotPasswordDidReceive:obj:)];
+
+    [weiboClient forgetPassword:usernameField.text];
+
+}
+-(IBAction)login:(id)sender
+{
+    [usernameField resignFirstResponder];
+    [passwordField resignFirstResponder];
+    [PublicUtils removeCurrentUser];
+    UIButton *loginBtn=(UIButton *)[self.view viewWithTag:10];
+    loginBtn.enabled=NO;
+    [active setHidden:NO];
+    [active startAnimating];
+    
+    if (weiboClient) { 
+		weiboClient.delegate = nil;
+        [weiboClient release];
+		weiboClient = nil;
+	}
+    weiboClient = [[WeiboClient alloc] initWithTarget:self
+											   action:@selector(loginResultDidReceive:obj:)];
+    NSString* pwd = [self md5:passwordField.text];
+    [weiboClient loginAction:usernameField.text pwd:pwd];
+}
+
+-(IBAction)backgroundTap:(id)sender
+{
+    [usernameField resignFirstResponder];
+    [passwordField resignFirstResponder];
+}
+#pragma  mark - 登陆数据解析
+- (void)forgotPasswordDidReceive:(WeiboClient*)sender obj:(NSObject*)obj{
+
+    if (sender.hasError) {
+		NSLog(@"用户登陆失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opResult = [[dic objectForKey:@"opResult"] intValue];
+    if(opResult==0)
+    {
+        
+        int errCode = [[dic objectForKey:@"errCode"] intValue];
+        if (errCode==1) {
+            [[[iToast makeText:NSLocalizedString(@"Not found related Email or Mobile", @"")] setGravity:iToastGravityTop] show];
+        }
+        else{
+   
+        
+            [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityTop] show];
+        }
+        
+        [active setHidden:YES];
+        [active stopAnimating];
+     
+        
+        return;
+    }
+    if(opResult==1)
+    {
+  [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityTop] show];
+        
+        [active setHidden:YES];
+        [active stopAnimating];
+      
+    }
+    
+    NSString* newpwd = [dic objectForKey:@"newpwd"] ;
+    
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"New Password" message:newpwd delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:nil, nil];
+    [alert show];
+    [alert release];
+    
+
+}
+
+- (void)loginResultDidReceive:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"用户登陆失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opResult = [[dic objectForKey:@"opResult"] intValue];
+    if(opResult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Wrong username or password", @"")] setGravity:iToastGravityBottom] show];
+        
+        [active setHidden:YES];
+        [active stopAnimating];
+        UIButton *loginBtn=(UIButton *)[self.view viewWithTag:10];
+        loginBtn.enabled=YES;
+        
+       return;
+    }
+    if(opResult==1)
+    {
+        [PublicUtils save:[usernameField.text copy] name:@"userloginname.db" type:@"userinfo"];
+        [PublicUtils saveCurrentUser:dic];
+        [self dismissModalViewControllerAnimated:YES];
+        [AceBridgeAppDelegate getAppDelegate].isOpen=NO;
+        [[AceBridgeAppDelegate getAppDelegate] signIn:nil];
+        
+        
+        [active setHidden:YES];
+        [active stopAnimating];
+        UIButton *loginBtn=(UIButton *)[self.view viewWithTag:10];
+        loginBtn.enabled=YES;
+    }
+   
+}
+- (void)getLoginUserInfo:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"用户登陆失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+}
+#pragma mark - md5
+-(NSString*) md5:(NSString*) str
+{
+    const char* cstr = [str UTF8String];
+    unsigned char result[32];
+    CC_MD5(cstr, strlen(cstr), result);
+    return [NSString stringWithFormat:@"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",result[0],result[1],result[2],result[3],result[4],result[5],result[6],result[7],result[8],result[9],result[10],result[11],result[12],result[13],result[14],result[15]];
+}
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    switch (theTextField.returnKeyType) {
+        case UIReturnKeyNext:
+            [passwordField becomeFirstResponder];
+		case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

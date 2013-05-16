@@ -1,0 +1,30 @@
+//
+//  Birthday.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-4.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "MBirthday.h"
+@interface Birthday : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    IBOutlet    UITableView*    birthdayTableView;
+    NSMutableArray*             keys;
+    NSMutableArray*             values;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+}
+@property(nonatomic,retain)NSMutableArray*             keys;
+@property(nonatomic,retain)NSMutableArray*             values;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)birthdayList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell postName:(NSString*)postName;
+-(IBAction)tobless:(id)sender;
+-(IBAction)currentplace:(id)sender;
+@end

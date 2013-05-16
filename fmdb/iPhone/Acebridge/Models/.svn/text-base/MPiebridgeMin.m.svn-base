@@ -1,0 +1,64 @@
+//
+//  MPiebridgeMin.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MPiebridgeMin.h"
+
+@implementation MPiebridgeMin
+@synthesize avatarName,rank,publisherID,certificated,publisherName,isLike,pieBridgeID,age,constellation,cityName,gender;
+
++ (MPiebridgeMin*)mpiebridgeminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MPiebridgeMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MPiebridgeMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        pieBridgeID =([dic objectForKey:@"pieBridgeID"]==[NSNull null])?0:[[dic objectForKey:@"pieBridgeID"] intValue];
+        age =([dic objectForKey:@"age"]==[NSNull null])?0:[[dic objectForKey:@"age"] intValue];
+        publisherID =  ([dic objectForKey:@"publisherID"]==[NSNull null])?0:[[dic objectForKey:@"publisherID"] intValue];
+        publisherName = [[dic objectForKey:@"publisherName"] retain];
+        cityName = [[dic objectForKey:@"cityName"] retain];
+        constellation = [[dic objectForKey:@"constellation"] retain];
+        rank =  ([dic objectForKey:@"rank"]==[NSNull null])?0:[[dic objectForKey:@"rank"] intValue];
+        avatarName = [[dic objectForKey:@"avatarName"] retain];
+        certificated =  ([dic objectForKey:@"certificated"]==[NSNull null])?NO:[[dic objectForKey:@"certificated"] boolValue];
+        isLike =  ([dic objectForKey:@"like"]==[NSNull null])?NO:[[dic objectForKey:@"like"] boolValue];
+        gender = ([dic objectForKey:@"gender"]==[NSNull null])?NO:[[dic objectForKey:@"gender"] boolValue];
+        if ((id)avatarName == [NSNull null]) avatarName = @"";
+        if ((id)publisherName == [NSNull null]) publisherName = @"";
+        if ((id)cityName == [NSNull null]) cityName = @"";
+        if ((id)constellation == [NSNull null]) constellation = @"";
+    }
+    return self;
+}
+-(NSString*)getRank:(int)_rank
+{
+    if(_rank==0)
+    {
+        return @"Beginner";
+    }
+    else if(_rank==1)
+        return @"A";
+    else if(_rank==2)
+        return @"AA";
+    else if(_rank==3)
+        return @"AAA";
+    else
+        return @"";
+}
+- (void)dealloc
+{
+    [constellation release];
+    [cityName release];
+    [avatarName release];
+    [publisherName release];
+    [super dealloc];
+}
+@end
+

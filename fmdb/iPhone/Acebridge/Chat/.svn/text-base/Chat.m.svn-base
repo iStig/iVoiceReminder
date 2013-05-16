@@ -1,0 +1,506 @@
+//
+//  Chat.m
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Chat.h"
+#import "iToast.h"
+#import "PublicUtils.h"
+#import "ChatInfo.h"
+#import "SendChat.h"
+#import "TimeUtils.h"
+#import "searchPerson.h"
+#import "MmailInCount.h"
+#import "AppDelegate_iPhone.h"
+@implementation Chat
+@synthesize chatArray,minboxinfo,chatTableView,isLoading;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+-(void)viewDidAppear:(BOOL)animated{
+    
+    [[AppDelegate_iPhone getAppDelegate] setDDMenuEnabled:YES];
+}
+
+-(void) viewWillAppear:(BOOL)animated
+{
+    //[[AppDelegate_iPhone getAppDelegate] setDDMenuEnabled:NO];
+    
+    if(iscount)
+    {
+        [self mmailcount];
+    }
+    
+  
+}
+
+-(void)mmailcount{
+
+    [self navigationController].tabBarItem.badgeValue = nil;
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(chatCountRequest:obj:)];
+    [weiboClient countInMail];
+}
+
+
+- (void)chatCountRequest:(WeiboClient*)sender obj:(NSObject*)obj{
+    
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    
+    if(opresult>0)
+    {
+        int icount=0;
+       
+      
+            MmailInCount* mmail = [MmailInCount mmailInCountWithJsonDictionary:dic];
+            icount+=mmail.count;
+     
+        if(icount>0)
+        {
+         
+            [self navigationController].tabBarItem.badgeValue = [NSString stringWithFormat:@"%d", icount];
+        }
+        else {
+            [self navigationController].tabBarItem.badgeValue = nil;
+
+        }
+    }
+
+    
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    iscount=NO;
+    // Custom initialization
+    imageCache=[ImageCache sharedCache];
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"edit.png"] forState:UIControlStateNormal];//edit.png home.png
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(update:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    //navigationBarLeftBtn按钮
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"Locate.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42);
+    [button addTarget:self action:@selector(currentplace:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    tableView = self.chatTableView;
+    action = [[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                otherButtonTitles:@"User Profile",@"View",@"Reply",@"Delete",nil];
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    tableView.frame = CGRectMake(0, 0, 320, 365);
+    isLoading=NO;
+    chatArray = [[[NSMutableArray alloc] init] retain];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    //获取缓存数据
+    NSDictionary* dic = [PublicUtils getChatList];
+    if(dic!=nil)
+    {
+        NSArray* arr =(NSArray*)[dic objectForKey:@"mailArray"];
+        for (int i=0; i<[arr count]; i++) {
+            MInbox* inbox = [[MInbox minboxWithJsonDictionary:[arr objectAtIndex:i]] retain];
+            [chatArray addObject:inbox];
+        }
+    }
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(IBAction)update:(id)sender{
+    
+  // self.tabBarController.selectedIndex=1;
+    
+    searchPerson*   search = [[searchPerson alloc] initWithNibName:@"searchPerson" bundle:nil];
+    [search setTitle:@"Search Person"];
+    [self.navigationController pushViewController:search animated:YES];
+ 
+}
+-(IBAction)currentplace:(id)sender
+{
+    [[AceBridgeAppDelegate getAppDelegate] networkcp:0];
+}
+//下拉刷新
+-(void)getItemsWhenPullDownTableView
+{
+     loadCell.hidden=NO;
+    [self getChatDate:1];
+}
+-(void) getChatDate:(int) pageNo
+{
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(chatList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient inboxInMail:pageNo ];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if(buttonIndex == 0)
+    {
+        UserInfo*   userinfo = [[UserInfo alloc] initWithNibName:@"UserInfo" bundle:nil];
+        userinfo.userID = minboxinfo.userID;
+        userinfo.userName = minboxinfo.userName;
+        [userinfo setTitle:minboxinfo.userName];
+        userinfo.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:userinfo animated:YES];
+    }
+    if(buttonIndex == 1)
+    {
+        ChatInfo* chatinfo = [[ChatInfo alloc] initWithNibName:@"ChatInfo" bundle:nil];
+        chatinfo.userID = minboxinfo.userID;
+        [chatinfo setTitle:minboxinfo.userName];
+        [self.navigationController pushViewController:chatinfo animated:YES];
+        [chatinfo release];
+    }
+    if(buttonIndex == 2)
+    {
+        SendChat* sendchat = [[SendChat alloc] initWithNibName:@"SendChat" bundle:nil];
+        sendchat.toUser=minboxinfo.userName;
+        [sendchat setTitle:[NSString stringWithFormat:@"To %@",minboxinfo.userName]];
+        sendchat.toUserID = minboxinfo.userID;
+        sendchat.hidesBottomBarWhenPushed=YES;
+        [self.navigationController pushViewController:sendchat animated:YES];
+        [sendchat release];
+    }
+    if(buttonIndex==3)
+    {
+        if (weiboClient) {
+            weiboClient.delegate = nil;
+            [weiboClient release];
+            weiboClient = nil;
+        }
+        weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                                   action:@selector(deleteInbox:obj:)];
+        [weiboClient delAllInMail:minboxinfo.userID];
+    }
+}
+
+#pragma mark - 数据解析
+- (void)deleteInbox:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+    }
+    [self getItemsWhenPullDownTableView];
+}
+- (void)chatList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+      
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"mailArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [chatArray removeAllObjects];
+        [PublicUtils saveChatList:dic];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MInbox* inbox = [[MInbox minboxWithJsonDictionary:[arr objectAtIndex:i]] retain];
+        [chatArray addObject:inbox];
+    }
+    [tableView reloadData];
+    isLoading=NO;
+    iscount=YES;
+    [self mmailcount];
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MInbox *pItem =(MInbox*) [chatArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.userID,pItem.userID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [chatArray count]+1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([chatArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [chatArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:14];
+        }
+        else {
+            JSTwitterCoreTextView* _textView = (JSTwitterCoreTextView*)[cell viewWithTag:100];
+            [_textView removeFromSuperview];
+        }
+        MInbox* minbox = (MInbox*)[chatArray objectAtIndex:indexPath.row];
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        if(minbox.userID)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        UILabel* labName = (UILabel*)[cell viewWithTag:2];
+        UILabel* labTime = (UILabel*)[cell viewWithTag:3];
+        labTime.text = [TimeUtils timestamp:minbox.lastTime];
+        //linktext
+        {
+            NSString *text =minbox.lastContent;
+            NSString *font = @"Helvetica";
+            CGFloat size = 14.0;
+            CGFloat paddingTop = 25;
+            CGFloat paddingLeft = 56;
+            
+            JSTwitterCoreTextView* _textView = [[[JSTwitterCoreTextView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 0)] autorelease];
+            [_textView setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
+            [_textView setDelegate:self];
+            [_textView setText:text];
+            [_textView setFontName:font];
+            [_textView setFontSize:size];
+            [_textView setHighlightColor:[UIColor clearColor]];
+            [_textView setBackgroundColor:[UIColor clearColor]];
+            [_textView setPaddingTop:paddingTop];
+            [_textView setPaddingLeft:paddingLeft];
+            CGFloat height = [JSCoreTextView measureFrameHeightForText:text 
+                                                              fontName:font 
+                                                              fontSize:size 
+                                                    constrainedToWidth:_textView.frame.size.width - (paddingLeft * 2)
+                                                            paddingTop:paddingTop 
+                                                           paddingLeft:paddingLeft];
+            CGRect textFrame = [_textView frame];
+            textFrame.size.height = height;
+            [_textView setFrame:textFrame];
+            [_textView setTag:100];
+            [cell addSubview:_textView];
+        }
+        
+        UILabel* labFromTo = (UILabel*)[cell viewWithTag:5];
+        if(minbox.lastWhoSent)
+        {
+            labFromTo.text=@"To";
+            labName.frame=CGRectMake(72, 6, 107, 18);
+        }
+        else
+        {
+            labFromTo.text=@"From";  
+            labName.frame=CGRectMake(86, 6, 107, 18);
+        }
+        labName.text = minbox.userName;
+        return cell;
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self getChatDate:[chatArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+- (void)textView:(JSCoreTextView *)textView linkTapped:(AHMarkedHyperlink *)link
+{
+    NSString* str = [NSString stringWithFormat:@"%@",[link URL]] ;
+    NSLog(@"%@",str);
+    str = [str lowercaseString];
+    if([str hasPrefix:@"http:"])
+    {
+        [[UIApplication sharedApplication] openURL:[link URL]];
+    }
+}
+-(void)textViewNoLink:(JSCoreTextView *)textView linkTapped:(AHMarkedHyperlink *)link
+{
+    JSCoreTextView* btn = (JSCoreTextView*)textView;
+    UITableViewCell* cell = (UITableViewCell*)[btn superview];
+    minboxinfo = (MInbox*) [chatArray objectAtIndex:[chatTableView indexPathForCell:cell].row];
+    [action showInView:self.view.superview];
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([chatArray count]==0||[chatArray count]==indexPath.row)
+    {
+        if([chatArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    MInbox* min = (MInbox*) [chatArray objectAtIndex:indexPath.row];
+    //linktext
+        NSString *text =min.lastContent;
+        NSString *font = @"Helvetica";
+        CGFloat size = 14.0;
+        CGFloat paddingTop = 25;
+        CGFloat paddingLeft = 56;
+        
+        JSTwitterCoreTextView* _textView = [[[JSTwitterCoreTextView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 0)] autorelease];
+        CGFloat height = [JSCoreTextView measureFrameHeightForText:text 
+                                                          fontName:font 
+                                                          fontSize:size 
+                                                constrainedToWidth:_textView.frame.size.width - (paddingLeft * 2)
+                                                        paddingTop:paddingTop 
+                                                       paddingLeft:paddingLeft];
+    if (height<58) {
+        height=58;
+    }
+    return height;
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    minboxinfo = (MInbox*) [chatArray objectAtIndex:indexPath.row];
+    [action showInView:self.view.superview];
+}
+
+@end

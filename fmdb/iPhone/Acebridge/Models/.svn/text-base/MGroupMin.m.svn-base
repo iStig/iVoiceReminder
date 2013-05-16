@@ -1,0 +1,49 @@
+//
+//  MGroup.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-8.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "MGroupMin.h"
+
+@implementation MGroupMin
+
+@synthesize groupID,groupPic,groupName,groupCategory,groupCreatorId,groupCreateTime,groupCreatorName,groupMemberCount,shareCount,hot,member,admin;
++ (MGroupMin*)mgroupminWithJsonDictionary:(NSDictionary*)dic
+{
+    return [[[MGroupMin alloc] initWithJsonDictionary:dic] autorelease];
+}
+- (MGroupMin*)initWithJsonDictionary:(NSDictionary*)dic
+{
+    if(self = [super init])
+    {
+        groupID =  ([dic objectForKey:@"groupID"]==[NSNull null])?0:[[dic objectForKey:@"groupID"] intValue];
+        groupCreatorId =  ([dic objectForKey:@"groupCreatorId"]==[NSNull null])?0:[[dic objectForKey:@"groupCreatorId"] intValue];
+        groupPic = [[dic objectForKey:@"groupPic"] retain];
+        groupName = [[dic objectForKey:@"groupName"] retain];
+        groupCategory = [[dic objectForKey:@"groupCategory"] retain];
+        groupCreateTime = [[dic objectForKey:@"groupCreateTime"] retain];
+        groupCreatorName= [[dic objectForKey:@"groupCreatorName"] retain];
+        groupMemberCount = ([dic objectForKey:@"groupMemberCount"]==[NSNull null])?0:[[dic objectForKey:@"groupMemberCount"] intValue];
+        shareCount =  ([dic objectForKey:@"shareCount"]==[NSNull null])?0:[[dic objectForKey:@"shareCount"] intValue];
+        hot = ([dic objectForKey:@"hot"]==[NSNull null])?0:[[dic objectForKey:@"hot"] boolValue];
+        member =  ([dic objectForKey:@"member"]==[NSNull null])?0:[[dic objectForKey:@"member"] intValue];
+        admin = ([dic objectForKey:@"admin"]==[NSNull null])?0:[[dic objectForKey:@"admin"] boolValue];
+        if ((id)groupPic == [NSNull null]) groupPic = @"";
+        if ((id)groupName == [NSNull null]) groupName = @"";
+        if ((id)groupCategory == [NSNull null]) groupCategory = @"";
+        if ((id)groupCreatorName == [NSNull null]) groupCreatorName = @"";
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [groupPic release];
+    [groupName release];
+    [groupCategory release];
+    [groupCreatorName release];
+    [super dealloc];
+}
+@end

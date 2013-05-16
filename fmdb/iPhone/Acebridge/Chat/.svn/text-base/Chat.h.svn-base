@@ -1,0 +1,39 @@
+//
+//  Chat.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "MInbox.h"
+#import "UserInfo.h"
+#import "UTTableViewController.h"
+#import "JSCoreTextView.h"
+#import "JSTwitterCoreTextView.h"
+@class JSTwitterCoreTextView;
+@interface Chat : UTTableViewController<UIActionSheetDelegate,JSCoreTextViewDelegate>
+{
+    IBOutlet    PullRefreshTableView*    chatTableView;
+    NSMutableArray*             chatArray;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    UIActionSheet*              action;
+    MInbox*                     minboxinfo;
+    BOOL                        isLoading;
+    BOOL                        iscount;
+}
+@property(nonatomic,retain)MInbox*                      minboxinfo;
+@property(nonatomic,retain)NSMutableArray*              chatArray;
+@property(nonatomic,assign)BOOL                         isLoading;
+@property(nonatomic,retain)IBOutlet    PullRefreshTableView*    chatTableView;
+- (void)chatList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)deleteInbox:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void) getChatDate:(int) pageNo;
+-(void)mmailcount;
+@end

@@ -1,0 +1,39 @@
+//
+//  MPiebridgeMin.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MPiebridgeMin : NSObject
+{
+    int                 publisherID;
+    NSString*           publisherName;
+    NSString*           avatarName;
+    int                 rank;
+    BOOL                certificated;
+    BOOL                isLike;
+    int                 pieBridgeID;
+    int                 age;
+    NSString*   cityName;
+    NSString*   constellation;
+    BOOL gender;
+}
+@property(nonatomic,assign)BOOL gender;
+@property(nonatomic,retain)NSString*   cityName;
+@property(nonatomic,retain)NSString*   constellation;
+@property(nonatomic,assign)int                 age;
+@property(nonatomic,assign)int                 pieBridgeID;
+@property(nonatomic,assign)int                 publisherID;
+@property(nonatomic,retain)NSString*           publisherName;
+@property(nonatomic,retain)NSString*           avatarName;
+@property(nonatomic,assign)int                 rank;
+@property(nonatomic,assign)BOOL                certificated;
+@property(nonatomic,assign)BOOL                isLike;
++ (MPiebridgeMin*)mpiebridgeminWithJsonDictionary:(NSDictionary*)dic;
+- (MPiebridgeMin*)initWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*)getRank:(int)_rank;
+@end

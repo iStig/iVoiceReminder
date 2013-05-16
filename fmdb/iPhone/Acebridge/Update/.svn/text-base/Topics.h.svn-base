@@ -1,0 +1,31 @@
+//
+//  Topics.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "iToast.h"
+#import "UTTableViewController.h"
+@interface Topics :UTTableViewController
+{
+    IBOutlet    PullRefreshTableView*    topicsTableView;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+    NSMutableArray*             topicsArray;
+    int                         groupID;
+    BOOL                        isLoading;
+}
+@property(nonatomic,assign)int              groupID;
+@property(nonatomic,retain) NSMutableArray* topicsArray;
+-(void)InitNavigationBarItems;
+-(void)back;
+- (void)topicsList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+-(void) getstatusList:(int)pageNo;
+@end

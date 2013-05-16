@@ -1,0 +1,33 @@
+//
+//  RegiestCode.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-6.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "AceBridgeAppDelegate.h"
+#import "GetCodeInfo.h"
+@interface RegiestCode : UIViewController <UITableViewDelegate, UITableViewDataSource,UITextFieldDelegate>
+{
+    IBOutlet UITableViewCell*   phoneNumber;
+    IBOutlet UITableViewCell*   code;
+    IBOutlet UITextField*       phoneNumberField;
+    IBOutlet UITextField*       codeField;
+    IBOutlet UITableView*       tableView;
+    WeiboClient*              weiboClient;
+
+    //NSString                    *strMobile;
+   
+    
+}
+
+-(IBAction)getCode:(id)sender;
+-(IBAction)signUp:(id)sender;
+-(IBAction)backgroundTap:(id)sender;
+//@property(nonatomic,retain) NSString                    *strMobile;
+
+-(void)back;
+- (void)validateCode:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

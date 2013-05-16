@@ -1,0 +1,89 @@
+//
+//  MUser.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-14.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MUser :NSObject
+{
+    int                 userID;
+    NSString*           userName;
+    BOOL                gender;
+    NSString*           school;
+    NSString*           company;
+    NSString*           cityName;
+    int                 point;
+    int                 rank;
+    NSString*           email;
+    NSString*           mobile;
+    int                 connectedStatus;//1:与本人的connected 0：未connected 2:已发送connect请求
+    double              distance;
+    NSString*           avatarName;//头像
+    
+    NSString*           status;
+    NSString*           selfIntrodution;
+    int                 connectedNum;
+    int                 eventNum;
+    int                 careeNum;
+    int                 groupNum;
+    long  long          timeSpan;
+    NSString*           state;
+    NSDate*             birthday;
+    int                 industryID;
+    NSString*           industryName;
+    int                 locationID;
+    NSString*           locationName;
+    int                 functionID;
+    NSString*           functionName;
+    NSString*           slogan;
+    NSString*           title;
+    int statusNum;
+    int privacyInfo;
+    int privacyProfile;
+    int privacyMsg;
+    
+}
+@property (nonatomic, retain)NSString*           title;
+@property (nonatomic, retain)NSString*           slogan;
+@property (nonatomic, retain)NSDate*             birthday;
+@property (nonatomic, assign)int                 industryID;
+@property (nonatomic, retain)NSString*           industryName;
+@property (nonatomic, assign)int                 locationID;
+@property (nonatomic, retain)NSString*           locationName;
+@property (nonatomic, assign)int                 functionID;
+@property (nonatomic, retain)NSString*           functionName;
+
+@property (nonatomic, retain) NSString*	 state;
+@property (nonatomic, assign) int  userID;
+@property (nonatomic, retain) NSString*	 userName;
+@property (nonatomic, assign) BOOL gender;
+@property (nonatomic, retain) NSString*	 school;
+@property (nonatomic, retain) NSString*	 company;
+@property (nonatomic, retain) NSString*	 cityName;
+@property (nonatomic, assign) int  point;
+@property (nonatomic, assign) int  rank;
+@property (nonatomic, retain) NSString*	 email;
+@property (nonatomic, retain) NSString*	 mobile;
+@property (nonatomic, assign) int  connectedStatus;
+@property (nonatomic, assign) double distance;
+@property (nonatomic, retain) NSString*	 avatarName;
+
+@property (nonatomic, retain) NSString*  status;
+@property (nonatomic, retain) NSString*	 selfIntrodution;
+@property (nonatomic, assign) int connectedNum ;
+@property (nonatomic, assign) int  eventNum;
+@property (nonatomic, assign) int  statusNum;
+@property (nonatomic, assign) int  careeNum;
+@property (nonatomic, assign) int  groupNum;
+@property (nonatomic, assign) long long timeSpan;
+@property (nonatomic, assign) int privacyInfo;
+@property (nonatomic, assign) int privacyProfile;
+@property (nonatomic, assign) int privacyMsg;
+- (MUser*)initWithJsonDictionary:(NSDictionary*)dic;
++ (MUser*)muserWithJsonDictionary:(NSDictionary*)dic;
+-(NSString*)getRank:(int)_rank;
+@end

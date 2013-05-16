@@ -1,0 +1,26 @@
+//
+//  MComment.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-29.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MComment : NSObject
+{
+    int         userID;
+    NSString*   username;
+    int         commentID;
+    NSString*   content;
+    NSDate*     time;
+}
+@property(nonatomic,assign)int         userID;
+@property(nonatomic,assign)int         commentID;
+@property(nonatomic,retain)NSString*   username;
+@property(nonatomic,retain)NSString*   content;
+@property(nonatomic,retain)NSDate*     time;
++ (MComment*)mcommentWithJsonDictionary:(NSDictionary*)dic;
+- (MComment*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

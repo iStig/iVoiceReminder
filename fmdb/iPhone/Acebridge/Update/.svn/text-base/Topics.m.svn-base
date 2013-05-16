@@ -1,0 +1,299 @@
+//
+//  Topics.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Topics.h"
+#import "MTopicMin.h"
+#import "TopicsInfo.h"
+#import "TimeUtils.h"
+#import "PostTopic.h"
+@implementation Topics
+@synthesize topicsArray,groupID;
+
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    topicsArray = [[NSMutableArray alloc] init];
+    tableView = topicsTableView;
+    [self InitNavigationBarItems];
+    isLoading=NO;
+    [self getItemsWhenPullDownTableView];
+
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self getstatusList:1];
+}
+-(void) getstatusList:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(topicsList:obj:)];
+     weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient rgroupTopics:groupID firstIndex:-1 lastIndex:0 pageNo:pageNo];
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);  
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"edit.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+    PostTopic *postT=[[PostTopic alloc] initWithNibName:@"PostTopic" bundle:nil];
+    [postT setTitle:@"Post Topic"];
+    postT.groupID=groupID;
+    [self.navigationController pushViewController:postT animated:YES];
+    [postT release];
+    
+
+    
+}
+#pragma mark - tableview事件
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{                                                                                                                                                                                                                                                                                                      
+    return [topicsArray count]+1;
+}
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([topicsArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [topicsArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        MTopicMin* min = (MTopicMin*) [topicsArray objectAtIndex:indexPath.row];
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:12];
+        } 
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        if(min.postUserID)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+        UILabel* labCreateName = (UILabel*)[cell viewWithTag:2];
+        UILabel* time = (UILabel*)[cell viewWithTag:3];
+        time.text =[TimeUtils timestamp:min.postTime];
+        labCreateName.text = min.postUserName;
+        UILabel* labName = (UILabel*)[cell viewWithTag:4];
+        UIFont* myfont1 = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+        CGSize textsize1 = [min.title sizeWithFont:myfont1 constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        labName.numberOfLines = textsize1.height/15+1;
+        labName.frame=CGRectMake(56, 30, textsize1.width, textsize1.height);
+        labName.text = min.title;
+        UILabel* labText = (UILabel*)[cell viewWithTag:5];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+        CGSize textsize = [min.content sizeWithFont:myfont constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+        labText.numberOfLines = textsize.height/15+1;
+        labText.frame=CGRectMake(56, 34+textsize1.height, textsize.width, textsize.height);
+        labText.text = min.content;
+        UILabel* labComment = (UILabel*)[cell viewWithTag:6];
+        labComment.text = [NSString stringWithFormat:@"%d",min.replyCount];
+        UIView* view = (UIView*)[cell viewWithTag:7];
+        view.frame = CGRectMake(268, 38+textsize.height+textsize1.height, 140, 25);
+        time.frame=CGRectMake(56, 38+textsize.height+textsize1.height, 140, 25);
+        // Configure the cell...
+        return cell;
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self getstatusList:[topicsArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    if([topicsArray count]==0||[topicsArray count]==indexPath.row)
+    {
+        if([topicsArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    MTopicMin* min = (MTopicMin*) [topicsArray objectAtIndex:indexPath.row];
+    
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+    CGSize textsize = [min.title sizeWithFont:myfont constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    
+    UIFont* myfont1 = [UIFont fontWithName:@"Helvetica" size:14];
+    CGSize textsize1 = [min.content sizeWithFont:myfont1 constrainedToSize:CGSizeMake(264, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    return 40+25+textsize.height+textsize1.height;
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    MTopicMin* mtopics = (MTopicMin*)[topicsArray objectAtIndex:indexPath.row];
+    TopicsInfo* topicsinfo = [[TopicsInfo alloc] initWithNibName:@"TopicsInfo" bundle:nil];
+    [topicsinfo setTitle:self.title];
+    topicsinfo.topicsID = mtopics.postID;
+    [self.navigationController pushViewController:topicsinfo animated:YES];
+    [topicsinfo release];
+}
+#pragma mark - 数据解析
+- (void)topicsList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取topics数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"updateArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [topicsArray removeAllObjects];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MTopicMin* mtopics = [MTopicMin mtopicsminWithJsonDictionary:[arr objectAtIndex:i]];
+        [topicsArray addObject:mtopics];
+    }
+    [topicsTableView reloadData];
+    isLoading=NO;
+}
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MTopicMin *pItem =(MTopicMin*) [topicsArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.postUserID,pItem.postUserID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+     
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+           
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

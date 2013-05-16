@@ -1,0 +1,293 @@
+//
+//  PiebridgeCell.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-24.
+//  Copyright (c) 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "PiebridgeCell.h"
+#import "TimeUtils.h"
+@implementation PiebridgeCell
+@synthesize PieArray;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    self.PieArray=[[NSMutableArray alloc] init];
+    
+    //添加缓存
+    NSDictionary* dic = (NSDictionary*)[PublicUtils get:[NSString stringWithFormat:@"piebridge_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+    if(dic!=nil)
+    {
+
+    NSArray* arr =(NSArray*)[dic objectForKey:@"notificationArray"];
+       for (int i=0; i<[arr count]; i++) {
+        AtNotification* atNotification = [AtNotification atboxWithJsonDictionary:[arr objectAtIndex:i]];
+        [PieArray addObject:atNotification];
+    }
+    }
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+    
+    tableView = PieTableView;
+    isLoading=NO;
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+
+    [self getList:1];
+}
+-(void) getList:(int)pageNo
+{
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(PieList:obj:)];
+     weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient rNotifications:pageNo nTypeID:6 version:2];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+    [self.navigationController  popToRootViewControllerAnimated:YES];
+}
+
+#pragma mark - tableview事件
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([PieArray count]==0||[PieArray count]==indexPath.row)
+    {
+        if([PieArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 60;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [PieArray count]+1;
+}
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([PieArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= [PieArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"NotificationCellDetail" owner:nil options:nil] objectAtIndex:3];
+        } 
+        AtNotification *pieInfo =(AtNotification*)[PieArray objectAtIndex:indexPath.row];
+        
+        UILabel *user=(UILabel*)[cell viewWithTag:2];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+        CGSize textsize= [pieInfo.relatedUserName sizeWithFont:myfont constrainedToSize:CGSizeMake(CGFLOAT_MAX, 15) lineBreakMode:UILineBreakModeWordWrap];
+        user.frame=CGRectMake(63, 10, textsize.width, textsize.height);
+        [user setText:pieInfo.relatedUserName];
+        
+        UILabel *likeLbl=(UILabel*)[cell viewWithTag:3];
+        likeLbl.frame=CGRectMake(63+textsize.width+5, 12, 120, 15);
+        likeLbl.text=pieInfo.relatedOperate;
+        UILabel *time=(UILabel*)[cell viewWithTag:4];
+        time.text=[TimeUtils timestamp:pieInfo.nTime];
+        return cell;
+    }
+    if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self getList:[PieArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    AtNotification *PieInfo =(AtNotification*)[PieArray objectAtIndex:indexPath.row];
+    
+    if ([PieInfo.relatedType isEqualToString:@"blog"]) {
+        BlogInfo* bloginfo = [[BlogInfo alloc] initWithNibName:@"BlogInfo" bundle:nil];
+        [bloginfo setTitle:@"Blog"];
+        bloginfo.blogID = PieInfo.relatedID;
+        [self.navigationController pushViewController:bloginfo animated:YES];
+        [bloginfo release];
+    }
+    if ([PieInfo.relatedType isEqualToString:@"event"]){
+        EventInfo* eventinfo = [[EventInfo alloc] initWithNibName:@"EventInfo" bundle:nil];
+        [eventinfo setTitle:@"Event Details"];
+        eventinfo.eventID = PieInfo.relatedID;
+        [self.navigationController pushViewController:eventinfo animated:YES];
+        [eventinfo release];
+    }
+    if ([PieInfo.relatedType isEqualToString:@"career"]) {
+        CarrerInfo* info = [[CarrerInfo alloc] initWithNibName:@"CarrerInfo" bundle:nil];
+        info.carrerID=PieInfo.relatedID;
+        [info setTitle:@"Career Opportunity"];
+        [self.navigationController pushViewController:info animated:YES];
+        [info release];
+    }
+    if ([PieInfo.relatedType isEqualToString:@"promotion"]) 
+    {
+        ViewPromotion* viewPromotion = [[ViewPromotion alloc] initWithNibName:@"ViewPromotion" bundle:nil];
+        [viewPromotion setTitle:@"Promotion Details"];
+        viewPromotion.promotionID =PieInfo.relatedID;
+        [self.navigationController pushViewController:viewPromotion animated:YES];
+        [viewPromotion release];
+        
+        
+        
+    }
+    if ([PieInfo.relatedType isEqualToString:@"status"]) 
+    {
+        StatusInfo* statusInfo = [[StatusInfo alloc] initWithNibName:@"StatusInfo" bundle:nil];
+        [statusInfo setTitle:@"Status"];
+        statusInfo.statusID = PieInfo.relatedID;
+    
+        [self.navigationController pushViewController:statusInfo animated:YES];
+        [statusInfo release];
+        
+        
+    }
+    if ([PieInfo.relatedType isEqualToString:@"group"]) 
+    {
+        GroupInfo* groupinfo = [[GroupInfo alloc] initWithNibName:@"GroupInfo" bundle:nil];
+        [groupinfo setTitle:@"Group"];
+        groupinfo.groupID = PieInfo.relatedID;
+        [self.navigationController pushViewController:groupinfo animated:YES];
+        [groupinfo release];
+    }
+    if ([PieInfo.relatedType isEqualToString:@"piebridge"]) 
+    {
+        UserInfo* userinfo = [[UserInfo alloc] initWithNibName:@"UserInfo" bundle:nil];
+        userinfo.userID = PieInfo.relatedID;
+        [self.navigationController pushViewController:userinfo animated:YES];
+        [userinfo release];
+        
+        
+    }
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (void)PieList:(WeiboClient*)sender obj:(NSObject*)obj{  
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+    NSLog(@"获取chat数据失败!!!, 错误:%@, 详细信息:%@"
+          , sender.errorMessage, sender.errorDetail);
+    if (sender.statusCode == 401) {
+        AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+        [appDelegate openAuthenticateView];
+    }
+    [sender alert];
+        return;
+    }
+    
+    NSDictionary* dic = (NSDictionary*)obj;
+    NSLog(@"%@",dic);
+    int opresult =[[dic objectForKey:@"opResult"] intValue] ;
+    if(opresult==0){
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    
+   // self.PieArray=[[NSMutableArray alloc] init];
+    NSArray* arr =(NSArray*)[dic objectForKey:@"notificationArray"];
+    if ([arr count]<1) {
+        loadCell.hidden=YES;
+    }
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [PieArray removeAllObjects];
+        [PublicUtils save:dic name:[NSString stringWithFormat:@"piebridge_n_list_%d.db",[PublicUtils getCurrentUser].userID]];
+        
+    }
+    for (int i=0; i<[arr count]; i++) {
+        AtNotification* atNotification = [AtNotification atboxWithJsonDictionary:[arr objectAtIndex:i]];
+        [PieArray addObject:atNotification];
+    }
+    
+    [PieTableView reloadData];
+    isLoading =NO;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

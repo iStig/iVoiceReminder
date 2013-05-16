@@ -1,0 +1,425 @@
+//
+//  UserList.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "UserList.h"
+#import "AceBridgeAppDelegate.h"
+#import "iToast.h"
+#import "SendChat.h"
+
+@implementation UserList
+@synthesize userArray,userID,subindustryID,cityID,targetUniversity,targetUserName,functionID,industryID,targetCompany;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View 生命周期
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    if(targetCompany==NULL)
+    {
+        targetCompany=@"";
+    }
+    imageCache=[ImageCache sharedCache];
+    tableView = ultableView;
+    tableView.frame = CGRectMake(0, 0, 320, 367);
+    isLoading=NO;
+     userArray = [[NSMutableArray alloc] init];
+    [self InitNavigationBarItems];
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self getUserList:1];
+}
+-(void) getUserList:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(queryfriends:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient queryfriends:userID targetUserName:targetUserName targetUniversity:targetUniversity functionID:functionID cityID:cityID industryID:industryID subindustryID:subindustryID pageNo:pageNo targetCompany:targetCompany];
+}
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+//发私信
+-(IBAction)chatClicked:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    MUser* user =(MUser*)[userArray objectAtIndex:[ultableView indexPathForCell:cell].row];
+    SendChat* sendchat = [[SendChat alloc] initWithNibName:@"SendChat" bundle:nil];
+    sendchat.toUser=user.userName;
+    [sendchat setTitle:[NSString stringWithFormat:@"To %@",user.userName]];
+    sendchat.toUserID = user.userID;
+    sendchat.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:sendchat animated:YES];
+    [sendchat release];
+}
+#pragma mark - tableview 事件
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [userArray count]+1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([userArray count]==0)
+    {
+        return loadCell;
+    }
+    NSLog(@"row:%d    --    usercount:%d",indexPath.row,[userArray count]);
+    if(indexPath.row +1 <= [userArray count])
+    {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = [_tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if(cell==nil)
+        {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"ShareCell" owner:nil options:nil] objectAtIndex:0];
+        }
+        MUser *user = (MUser*)[userArray objectAtIndex:indexPath.row];
+        //调用打电话
+        UIButton* btn = (UIButton*)[cell viewWithTag:8];
+        [btn addTarget:self action:@selector(telClicked:) forControlEvents:UIControlEventTouchUpInside];
+        //发私信
+        UIButton* btnChat = (UIButton*)[cell viewWithTag:10];
+        [btnChat addTarget:self action:@selector(chatClicked:) forControlEvents:UIControlEventTouchUpInside];
+        //绑定名称
+        UILabel *labUserName = (UILabel*)[cell viewWithTag:2];
+        UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:14];
+        CGFloat width = [user.userName sizeWithFont:myfont constrainedToSize:CGSizeMake(150, 20) lineBreakMode:UILineBreakModeWordWrap].width;
+        labUserName.frame=CGRectMake(96, 8, width+10, 20);
+        [labUserName setText:user.userName];
+        UIImageView* sex= (UIImageView*)[cell viewWithTag:3];
+        sex.frame=CGRectMake(105+width, 10, 15, 15);
+        if(user.gender)
+        {
+            [sex setImage:[UIImage imageNamed:@"male.png"]];
+        }
+        else
+        {
+            [sex setImage:[UIImage imageNamed:@"female.png"]];
+        }
+        UILabel* labschool = (UILabel*)[cell viewWithTag:5];
+        [labschool setText:user.school];
+        UILabel* labfunction = (UILabel*) [cell viewWithTag:6];
+        [labfunction setText:user.company];
+        UILabel* lab7 = (UILabel*)[cell viewWithTag:7];
+        [lab7 setText:[NSString stringWithFormat:@"%dm / %.0fday",(int)user.distance,user.timeSpan/1440.0]];
+        lab7.hidden=YES;//取消显示距离
+        UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+        [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+        if(user.userID)
+        {
+            [self updateImageForCell:cell AtIndex:indexPath.row];
+        }
+
+        UIButton* btnConnect = (UIButton*)[cell viewWithTag:4];
+        btnConnect.hidden=NO;
+        UIImageView* link = (UIImageView*)[cell viewWithTag:11];
+        link.hidden=YES;
+        if(user.connectedStatus==0)
+        {
+            [btnConnect setTitle:@"Connect" forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button02.png"] forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button02_s.png"] forState:UIControlStateSelected];
+            btn.hidden=YES;
+            [btnConnect addTarget:self action:@selector(connectClicked:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        else if(user.connectedStatus==1)
+        {
+            btnConnect.hidden=YES;
+            link.frame = CGRectMake(286, 7, 23, 23);
+            [link setImage:[UIImage imageNamed:@"link.png"]];
+            link.hidden=NO;
+            btn.hidden=NO;
+        }
+        else
+        {
+            btn.hidden=YES;
+            [btnConnect setTitle:@"Pending" forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateNormal];
+            [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateSelected];
+        }
+        return cell;
+    }
+    
+	if((indexPath.row) %20 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self getUserList:[userArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+    UITableViewCell* cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if( [cell isKindOfClass:[LoadMoreCell class]])
+    {
+        return;
+    }
+    UserInfo* userInfo = [[UserInfo alloc] initWithNibName:@"UserInfo" bundle:nil];
+    MUser* user = (MUser*)[userArray objectAtIndex:indexPath.row];
+    userInfo.userID=user.userID;
+    [userInfo setTitle:user.userName];
+    userInfo.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:userInfo animated:YES];
+    [userInfo release];
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([userArray count]==0||[userArray count]==indexPath.row)
+    {
+        if([userArray count]%20!=0)
+        {
+            return 0;
+        }
+        return 44;
+    }
+    return 92;
+}
+
+#pragma mark - 下载图片
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    MUser *pItem =(MUser*) [userArray objectAtIndex:index];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,pItem.userID,pItem.userID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+    
+            UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+            [imageview setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    UIImageView*imageview=(UIImageView*)[cell viewWithTag:1];
+                    [imageview setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+
+-(IBAction)telClicked:(id)sender
+{
+    if (![actionButtonActionSheet isVisible]) {
+        UIButton* btn = (UIButton*)sender;
+        UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+        MUser* user =(MUser*)[userArray objectAtIndex:[ultableView indexPathForCell:cell].row];
+        tel = user.mobile;
+        actionButtonActionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self
+                                                     cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil
+                                                     otherButtonTitles:@"Make a call",nil];
+        [actionButtonActionSheet setTag:1];
+        [actionButtonActionSheet showInView:self.view];
+    }
+}
+#pragma mark - 弹出提示事件
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (buttonIndex==0) {
+        UIApplication *app = [UIApplication sharedApplication];
+        NSString *urlString = [NSString stringWithFormat:@"tel://%@",tel];
+        NSURL *url = [NSURL URLWithString:urlString];
+        [app openURL:url];
+    }
+}
+#pragma mark - 数据交互
+- (void)queryfriends:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取用户信息失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    int errCode = [[dic objectForKey:@"errCode"] intValue];
+    if(opresult==0)
+    {
+        if (errCode==12) {
+            [[[iToast makeText:NSLocalizedString(@"No access due to user’s setting.", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        else{
+            [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+            
+        }
+        
+        return;
+    }
+    
+//    if(opresult==0)
+//    {
+//        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+//        return;
+//    }
+    int requestCount = [[dic objectForKey:@"userCount"] intValue];
+    if(requestCount==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"userArray"];
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [userArray removeAllObjects];
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MUser* user = [MUser muserWithJsonDictionary:[arr objectAtIndex:i]];
+        [userArray addObject:user];
+    }
+    if([userArray count]==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+        return;
+    }
+    [tableView reloadData];
+    isLoading=NO;
+}
+
+#pragma mark - 发送connect请求 opcmd 1申请 2解除 3批准 4忽略
+-(IBAction)connectClicked:(id)sender
+{
+    UIButton* btn = (UIButton*)sender;
+    UITableViewCell* cell = (UITableViewCell*)[[btn superview] superview];
+    MUser* user =(MUser*)[userArray objectAtIndex:[ultableView indexPathForCell:cell].row];
+    selectUser = user;
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(changeconnect:obj:)];
+    [weiboClient changeconnect:user.userID opCmd:1];
+}
+#pragma mark - 发送connect请求返回数据
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"发送connect失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary *dic = (NSDictionary*)obj;
+    int opResult = [[dic objectForKey:@"opResult"] intValue];
+    if(opResult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        selectUser.connectedStatus=2;
+        [ultableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,379 @@
+//
+//  GroupInfo.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "GroupInfo.h"
+#import "Topics.h"
+#import "ShareView.h"
+
+@implementation GroupInfo
+@synthesize groupID,mgroup,groupName;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    UIButton* exit = (UIButton*)[self.view viewWithTag:7];
+    exit.hidden=YES;
+    [active startAnimating];
+    active.hidden=NO;
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(groupInfo:obj:)];
+    [weiboClient rgroupDetail:groupID];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - tableView事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 2;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 1;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(mgroup)
+    {
+        if(indexPath.section==0&&indexPath.row==0)
+        {
+            UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:12];
+            CGSize textsize = [mgroup.description sizeWithFont:myfont constrainedToSize:CGSizeMake(220, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+            return 60-25+textsize.height;
+        }
+    }
+    return 60;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if(cell==nil)
+    {
+        if(indexPath.section==0&&indexPath.row==0)
+        {
+            cell = cellInfo;
+            if (mgroup) {
+                UILabel* labInfo = (UILabel*)[cellInfo viewWithTag:1];
+                UIFont* myfont = [UIFont fontWithName:@"Helvetica" size:12];
+                CGSize textsize = [mgroup.description sizeWithFont:myfont constrainedToSize:CGSizeMake(220, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+                labInfo.numberOfLines = textsize.height/16+1;
+                labInfo.frame=CGRectMake(81, 18, textsize.width, textsize.height);
+                labInfo.text = mgroup.description;
+            }
+        }
+        if(indexPath.section==1&&indexPath.row==0)
+        {
+            cell = cellBtn;
+            if (mgroup) {
+                UILabel* labTopics = (UILabel*)[cellBtn viewWithTag:1];
+                labTopics.text = [NSString stringWithFormat:@"%d",mgroup.groupTopicsNum];
+                UILabel* labNumber = (UILabel*)[cellBtn viewWithTag:2];
+                labNumber.text = [NSString stringWithFormat:@"%d",mgroup.groupMembersNum];
+            }
+        }
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+    [self.navigationController  popToRootViewControllerAnimated:YES];
+    
+}
+#pragma mark - 数据解析
+- (void)groupInfo:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取group数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    mgroup = [[MGroup mgroupWithJsonDictionary:[dic objectForKey:@"groupDetail"]] retain];
+    
+    [active stopAnimating];
+     active.hidden=YES;
+
+    
+    [self bindGroupData];
+}
+#pragma  mark - 绑定数据
+-(void) bindGroupData
+{
+    UIImageView*imageview=(UIImageView*)[self.view viewWithTag:1];
+    [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+    if(mgroup.groupCreatorId)
+    {
+        UIImageView* face = (UIImageView*)[self.view viewWithTag:1];
+        [self updateImage:face];
+    }
+    UILabel* labName = (UILabel*)[self.view viewWithTag:2];
+    
+    UIFont* myfont = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+    
+    CGSize textsize = [mgroup.groupName sizeWithFont:myfont constrainedToSize:CGSizeMake(162, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    labName.numberOfLines = textsize.height/16+1;
+    labName.frame=CGRectMake(92, 8, textsize.width, textsize.height);
+   
+    labName.text = mgroup.groupName;
+    
+    UILabel* labCategory = (UILabel*)[self.view viewWithTag:3];
+    labCategory.text = mgroup.groupCategory;
+    
+    UILabel* labCreator = (UILabel*)[self.view viewWithTag:4];
+    labCreator.text = mgroup.groupCreatorName;
+    
+    UIButton* btnConnect = (UIButton*)[self.view viewWithTag:5];
+    btnConnect.hidden=NO;
+    UIImageView* link = (UIImageView*)[self.view viewWithTag:6];
+    UIButton* exit = (UIButton*)[self.view viewWithTag:7];
+    exit.hidden=YES;
+      link.hidden=YES;
+    if(mgroup.member==0)
+    {
+        [btnConnect addTarget:self action:@selector(join:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    else if(mgroup.member==1)
+    {
+        btnConnect.hidden=YES;
+        link.frame = CGRectMake(286, 7, 23, 23);
+        [link setImage:[UIImage imageNamed:@"已加入.png"]];
+        link.hidden=NO;
+        //exit.hidden=NO;
+    }
+    else
+    {
+        [btnConnect setTitle:@"Pending" forState:UIControlStateNormal];
+        [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateNormal];
+        [btnConnect setBackgroundImage:[UIImage imageNamed:@"button03.png"] forState:UIControlStateSelected];
+    }
+    
+    [groupTableView reloadData];
+}
+#pragma mark - join
+-(IBAction)join:(id)sender
+{
+    [self joinData:1];
+}
+
+#pragma mark - 请求数据
+-(void) joinData:(int) opCmd
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(joinGroup:obj:)];
+    weiboClient.context=[[NSString alloc] initWithFormat:@"%d",opCmd];
+    [weiboClient applyOrExitGroup:groupID opCmd:opCmd reason:@""];
+}
+
+#pragma mark - 数据解析
+- (void)joinGroup:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取event数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+        return;
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        int opCmd = [sender.context intValue];
+        if(opCmd==1)
+        {
+            mgroup.member = 2;
+        }
+        else
+        {
+            mgroup.member = 0;
+        }
+        [self bindGroupData];
+        [groupTableView reloadData];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/group/%d/%d_medium.jpg",IMAGE_PATH,groupID,groupID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [groupName release];
+    [mgroup release];
+    [super dealloc];
+}
+#pragma mark - exit
+-(IBAction)exit:(id)sender
+{
+    [self joinData:2];
+}
+#pragma mark - share
+-(IBAction)share:(id)sender
+{
+    ShareView* shareview =[[ShareView alloc] initWithNibName:@"ShareView" bundle:nil];
+    shareview.type = 6;
+    shareview.relatedID = groupID;
+    [shareview setTitle:@"Share Remarks"];
+    [self.navigationController pushViewController:shareview animated:YES];
+    [shareview release];
+}
+#pragma mark - topics
+-(IBAction)topics:(id)sender
+{
+    Topics* topics = [[Topics alloc] initWithNibName:@"Topics" bundle:nil];
+    UILabel* labName = (UILabel*)[self.view viewWithTag:2];
+    labName.text = mgroup.groupName;
+    [topics setTitle:labName.text];
+    topics.groupID = groupID;
+    [self.navigationController pushViewController:topics animated:YES];
+    [topics release];
+}
+#pragma mark - members
+-(IBAction)members:(id)sender
+{
+    Members* member = [[Members alloc] initWithNibName:@"Members" bundle:nil];
+    [member setTitle:groupName.copy];
+    member.groupID = groupID;
+    [self.navigationController pushViewController:member animated:YES];
+    [member release];
+}
+@end

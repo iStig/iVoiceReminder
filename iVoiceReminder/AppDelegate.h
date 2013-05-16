@@ -8,12 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
-@class ViewController;
+@class iVoiceController;
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate,UIAlertViewDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 
-@property (strong, nonatomic) ViewController *viewController;
+@property (strong, nonatomic) iVoiceController *iVoiceController;
+@property (retain, nonatomic) NSMutableArray *arrayList;
+@property(nonatomic,retain) NSDate *dateForCompare;
 
+- (void)resetClock:(NSDate*)date;
+-(void)refreshNotification;
 @end

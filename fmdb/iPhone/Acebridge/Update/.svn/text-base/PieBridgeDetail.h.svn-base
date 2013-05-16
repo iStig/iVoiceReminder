@@ -1,0 +1,36 @@
+//
+//  PieBridgeDetail.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-6-2.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MPBDetail.h"
+#import "WeiboClient.h"
+#import "ImageCache.h"
+#import "UIImageExtras.h"
+#import "iToast.h"
+#import "UserInfo.h"
+@interface PieBridgeDetail : UIViewController<UITableViewDelegate, UITableViewDataSource>
+{
+    IBOutlet UITableView*   pdTableView;
+    IBOutlet UIView*    headView;
+    MPBDetail*  mpbdetail;
+    int pbID;
+    WeiboClient*                weiboClient;
+    ImageCache                  *imageCache;
+      IBOutlet UIActivityIndicatorView *active;
+}  
+@property(nonatomic,assign)int  pbID;
+- (void)updateImage:(UIImageView*)face;
+-(void) pbdetails;
+- (void)pbdetailResult:(WeiboClient*)sender obj:(NSObject*)obj;
+-(void)initNavigation;
+-(void)home;
+-(void)back;
+-(void)bindHead;
+-(IBAction)userinfo:(id)sender;
+-(IBAction)likeOp:(id)sender;
+@end

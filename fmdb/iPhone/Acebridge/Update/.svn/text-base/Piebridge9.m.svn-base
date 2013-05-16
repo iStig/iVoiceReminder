@@ -1,0 +1,365 @@
+//
+//  Piebridge9.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-28.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "Piebridge9.h"
+#import "UIImageExtras.h"
+#import "MPiebridgeMin.h"
+#import "Piebridge.h"
+#import "UserInfo.h"
+@implementation Piebridge9
+@synthesize pbArray;
+#pragma mark - View 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self InitNavigationBarItems];
+    imageCache=[ImageCache sharedCache];
+    //添加
+    tableView = pbTableView;
+    tableView.delegate=self;
+    tableView.dataSource = self;
+    tableView.frame = CGRectMake(0, 36, 320, 380);
+    isLoading = NO;
+    type = 1;
+    pbArray = [[NSMutableArray alloc] init];
+    buttonAll.titleLabel.textColor=[UIColor whiteColor];
+    button2.titleLabel.textColor=[UIColor darkGrayColor];
+    button3.titleLabel.textColor=[UIColor darkGrayColor];
+    imageSelect.frame=CGRectMake(45, 26, 16, 10);
+    [self getItemsWhenPullDownTableView];
+    // Do any additional setup after loading the view from its nib.
+}
+-(void) getItemsWhenPullDownTableView
+{
+    loadCell.hidden=NO;
+    [self requestData:type pageNo:1];
+}
+#pragma mark - 加载数据
+-(void)requestData:(int)typeID pageNo:(int)pageNo
+{
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(pbList:obj:)];
+    weiboClient.context = [[NSString alloc] initWithFormat:@"%d",pageNo];
+    [weiboClient piebridge:typeID age:0 constellation:0 height:0 weight:0 income:0 cityID:0 pageNo:pageNo];
+}
+- (void)pbList:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    [self doneLoadingTableViewData];
+    if (sender.hasError) {
+		NSLog(@"获取pb数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [pbArray removeAllObjects];
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        [pbArray removeAllObjects];
+        return;
+    }
+    NSArray* arr =(NSArray*)[dic objectForKey:@"pbArray"];
+    int pageNo = [sender.context intValue];
+    if(pageNo==1)
+    {
+        [pbArray removeAllObjects];
+    }
+    int count = [[dic objectForKey:@"pbCount"] intValue];
+    if(count==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data available", @"")] setGravity:iToastGravityBottom] show];
+        loadCell.hidden=YES;
+    
+        [tableView reloadData];
+        return;
+    }
+    for (int i=0; i<[arr count]; i++) {
+        MPiebridgeMin* mpb = [MPiebridgeMin mpiebridgeminWithJsonDictionary:[arr objectAtIndex:i]];
+        [pbArray addObject:mpb];
+    }
+    [tableView reloadData];
+    isLoading=NO;
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    UIButton *rbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rbutton setBackgroundImage:[UIImage imageNamed:@"列表.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rbutton.frame = CGRectMake(0, 0, 42,42);
+    [rbutton addTarget:self action:@selector(leftClicked:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *rcustomBarItem = [[UIBarButtonItem alloc] initWithCustomView:rbutton];
+    self.navigationItem.rightBarButtonItem = rcustomBarItem;
+    // Cleanup
+    [rcustomBarItem release];
+    
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+#pragma mark-切换列表
+-(IBAction)leftClicked:(id)sender
+{
+    Piebridge* pie = [[Piebridge alloc] initWithNibName:@"Piebridge" bundle:nil];
+    [pie setTitle:@"Piebridge"];
+    pie.pbArray = pbArray;
+    [self.navigationController pushViewController:pie animated:YES];
+    [pie release];
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIButton*)userbtn imageName:(NSString*) imageName
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path = [NSString stringWithFormat:@"%@/data/%@/%@_medium.jpg",IMAGE_PATH,imageName,imageName];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+
+            [userbtn setImage:image forState:UIControlStateNormal];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+
+                    [userbtn setImage:image forState:UIControlStateNormal];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+#pragma mark-绘制九宫格
+#pragma mark - tableView事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return ([pbArray count]+3)/4+1;
+}
+-(CGFloat)tableView:(UITableView *)_tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([pbArray count]==0)
+    {
+        return 44;
+    }
+    if(([pbArray count]+3)/4==indexPath.row&&[pbArray count]%4!=0)
+    {
+        return 0;
+    }
+    return 82;
+}
+- (UITableViewCell *)tableView:(UITableView *)_tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if([pbArray count]==0)
+    {
+        return loadCell;
+    }
+    if(indexPath.row +1 <= ([pbArray count]+3)/4)
+    {
+        UITableViewCell* pcell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, 320,82)];
+        int count =[pbArray count] - (indexPath.row+1)*4;
+        NSLog(@"%d",indexPath.row);
+        if(count<0)
+        {
+            count+=4;
+        }
+        else
+        {
+            count=4;
+        }
+        int btnWidth = 3;
+
+        for (int i=0;i<count; i++) {
+            MPiebridgeMin*pbmin= (MPiebridgeMin*)[pbArray objectAtIndex:((indexPath.row)*4+i)];
+            if(i!=0)
+            {
+                btnWidth+=79;
+            }
+            UIButton* btnUser=[[UIButton alloc] initWithFrame:CGRectMake(btnWidth, 3, 76, 76)];
+            [btnUser setImage:[UIImage imageNamed:@"默认头像_S.png"] forState:UIControlStateNormal];
+            if([pbmin.avatarName length]>0)
+            {
+                [self updateImage:btnUser imageName:pbmin.avatarName];
+            }
+            [btnUser setTag:((indexPath.row)*4+i)];
+            [btnUser addTarget:self action:@selector(userClicked:) forControlEvents:UIControlEventTouchUpInside];
+            UIView* viewUser = [[UIView alloc] initWithFrame:CGRectMake(0, 56, 76, 20)];
+            [viewUser setBackgroundColor:[UIColor blackColor]];
+            [viewUser setAlpha:0.6];
+            
+            UILabel* lab = [[UILabel alloc] initWithFrame:CGRectMake(2, 5, 60, 15)];
+            lab.text = [NSString stringWithFormat:@"%@",pbmin.publisherName];
+            lab.textColor = [UIColor whiteColor];
+            lab.backgroundColor = [UIColor clearColor];
+            lab.font = [UIFont systemFontOfSize:10];
+            [viewUser addSubview:lab];
+            [lab release];
+            UILabel* userGender = [[UILabel alloc] init];
+            userGender.text = [NSString stringWithFormat:@"%d",pbmin.age];
+            [userGender setFrame:CGRectMake(60, 5, 15, 15)];
+            userGender.backgroundColor = [UIColor clearColor];
+            userGender.textColor = [UIColor redColor];
+            userGender.font = [UIFont systemFontOfSize:10];
+            [viewUser addSubview:userGender];
+            [userGender release];
+            [btnUser addSubview:viewUser];
+            [pcell addSubview:btnUser];
+            [viewUser release];
+            [btnUser release];
+        }
+        return pcell;   
+        
+	}
+    if((indexPath.row) %5 ==0)
+    {
+        if(!isLoading)
+        {
+            isLoading=true;
+            [self requestData:type pageNo:[pbArray count]/20+1];
+            return loadCell;
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+
+- (void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+- (NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return nil;
+}
+#pragma mark - 点击事件
+-(IBAction)userClicked:(id)sender
+{
+    MPiebridgeMin* pbmin = (MPiebridgeMin*)[pbArray objectAtIndex:[sender tag]];
+    PieBridgeDetail* pb = [[PieBridgeDetail alloc] initWithNibName:@"PieBridgeDetail" bundle:nil];
+    pb.pbID=pbmin.publisherID;
+    [pb setTitle:@"PieBridge"];
+    pb.hidesBottomBarWhenPushed=YES;
+    [self.navigationController pushViewController:pb animated:YES];
+    [pb release];
+}
+#pragma mark - 切换
+-(IBAction)getNext:(id)sender
+{
+    [pbArray removeAllObjects];
+    UIButton* btn=(UIButton*)sender;
+    if([btn tag]==1)
+    {
+        type=1;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor whiteColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(45, 26, 16, 10); 
+    }
+    if([btn tag]==2)
+    {
+        type=2;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor whiteColor];
+        button3.titleLabel.textColor=[UIColor darkGrayColor];
+        imageSelect.frame=CGRectMake(155, 26, 16, 10);
+    }
+    if([btn tag]==3)
+    {
+        type=3;
+        //添加
+        buttonAll.titleLabel.textColor=[UIColor darkGrayColor];
+        button2.titleLabel.textColor=[UIColor darkGrayColor];
+        button3.titleLabel.textColor=[UIColor whiteColor];
+        imageSelect.frame=CGRectMake(260, 26, 16, 10);
+    }
+    [self requestData:type pageNo:1];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [pbArray release];
+    [super dealloc];
+}
+@end

@@ -1,0 +1,49 @@
+//
+//  Update.h
+//  AceBridge
+//
+//  Created by unitrue.com unitrue on 12-4-9.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "WeiboClient.h"
+#import "DDMenuController.h"
+#import "AppDelegate_iPhone.h"
+#import "UTTableViewController.h"
+#import "WeiboClient.h"
+#import "ImageCache.h"
+@interface Update :UTTableViewController 
+{
+    IBOutlet UIView* CountView;
+    IBOutlet UIView* bCountView;
+    
+    WeiboClient*                weiboClient;
+    int ncount;
+    int bcount;
+    //update  new version
+    IBOutlet PullRefreshTableView *_tableView;
+    
+    NSMutableArray *updateArray;
+    
+    int findex;
+    int lindex;
+    ImageCache                  *imageCache;
+    BOOL isLoading;
+  int cell_height;
+    
+}
+//@property(nonatomic) int nCountForLeftMenu;
+//@property(nonatomic) int bCountForLeftMenu;
+-(IBAction)getNext:(id)sender;
+-(void)initNavigation;
+-(IBAction)currentplace:(id)sender;
+-(IBAction)newstatus:(id)sender;
+-(void) ncount;
+-(void) bcount;
+- (void)bcountRequest:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)ncountRequest:(WeiboClient*)sender obj:(NSObject*)obj;
+
+
+- (void)homeList:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

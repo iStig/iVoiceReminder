@@ -1,0 +1,47 @@
+//
+//  Events.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-27.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MEventMin.h"
+#import "WeiboClient.h"
+#import "iToast.h"
+#import "ImageCache.h"
+#import "Invite.h"
+#import "UIImageExtras.h"
+#import "UTTableViewController.h"
+#import "PublicUtils.h"
+@interface Events : UTTableViewController
+{
+    WeiboClient*                weiboClient;
+    NSMutableArray*             eventArray;
+    IBOutlet  PullRefreshTableView*      eventTableView; 
+    ImageCache                  *imageCache;
+    BOOL                        isLoading;
+    int                         type;
+    int                         targetUserID;
+    MEventMin                   *selectevent;
+    int                         appint;
+    IBOutlet    UIImageView*    imageSelect;
+    IBOutlet    UIButton*       buttonAll;
+    IBOutlet    UIButton*       button2;
+    IBOutlet    UIButton*       button3;
+}
+@property(nonatomic,retain) NSMutableArray* eventArray;
+@property(nonatomic,assign)int  targetUserID;
+@property(nonatomic,assign)int  type;
+- (void)InitNavigationBarItems;
+-(void)back;
+-(void)post;
+- (void)eventList:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+
+-(void)requestData:(int)loaduserID pageNo:(int)pageNo;
+-(IBAction)getNext:(id)sender;
+-(IBAction)applyrequest:(id)sender;
+- (void)sendResponse:(WeiboClient*)sender obj:(NSObject*)obj;
+@end

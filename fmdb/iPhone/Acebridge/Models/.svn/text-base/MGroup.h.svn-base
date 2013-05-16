@@ -1,0 +1,36 @@
+//
+//  MGroup.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-10.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MGroup : NSObject
+{
+    NSString*   description;
+    int         groupCreatorId;
+    NSString*   groupCategory;
+    int         groupMembersNum;
+    NSString*   groupCreatorName;
+    int         groupTopicsNum;
+    NSString*   groupPic;
+    BOOL        admin;
+    int        member;
+    NSString*   groupName;
+}
+@property(nonatomic,retain)NSString*   groupName;
+@property(nonatomic,retain)NSString*   description;
+@property(nonatomic,retain)NSString*   groupPic;
+@property(nonatomic,assign)int         groupCreatorId;
+@property(nonatomic,retain)NSString*   groupCategory;
+@property(nonatomic,assign)int         groupMembersNum;
+@property(nonatomic,retain)NSString*   groupCreatorName;
+@property(nonatomic,assign)int         groupTopicsNum;
+@property(nonatomic,assign)BOOL        admin;
+@property(nonatomic,assign)int        member;
++ (MGroup*)mgroupWithJsonDictionary:(NSDictionary*)dic;
+- (MGroup*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

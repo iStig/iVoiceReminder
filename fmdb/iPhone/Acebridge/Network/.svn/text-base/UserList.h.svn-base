@@ -1,0 +1,51 @@
+//
+//  UserList.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-4-24.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "UnitrueLabel.h"
+#import "UserInfo.h"
+#import "MUser.h"
+#import "UIImageExtras.h"
+#import "ChatInfo.h"
+#import "UTTableViewController.h"
+@interface UserList : UTTableViewController<UIActionSheetDelegate>
+{
+    IBOutlet PullRefreshTableView*       ultableView;
+    UIActionSheet*              actionButtonActionSheet;
+    UIActionSheet*              action;
+    WeiboClient*                weiboClient;
+    NSMutableArray*             userArray;
+    NSString*                   tel;
+    ImageCache                  *imageCache;
+    MUser*                      selectUser;
+    int userID;
+    int                         functionID;
+    int                         cityID;
+    int                         industryID;
+    int                         subindustryID;
+    NSString*                   targetUserName;
+    NSString*                   targetUniversity;
+    NSString*                   targetCompany;
+    BOOL                        isLoading;
+}
+@property (nonatomic,retain) NSMutableArray*             userArray;
+@property (nonatomic,assign) int userID;
+@property (nonatomic,assign) int functionID;
+@property (nonatomic,assign) int industryID;
+@property (nonatomic,assign) int subindustryID;
+@property (nonatomic,assign) int cityID;
+@property (nonatomic,retain) NSString*             targetUserName;
+@property (nonatomic,retain) NSString*             targetUniversity;
+@property (nonatomic,retain)  NSString*                   targetCompany;
+- (void)InitNavigationBarItems;
+- (void)updateImageForCell:(UITableViewCell*)cell AtIndex:(int)index;
+- (void)queryfriends:(WeiboClient*)sender obj:(NSObject*)obj;
+- (void)changeconnect:(WeiboClient*)sender obj:(NSObject*)obj;
+-(IBAction)chatClicked:(id)sender;
+-(void) getUserList:(int)pageNo;
+@end

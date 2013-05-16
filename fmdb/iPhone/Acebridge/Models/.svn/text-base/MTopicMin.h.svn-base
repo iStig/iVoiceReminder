@@ -1,0 +1,36 @@
+//
+//  MTopicMin.h
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface MTopicMin : NSObject
+{
+    int                 postType;
+    int                 postID;
+    NSString*           posterName;
+    int                 postUserID;
+    NSString*           postUserName;
+    NSString*           title;
+    NSString*           content;
+    NSDate*             postTime;
+    int                 relatedId;
+    int                 replyCount;
+}
+@property(nonatomic,retain)NSString*           posterName;
+@property(nonatomic,assign)int                 postUserID;
+@property(nonatomic,retain)NSString*           postUserName;
+@property(nonatomic,retain)NSString*           title;
+@property(nonatomic,retain)NSString*           content;
+@property(nonatomic,retain)NSDate*             postTime;
+@property(nonatomic,assign)int                 postType;
+@property(nonatomic,assign)int                 postID;
+@property(nonatomic,assign)int                 relatedId;
+@property(nonatomic,assign)int                 replyCount;
++ (MTopicMin*)mtopicsminWithJsonDictionary:(NSDictionary*)dic;
+- (MTopicMin*)initWithJsonDictionary:(NSDictionary*)dic;
+@end

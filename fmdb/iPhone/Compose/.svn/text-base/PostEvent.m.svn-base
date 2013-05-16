@@ -1,0 +1,635 @@
+//
+//  PostEvent.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-30.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "PostEvent.h"
+#import "iToast.h"
+@implementation PostEvent
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
+    [self InitNavigationBarItems];
+    categoryID = 0;
+    isselectImage=NO;
+    categoryName = [[NSString alloc] init];
+    category = [[Category alloc] initWithNibName:@"Category" bundle:nil];
+    // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+-(void) viewWillAppear:(BOOL)animated
+{
+    categoryID=-1;
+    int type1 = -1;
+    categoryID = category.cid;
+    categoryName = [category.name retain];
+    type1=category.type;
+    if(type1 ==1)
+    {
+        UILabel* lab = (UILabel*)[cellCategory viewWithTag:1];
+        lab.text = [[NSString alloc] initWithFormat:@"%@",categoryName];
+        postcategory = categoryID;
+    }
+    if(type1 ==2)
+    {
+        UILabel* lab = (UILabel*)[cellLocation viewWithTag:1];
+        lab.text = [[NSString alloc] initWithFormat:@"%@",categoryName];
+        postlocation = categoryID;
+    }
+    if(type1 == 3)
+    {
+        UILabel* lab = (UILabel*)[cellPrivacy viewWithTag:1];
+        lab.text = [[NSString alloc] initWithFormat:@"%@",categoryName];
+        postprivacy = categoryID;
+    }
+    [eventTableView reloadData];
+}
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+#ifdef AceBridge
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {       
+        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    }
+#endif
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    //navigationBarRightBtn按钮
+    rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"send.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(postEvent:) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+//-(void)home{
+//    [self.navigationController  popToRootViewControllerAnimated:YES];
+//}
+-(IBAction)postEvent:(id)sender
+{
+    rightButton.enabled=NO;
+    sendBtn.enabled=NO;
+    
+    if (weiboClient) {
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(requestEvent:obj:)];
+    UITextField* title = (UITextField*)[cellTitle viewWithTag:1];
+    UILabel* startTime1 = (UILabel*)[cellStartTime viewWithTag:1];
+    UILabel* startTime2 = (UILabel*)[cellStartTime viewWithTag:2];
+    NSString* startTime3=[startTime1.text stringByAppendingString:@" "];
+    NSString* startTime=[startTime3 stringByAppendingString:startTime2.text];
+    
+    UILabel* endTime1 = (UILabel*)[cellEndTime viewWithTag:1];
+    UILabel* endTime2 = (UILabel*)[cellEndTime viewWithTag:2];
+    NSString* endTime3=[endTime1.text stringByAppendingString:@" "];
+    NSString* endTime=[endTime3 stringByAppendingString:endTime2.text];
+    
+    
+    //UILabel* timezone = (UILabel*)[cellStartTime viewWithTag:3];
+    UITextField* address = (UITextField*)[cellAddress viewWithTag:1];
+    UITextField* budget = (UITextField*)[cellBudget viewWithTag:1];
+    UITextField* count = (UITextField*)[cellTotalCount viewWithTag:1];
+    UITextField* desc = (UITextField*)[cellDescription viewWithTag:1];
+    UITextField* phone = (UITextField*)[cellPhone viewWithTag:1];
+    UITextField* deadline1 = (UITextField*)[cellDeadline viewWithTag:1];
+    UITextField* deadline2 = (UITextField*)[cellDeadline viewWithTag:2];
+    NSString* deadline3=[deadline1.text stringByAppendingString:@" "];
+    NSString* deadline=[deadline3 stringByAppendingString:deadline2.text];
+    
+    UIImageView* image = (UIImageView*)[cellPoster viewWithTag:1];
+    NSData*  picStr=nil;
+    if(isselectImage)
+    {
+        picStr = [UIImageJPEGRepresentation([image image], 0.5) retain];
+    }
+    [weiboClient postEvent:title.text categoryID:postcategory startTime:[self NSStringDateToNSDate:startTime] endTime:[self NSStringDateToNSDate:endTime] cityID:postlocation address:address.text budget:[budget.text floatValue] totalCount:[count.text intValue] description:desc.text picStr:picStr cellphone:phone.text deadline:[self NSStringDateToNSDate:deadline] privacyID:1];
+}
+#pragma mark - 日期转换
+-(NSDate *)NSStringDateToNSDate:(NSString *)string { 
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
+    [formatter setDateFormat:@"yyyy-MM-dd' 'HH:mm:ss"];
+    NSDate *date = [formatter dateFromString:string];
+    [formatter release];
+    return date;
+}
+- (void)requestEvent:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    rightButton.enabled=YES;
+    sendBtn.enabled=YES;
+    
+    if (sender.hasError) {
+		NSLog(@"failed!!!, error:%@, details:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==1)
+    {
+        [[[iToast makeText:NSLocalizedString(@"Request sent", @"")] setGravity:iToastGravityBottom] show];
+        [self back];
+    }
+    else
+    {
+        [[[iToast makeText:NSLocalizedString(@"Failed", @"")] setGravity:iToastGravityBottom] show];
+    }
+}
+#pragma mark - tableview事件
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView 
+{
+	return 5;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+{
+	if(section==1)
+    {
+        return 8;
+    }
+    if(section==3)
+    {
+        return 3;
+    }
+    return 1;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section==2) {
+        return 130;
+    }
+    return 44;
+    
+}
+-(UITableViewCell*) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell;
+    if(indexPath.section==0)
+    {
+        if(indexPath.row==0)
+        {
+            cell = cellTitle;
+        }
+    }
+    if(indexPath.section==1)
+    {
+        if(indexPath.row==0)
+        {
+            cell = cellCategory;
+        }
+        if(indexPath.row==1)
+        {
+            cell = cellStartTime;
+        }
+        if(indexPath.row==2)
+        {
+            cell = cellEndTime;
+        }
+        if(indexPath.row==3)
+        {
+            cell = cellLocation;
+        }
+        if(indexPath.row==4)
+        {
+            cell = cellAddress;
+        }
+        if(indexPath.row==5)
+        {
+            cell = cellBudget;
+        }
+        if(indexPath.row==6)
+        {
+            cell = cellTotalCount;
+        }
+        if(indexPath.row==7)
+        {
+            cell = cellPhone;
+        }
+    }
+    if(indexPath.section==2)
+    {
+        if(indexPath.row==0)
+        {
+            cell = cellDescription;
+        }
+    }
+    if(indexPath.section == 3)
+    {
+        if(indexPath.row==0)
+        {
+            cell = cellPoster;
+        }
+        if(indexPath.row==1)
+        {
+            cell = cellDeadline;
+        }
+        if(indexPath.row==2)
+        {
+            cell = cellPrivacy;
+        }
+    }   if(indexPath.section == 4)
+    {
+        if(indexPath.row==0)
+        {
+            cell = cellPost;
+            UIView* view = [[UIView alloc] init];
+            [cell setBackgroundView:view];
+        }
+    }
+    
+    return cell;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if(indexPath.section==1)
+    {
+        if(indexPath.section==1)
+        {
+            if(indexPath.row==0)
+            {
+                
+                [category setTitle:@"Category"];
+                category.type=1;
+                [self.navigationController pushViewController:category animated:YES];
+            }
+            if(indexPath.row==3)
+            {
+                
+                [category setTitle:@"Location"];
+                category.type=2;
+                [self.navigationController pushViewController:category animated:YES];
+            }
+            selectView.hidden=YES;
+            datePicker.datePickerMode=UIDatePickerModeDate;
+            
+            if(indexPath.row==1)
+            {
+                selectView.hidden=NO;
+                //                datePicker.datePickerMode=UIDatePickerModeDate;
+                type=1; 
+            }
+            if(indexPath.row==2)
+            {
+                selectView.hidden=NO;
+                //                datePicker.datePickerMode=UIDatePickerModeDate;
+                type=2; 
+                
+            }
+            
+        }
+        
+    }
+    if (indexPath.section==3) {
+        
+        if (indexPath.row==0) {
+            // 创建时不指定按钮  
+            UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@""  
+                                                               delegate:self  
+                                                      cancelButtonTitle:nil  
+                                                 destructiveButtonTitle:nil  
+                                                      otherButtonTitles:nil];  
+            // 逐个添加按钮（比如可以是数组循环）  
+            [sheet addButtonWithTitle:@"Take Photo"];  
+            [sheet addButtonWithTitle:@"Choose From Library"];  
+            // 同时添加一个取消按钮  
+            [sheet addButtonWithTitle:@"Cancel"];  
+            // 将取消按钮的index设置成我们刚添加的那个按钮，这样在delegate中就可以知道是那个按钮  
+            sheet.destructiveButtonIndex = sheet.numberOfButtons-1;  
+            //[sheet showInView:self.view.superview];
+            [sheet showInView:[UIApplication sharedApplication].keyWindow];
+            [sheet release];
+            
+        }
+        if(indexPath.row==1)
+        {
+            selectView.hidden=NO;
+            datePicker.datePickerMode=UIDatePickerModeDate;
+            type=3;     
+        }
+        
+        if(indexPath.row==2)
+        {
+            
+            [category setTitle:@"Privacy"];
+            category.type=3;
+            [self.navigationController pushViewController:category animated:YES];
+        }
+        
+        
+        
+    }
+    
+}
+
+#pragma mark - textFieldDelegate
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    //    UITableViewCell * cell=(UITableViewCell *)[[textField  superview] superview];
+    //    NSIndexPath *indexPath=[eventTableView indexPathForCell:cell];
+    //    CGRect rect = self.view.frame;
+    //    [UIView beginAnimations:@"ResizeForKeyBoard" context:NULL];
+    //    [UIView setAnimationDuration:0.3];
+    //    if (indexPath.section==3) {
+    //        
+    //        if (indexPath.row==2) {
+    //            rect.origin.y = -41.0f * 6;
+    //        }
+    //        if (indexPath.row==1){
+    //            rect.origin.y = -40.0f * 5;  
+    //        }
+    //        if (indexPath.row==0){
+    //            
+    //            rect.origin.y = -39.0f * 4; 
+    //        }
+    //    } 
+    //    if (indexPath.section==4) {
+    //        rect.origin.y = -43.0f * 5;
+    //    } 
+    //    self.view.frame =  CGRectMake(0,rect.origin.y,320,416-rect.origin.y);
+    //    [UIView commitAnimations];
+    
+    UITableViewCell * cell=(UITableViewCell *)[[textField  superview] superview];
+    NSIndexPath *indexPath=[eventTableView indexPathForCell:cell];
+    //CGRect rect = self.view.frame;
+    if (indexPath.section==1) {
+        if (indexPath.row==4) {
+            txtFieldH=cellAddress.frame.origin.y;
+        }
+        if (indexPath.row==5) {
+            txtFieldH=cellBudget.frame.origin.y;
+        }
+        if (indexPath.row==6) 
+        {
+            txtFieldH=cellTotalCount.frame.origin.y;
+        }
+        if (indexPath.row==7) 
+        {
+            txtFieldH= cellPhone.frame.origin.y;
+        }
+    } 
+    if (indexPath.section==2) {
+        txtFieldH=cellDescription.frame.origin.y+100;
+    } 
+}
+- (void)scrolViewIfCovered {
+    
+    
+    CGRect aRect = self.view.frame;
+    aRect.origin.y = aRect.size.height- inputHeight;
+    
+    CGFloat fieldY = txtFieldH+44;
+    
+    
+    if (fieldY > aRect.origin.y ) {
+        CGPoint scrollPoint = CGPointMake(0.0,fieldY-aRect.origin.y);
+        [eventTableView setContentOffset:scrollPoint animated:YES];
+    }
+    
+}
+
+- (void)keyboardWasShown:(NSNotification*)aNotification {
+	NSDictionary* info = [aNotification userInfo];
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+	inputHeight=kbSize.height;
+    [self scrolViewIfCovered];
+}
+//-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+//{
+//    [UIView beginAnimations:@"ResizeForKeyBoard" context:NULL];
+//    [UIView setAnimationDuration:0.3];
+//    //self.view.frame = CGRectMake(0,0,320,416);
+//    [UIView commitAnimations];
+//    switch (theTextField.returnKeyType) {
+//		case UIReturnKeyDone:
+//			[theTextField resignFirstResponder];
+//			break;
+//		default:
+//			break;
+//	}
+//	return YES;
+//}
+#pragma mark -键盘事件
+-(BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
+    
+    [UIView beginAnimations:@"ResizeForKeyBoard" context:NULL];
+    [UIView setAnimationDuration:0.3];
+    //   self.view.frame = CGRectMake(0,0,320,426);
+    [eventTableView setContentOffset:CGPointMake(0, 0) animated:YES];
+    [UIView commitAnimations];
+    switch (theTextField.returnKeyType) {
+		case UIReturnKeyDone:
+			[theTextField resignFirstResponder];
+			break;
+		default:
+			break;
+	}
+	return YES;
+}
+
+
+#pragma mark - actionSheet
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex  
+{  
+    if (buttonIndex == actionSheet.cancelButtonIndex)  
+    { return; }  
+    switch (buttonIndex)  
+    {  
+        case 0: {  
+            UIImagePickerControllerSourceType sourceType=UIImagePickerControllerSourceTypeCamera;
+            if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            }
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=sourceType;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+        case 1: { 
+            UIImagePickerController * picker = [[UIImagePickerController alloc]init];
+            picker.delegate=self;
+            picker.allowsEditing=YES;//
+            picker.sourceType=UIImagePickerControllerSourceTypePhotoLibrary;
+            [self presentModalViewController:picker animated:YES];
+            [picker release];
+            break;  
+        }  
+    }  
+}  
+
+#pragma mark - imagePicker
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo {
+	[picker dismissModalViewControllerAnimated:YES];
+    
+    UIImageView *postImg=(UIImageView*)[cellPoster viewWithTag:1];
+    postImg.image=image;
+    isselectImage=YES;
+}
+
+-(IBAction)pickDate:(id)sender{
+    
+    
+    
+    
+    if (number==1) {
+        
+        
+        if (type==1) {
+            NSDate* _date = datePicker.date; 
+            
+            UILabel * dateStart2=(UILabel*)[cellStartTime viewWithTag:2];
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"hh:mm:ss"];
+            dateStart2.text=[dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            number=0;
+            [selectView setHidden:YES];
+        }
+        if (type==2) {
+            NSDate* _date = datePicker.date; 
+            
+            UILabel * dateEnd2=(UILabel*)[cellEndTime viewWithTag:2];
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"hh:mm:ss"];
+            dateEnd2.text=[dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            number=0;
+            [selectView setHidden:YES];
+        }
+        if (type==3) {
+            NSDate* _date = datePicker.date; 
+            
+            UILabel * deadL2=(UILabel*)[cellDeadline viewWithTag:2];
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"hh:mm:ss"];
+            deadL2.text=[dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            number=0;
+            [selectView setHidden:YES];
+        }
+        
+        
+        
+        
+    }
+    
+    else{
+        
+        if (type==1) {
+            NSDate* _date = datePicker.date; 
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+            UILabel * dateStart=(UILabel*)[cellStartTime viewWithTag:1];
+            dateStart.text= [dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            
+            number=1;
+            datePicker.datePickerMode=UIDatePickerModeTime;
+            
+        }
+        if (type==2) {
+            NSDate* _date = datePicker.date; 
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+            UILabel * dateEnd=(UILabel*)[cellEndTime viewWithTag:1];
+            dateEnd.text= [dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            number=1;
+            
+            
+            datePicker.datePickerMode=UIDatePickerModeTime;
+        }
+        if (type==3) {
+            NSDate* _date = datePicker.date; 
+            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+            UILabel * deadL=(UILabel*)[cellDeadline viewWithTag:1];
+            deadL.text= [dateFormatter stringFromDate:_date];
+            [dateFormatter release];
+            number=1;
+            
+            
+            datePicker.datePickerMode=UIDatePickerModeTime;
+        }
+    }
+    
+    
+    
+    
+}
+
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end

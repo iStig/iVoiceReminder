@@ -1,0 +1,226 @@
+//
+//  TopicsInfo.m
+//  AceBridge
+//
+//  Created by 军锋 安 on 12-5-16.
+//  Copyright 2012年 __MyCompanyName__. All rights reserved.
+//
+
+#import "TopicsInfo.h"
+#import "iToast.h"
+#import "Comment.h"
+#import "TimeUtils.h"
+@implementation TopicsInfo
+@synthesize topicsID,mtopics;
+#pragma mark - 生命周期
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc that aren't in use.
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    imageCache=[ImageCache sharedCache];
+    // Do any additional setup after loading the view from its nib.
+    if (weiboClient) { 
+        weiboClient.delegate = nil;
+        [weiboClient release];
+        weiboClient = nil;
+    }
+    weiboClient = [[WeiboClient alloc] initWithTarget:self 
+                                               action:@selector(topicsview:obj:)];
+    [weiboClient rgroupTopicDetail:topicsID];
+    [self InitNavigationBarItems];
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(void)webViewDidFinishLoad:(UIWebView *)webView
+{
+    CGSize size = [webView sizeThatFits:CGSizeZero];
+    CGRect newsize= webView.frame;
+    newsize.size.height = size.height;
+    webView.frame = newsize;
+    headView.frame = CGRectMake(0, 0, 320, headView.frame.size.height);
+    [scrollview addSubview:headView];
+    
+    UIFont* myfont1 = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+    CGSize textsize1 = [mtopics.title sizeWithFont:myfont1 constrainedToSize:CGSizeMake(300, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap];
+    lblTitle.numberOfLines = textsize1.height/16+1;
+    lblTitle.frame=CGRectMake(12, 75, textsize1.width, textsize1.height);
+    [scrollview addSubview:lblTitle];
+    
+    webView.frame = CGRectMake(5, headView.frame.size.height+textsize1.height+10, webView.frame.size.width-5, webView.frame.size.height);
+    [scrollview addSubview:webView];
+    bottomView.frame = CGRectMake(0, headView.frame.size.height+webView.frame.size.height+textsize1.height, 320, 60);
+    [scrollview addSubview:bottomView];
+    scrollview.contentSize = CGSizeMake(320, headView.frame.size.height+size.height+bottomView.frame.size.height+textsize1.height);
+    for(id subview in webView.subviews)
+    {
+        if([[subview class] isSubclassOfClass:[UIScrollView class]])
+        {
+            ((UIScrollView*)subview).scrollEnabled=NO;
+        }
+    }
+}
+#pragma mark - 返回按钮
+- (void)InitNavigationBarItems
+{
+    UIImage *image = [UIImage imageNamed: @"titlebar.png"];   
+    [image drawInRect:CGRectMake(0, 0, 320, 44)];
+    //    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    //    {       
+    //        [self.navigationController.navigationBar setBackgroundImage:image forBarMetrics: UIBarMetricsDefault];
+    //    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button setBackgroundImage:[UIImage imageNamed:@"BACK.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    button.frame = CGRectMake(0, 0, 42, 42.0);
+    [button addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBarItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.navigationItem.leftBarButtonItem = customBarItem;
+    // Cleanup
+    [customBarItem release];
+    
+    
+    //navigationBarRightBtn按钮
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setBackgroundImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
+    //set the frame of the button to the size of the image (see note below)
+    rightButton.frame = CGRectMake(0, 0, 42, 42);
+    [rightButton addTarget:self action:@selector(home) forControlEvents:UIControlEventTouchUpInside];
+    //create a UIBarButtonItem with the button as a custom view
+    UIBarButtonItem *customBar = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    self.navigationItem.rightBarButtonItem = customBar;
+    // Cleanup
+    [customBar release];
+}
+-(void)back {
+	[self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)home{
+    [self.navigationController  popToRootViewControllerAnimated:YES];
+    
+}
+#pragma mark - 数据解析
+- (void)topicsview:(WeiboClient*)sender obj:(NSObject*)obj
+{
+    if (sender.hasError) {
+		NSLog(@"获取topic数据失败!!!, 错误:%@, 详细信息:%@"
+			  , sender.errorMessage, sender.errorDetail);
+        if (sender.statusCode == 401) {
+            AceBridgeAppDelegate *appDelegate = [AceBridgeAppDelegate getAppDelegate];
+            [appDelegate openAuthenticateView];
+        }
+        [sender alert];
+    }
+	NSLog(@"%@",obj);
+    NSDictionary* dic = (NSDictionary*)obj;
+    int opresult = [[dic objectForKey:@"opResult"] intValue];
+    if(opresult==0)
+    {
+        [[[iToast makeText:NSLocalizedString(@"No data downloaded", @"")] setGravity:iToastGravityBottom] show];
+        return;
+    }
+    mtopics = [[MTopics mtopicsWithJsonDictionary:[dic objectForKey:@"topicDetail"]] retain];
+    [self viewdataload];
+}
+-(void)viewdataload
+{
+    UIImageView*imageview=(UIImageView*)[headView viewWithTag:1];
+    [imageview setImage:[UIImage imageNamed:@"默认头像.png"]];
+    if(mtopics.postUserID)
+    {
+        UIImageView* face = (UIImageView*)[headView viewWithTag:1];
+        [self updateImage:face];
+    }
+    UILabel* labName = (UILabel*)[headView viewWithTag:2];
+    labName.text=mtopics.postUserName;
+          
+    lblTitle.text = mtopics.title;
+       
+    headView.frame = CGRectMake(headView.frame.origin.x, headView.frame.origin.y, headView.frame.size.width, headView.frame.size.height);
+    
+    [topicWebView loadHTMLString:mtopics.content baseURL:nil];
+    
+    UILabel* labTime = (UILabel*)[bottomView viewWithTag:1];
+    labTime.text = [TimeUtils timestamp:mtopics.postTime];;
+    UILabel* labComment = (UILabel*)[bottomView viewWithTag:2];
+    labComment.text = [NSString stringWithFormat:@"%d",mtopics.commentCount];
+}
+#pragma mark - 下载图片
+- (void)updateImage:(UIImageView*)face
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *path =[NSString stringWithFormat:@"%@/data/%d/%d_medium.jpg",IMAGE_PATH,mtopics.postUserID,mtopics.postUserID];
+    NSData *data=nil;
+    if([imageCache hasImageForURL:path]) 
+    {
+        data=[imageCache imageDataForURL:path] ;
+        if(data!=nil)
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+  
+            [face setImage:image];
+        }
+    }
+    else
+    {
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{     
+            NSURL *url = [NSURL URLWithString:path];
+            NSLog(@"%@",path);
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(data!=nil)
+                {
+                    [imageCache storeData:data forURL:path];
+                    UIImage *image = [[UIImage alloc] initWithData:data];
+     
+                    [face setImage:image];
+                }
+            });
+        });  
+    }
+    [pool release];
+}
+-(IBAction)comment:(id)sender
+{
+    Comment* comment = [[Comment alloc] initWithNibName:@"Comment" bundle:nil];
+    [comment setTitle:@"Comment"];
+    comment.typeID = 7;
+    comment.relatedID =topicsID;
+    comment.userID =mtopics.postUserID;
+    [self.navigationController pushViewController:comment animated:YES];
+    [comment release];
+}
+-(void) dealloc
+{
+    [weiboClient release];
+    [super dealloc];
+}
+@end
