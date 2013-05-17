@@ -54,4 +54,52 @@
     [self dismissModalViewControllerAnimated:YES];
 }
 
+#pragma mark TableViewDelegate
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return 3;
+    
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    static NSString *CellIdentifier = @"VoiceCell";
+    
+    UITableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
+    if(cell==nil)
+    {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"VoiceCell" owner:nil options:nil] objectAtIndex:1];
+    }
+    
+//    
+//    VoiceModel *V=(VoiceModel*)[arrayList objectAtIndex:indexPath.row];
+//    
+//    UIButton *VoiceBtn=(UIButton*)[cell viewWithTag:1];
+//    VoiceBtn.showsTouchWhenHighlighted=YES;
+//    [VoiceBtn addTarget:self action:@selector(playAudio:) forControlEvents:UIControlEventTouchUpInside];
+//    
+//    UILabel *date=(UILabel*)[cell viewWithTag:2];
+//    date.text=V.date;
+//    
+//    
+//    UILabel *remindTime=(UILabel*)[cell viewWithTag:3];
+//    remindTime.text=V.remindTime;
+//    
+//    UILabel *timeInterval=(UILabel*)[cell viewWithTag:4];
+//    timeInterval.text=[NSString stringWithFormat:@"%d″",V.timeInterval];
+//    
+//    
+//    UILabel *note=(UILabel*)[cell viewWithTag:5];
+//    note.text=V.note;
+    
+    
+    return cell;
+    
+    
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+}
+
+
+
 @end

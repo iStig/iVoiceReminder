@@ -16,8 +16,9 @@
 
 @property (strong, nonatomic) iVoiceController *iVoiceController;
 @property (retain, nonatomic) NSMutableArray *arrayList;
-@property(nonatomic,retain) NSDate *dateForCompare;
+@property (nonatomic,retain) NSDate *dateForCompare;
+@property (nonatomic,retain) NSString *note;
 
-- (void)resetClock:(NSDate*)date;
+- (void)resetClock:(NSDate*)date  note:(NSString*)note;
 -(void)refreshNotification;
 @end

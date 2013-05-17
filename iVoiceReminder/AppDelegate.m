@@ -12,7 +12,7 @@
 #import "VoiceModel.h"
 
 @implementation AppDelegate
-@synthesize arrayList,dateForCompare;
+@synthesize arrayList,dateForCompare,note;
 
 - (void)dealloc
 {
@@ -34,6 +34,7 @@
     
     [NSThread sleepForTimeInterval:3];//延时3秒进入程序
     
+    note=@"时间到";
     [self cleanNotifications];
     [self refreshNotification];
 
@@ -85,13 +86,13 @@
                 NSString *date=[rs stringForColumn:@"date"];
                 int timeInterval=[[rs stringForColumn:@"timeInterval"] intValue];
                 NSString *remindTime=[rs stringForColumn:@"remindTime"];
-                NSString *note=[rs stringForColumn:@"note"];
+                NSString *notestr=[rs stringForColumn:@"note"];
                 VoiceModel *v=[[VoiceModel alloc] init];
                 v.VoiceStr=voiceStr;
                 v.date=date;
                 v.timeInterval=timeInterval;
                 v.remindTime=remindTime;
-                v.note=note;
+                v.note=notestr;
                 
                 [arrayList addObject:v];
                 [v release];
@@ -129,6 +130,7 @@
         for (int i=0; i<[arrayList count]; i++) {
             VoiceModel *v=[arrayList objectAtIndex:i];
             NSString *remindTimeStr=v.remindTime;
+            NSString *notestr=v.note;
             
             NSLog(@"%d",i);
             
@@ -150,14 +152,24 @@
                 
                 if (!dateForCompare) {
                     dateForCompare=remindDate;
+                    if ([notestr length]!=0) {
+                        note=notestr;
+                    }
+                
+                    
                 }else{
+                    
+                    if (![dateForCompare isEqualToDate:[dateForCompare earlierDate:remindDate]]) {
+                        note=notestr;
+                        
+                    }
                     dateForCompare=[dateForCompare earlierDate:remindDate];
                 }
             }
         }
         
 
-        [self resetClock:self.dateForCompare];
+        [self resetClock:self.dateForCompare note:note];
         
         
     }
@@ -223,7 +235,7 @@
 
 
 
-- (void)resetClock:(NSDate*)date
+- (void)resetClock:(NSDate*)date  note:(NSString*)notestr
 {
     // 试图取消以前的通知
     [[UIApplication sharedApplication] cancelAllLocalNotifications];
@@ -235,7 +247,7 @@
     }
     
     
-    // 判断是否是当前时间 之前的提醒时间  如果是 则忽略了
+// 判断是否是当前时间 之前的提醒时间  如果是 则忽略了
 //    NSDate *dateNow=[NSDate date];
 //    
 //    if ( [date  isEqualToDate:[date earlierDate:dateNow]]) {
@@ -257,13 +269,13 @@
       //  noti.repeatCalendar = nil;
     
     // 提示时的显示信息
-    noti.alertBody = @"时间到";
+    noti.alertBody = notestr;
     // 下面属性仅在提示框状态时的有效，在横幅时没什么效果
     noti.hasAction = NO;
-    noti.alertAction = @"open";
+    noti.alertAction = @"关闭";
     
     // 这里可以设置从通知启动的启动界面，类似Default.png的作用。
-    noti.alertLaunchImage = @"lunch.png";
+    //noti.alertLaunchImage = @"lunch.png";
     
     // 提醒时播放的声音
     // 这里用系统默认的声音。也可以自己把声音文件加到工程中来，把文件名设在下面。最后可以播放时间长点，闹钟啊

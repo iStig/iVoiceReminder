@@ -9,9 +9,10 @@
 #import <UIKit/UIKit.h>
 #import "SMGlowLabel.h"
 
-@interface SettingViewController : UIViewController{
+@interface SettingViewController : UIViewController<UITableViewDataSource,UITableViewDelegate>{
     
     IBOutlet  UIView *headView;
+    IBOutlet UITableView *settingTableView;
     
 
 }
