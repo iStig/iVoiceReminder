@@ -9,6 +9,7 @@
 
 #import "AppDelegate.h"
 
+#import  <ShareSDK/ShareSDK.h>
 int main(int argc, char *argv[])
 {
     @autoreleasepool {

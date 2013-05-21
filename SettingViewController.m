@@ -115,15 +115,26 @@
     }
     [self dismissModalViewControllerAnimated:YES];
 }
--(IBAction)appComment:(id)sender{}
+-(IBAction)appComment:(id)sender{
+
+    
+    NSString *str = [NSString stringWithFormat:@"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=%d",547203890];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+
+}
+
+-(IBAction)weiboAction:(id)sender{
+[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://weibo.com/u/1762839362?topnav=1&wvr=5"]];
+
+}
 
 -(void)ledText{
 
 
    // [ledTitle setText:[NSString stringWithFormat:@"%i", 0]];
-    ledTitle.glowColor = [UIColor colorWithRed:(62.0/255.0) green:(136.0/255.0) blue:(255.0/255.0) alpha:0.75f];
-	ledTitle.glowOffset = CGSizeMake(0.0f, 5.0f);
-	ledTitle.glowRadius = 30.0f;
+//    ledTitle.glowColor = [UIColor colorWithRed:(62.0/255.0) green:(136.0/255.0) blue:(255.0/255.0) alpha:0.75f];
+//	ledTitle.glowOffset = CGSizeMake(0.0f, 5.0f);
+//	ledTitle.glowRadius = 30.0f;
 
 }
 - (void)didReceiveMemoryWarning

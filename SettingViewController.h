@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "SMGlowLabel.h"
 #import <MessageUI/MFMailComposeViewController.h>
+#import <ShareSDK/ShareSDK.h>
 
 @interface SettingViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UIScrollViewDelegate,MFMailComposeViewControllerDelegate>{
     
@@ -26,4 +27,5 @@
 -(IBAction)returnToPreView:(id)sender;
 -(IBAction)feedback:(id)sender;
 -(IBAction)appComment:(id)sender;
+-(IBAction)weiboAction:(id)sender;
 @end

@@ -10,6 +10,7 @@
 
 #import "iVoiceController.h"
 #import "VoiceModel.h"
+#import <ShareSDK/ShareSDK.h>
 
 @implementation AppDelegate
 @synthesize arrayList,dateForCompare,note;
@@ -24,6 +25,13 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    
+    
+    
+    //sharesdk key
+        [ShareSDK registerApp:@"3b4fd481d07"];
+    
+    
     arrayList=[[NSMutableArray alloc] init];
     dateForCompare=[[NSDate alloc] init];
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
