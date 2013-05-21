@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		621FAB0A174B23EC00977C17 /* 意见反馈.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FAB08174B23EC00977C17 /* 意见反馈.png */; };
+		621FAB0B174B23EC00977C17 /* 意见反馈@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FAB09174B23EC00977C17 /* 意见反馈@2x.png */; };
+		621FAB0D174B327200977C17 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 621FAB0C174B327200977C17 /* MessageUI.framework */; };
 		621FC7B41727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B11727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png */; };
 		621FC7B51727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B21727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png */; };
 		621FC7B61727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 621FC7B31727E6B20054C9C2 /* iTunesArtwork_Glossy_Icon_icon.png */; };
@@ -73,6 +76,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		621FAB08174B23EC00977C17 /* 意见反馈.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "意见反馈.png"; sourceTree = "<group>"; };
+		621FAB09174B23EC00977C17 /* 意见反馈@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "意见反馈@2x.png"; sourceTree = "<group>"; };
+		621FAB0C174B327200977C17 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		621FC7B017279A440054C9C2 /* PublicDef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicDef.h; sourceTree = "<group>"; };
 		621FC7B11727E6B20054C9C2 /* iPhone_Glossy_Icon_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iPhone_Glossy_Icon_icon.png; sourceTree = "<group>"; };
 		621FC7B21727E6B20054C9C2 /* iPhoneRetina_Glossy_Icon_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iPhoneRetina_Glossy_Icon_icon.png; sourceTree = "<group>"; };
@@ -162,6 +168,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				621FAB0D174B327200977C17 /* MessageUI.framework in Frameworks */,
 				62BB80BD1724D0AA007B641F /* AVFoundation.framework in Frameworks */,
 				62833F04171FE8E800566B23 /* QuartzCore.framework in Frameworks */,
 				62833EFE171FDD0F00566B23 /* libsqlite3.dylib in Frameworks */,
@@ -186,6 +193,7 @@
 		62833D73171E83CF00566B23 = {
 			isa = PBXGroup;
 			children = (
+				621FAB0C174B327200977C17 /* MessageUI.framework */,
 				62B9567A1728EFC300FB88BA /* Resource */,
 				62833EEA171E8E6300566B23 /* TOOLS */,
 				62833D85171E83CF00566B23 /* iVoiceReminder */,
@@ -343,6 +351,8 @@
 		62DBB5551738949D007ACD26 /* picture */ = {
 			isa = PBXGroup;
 			children = (
+				621FAB08174B23EC00977C17 /* 意见反馈.png */,
+				621FAB09174B23EC00977C17 /* 意见反馈@2x.png */,
 				627872E61728F4460069A5F9 /* grey_wash_wall_@2X.png */,
 				627872E71728F4460069A5F9 /* grey_wash_wall.png */,
 				62787309172B819B0069A5F9 /* 时钟.png */,
@@ -492,6 +502,8 @@
 				62DBB5531737490F007ACD26 /* 确定按钮.png in Resources */,
 				62E7FB3B1743383300C66545 /* lunch.png in Resources */,
 				62E7FB401743870000C66545 /* SettingViewController.xib in Resources */,
+				621FAB0A174B23EC00977C17 /* 意见反馈.png in Resources */,
+				621FAB0B174B23EC00977C17 /* 意见反馈@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

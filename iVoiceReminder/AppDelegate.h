@@ -20,5 +20,5 @@
 @property (nonatomic,retain) NSString *note;
 
 - (void)resetClock:(NSDate*)date  note:(NSString*)note;
--(void)refreshNotification;
+- (void)refreshNotification;
 @end

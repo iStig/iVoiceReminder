@@ -15,4 +15,6 @@
 
 static NSString* DATAMODEL=@"(ID INTEGER PRIMARY KEY AUTOINCREMENT, 'voice' text ,'date' text,'timeInterval' integer ,'note' text,'remindTime' text)";
 
+static NSString* REMINDSTRING=@"语音提醒时间到";
+
 #endif

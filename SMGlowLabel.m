@@ -23,9 +23,9 @@
     return self;
 }
 
-- (void)dealloc{
-    //Clean up
-}
+//- (void)dealloc{
+//    //Clean up
+//}
 
 #pragma mark drawTextInRect for drawing text
 

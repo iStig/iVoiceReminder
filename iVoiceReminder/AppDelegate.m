@@ -34,7 +34,7 @@
     
     [NSThread sleepForTimeInterval:3];//延时3秒进入程序
     
-    note=@"时间到";
+    note=REMINDSTRING;
     [self cleanNotifications];
     [self refreshNotification];
 
@@ -102,11 +102,7 @@
         }
         
     }
-        
-    
-    
- 
-        
+              
     [self compareRemindTime];
     
 
@@ -116,6 +112,116 @@
 //设定localNotification
 -(void)compareRemindTime{
     
+    
+//    for (i = 0; i < count; i++) {
+//	    temp = clockDays[i] - weekday;
+//		days = (temp >= 0 ? temp : temp + 7);
+//		NSDate *newFireDate = [[calendar dateFromComponents:comps] dateByAddingTimeInterval:3600 * 24 * days];
+//		
+//		UILocalNotification *newNotification = [[UILocalNotification alloc] init];
+//		if (newNotification) {
+//			newNotification.fireDate = newFireDate;
+//			newNotification.alertBody = clockRemember;
+//			newNotification.soundName = [NSString stringWithFormat:@"%@.caf", clockMusic];
+//			newNotification.alertAction = @"查看闹钟";
+//			newNotification.repeatInterval = NSWeekCalendarUnit;
+//			NSDictionary *userInfo = [NSDictionary dictionaryWithObject:clockID forKey:@"ActivityClock"];
+//			newNotification.userInfo = userInfo;
+//			[[UIApplication sharedApplication] scheduleLocalNotification:newNotification];
+//		}
+//		NSLog(@"Post new localNotification:%@", [newNotification fireDate]);
+//		[newNotification release];
+//		
+//	}
+    
+    
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
+    
+    for (int i=0; i<[arrayList count]; i++) {
+        NSDate *dateNow=[NSDate date];
+        VoiceModel *v=[arrayList objectAtIndex:i];
+        NSString *remindTimeStr=v.remindTime;
+        //NSString *notestr=v.note;
+        NSLog(@"%d",i);
+        if ([remindTimeStr length]==0) {
+            continue;
+        }
+        else{
+            NSDateFormatter *formate = [[NSDateFormatter alloc] init];
+            [formate setTimeZone:[NSTimeZone defaultTimeZone]];
+            [formate setDateFormat:(@"yyyy-MM-dd HH:mm:ss")];
+            NSDate *remindDate = [formate dateFromString:remindTimeStr];
+            [formate release];
+            if ( [remindDate  isEqualToDate:[remindDate earlierDate:dateNow]]) {
+                continue;
+            }
+            else{
+                UILocalNotification *newNotification = [[UILocalNotification alloc] init];
+                if (newNotification) {
+                    
+                    newNotification.fireDate = remindDate;
+                    newNotification.timeZone = [NSTimeZone defaultTimeZone];
+                    newNotification.alertBody = v.note;
+                    newNotification.soundName = @"皮卡丘的短信铃声_铃声之家cnwav.mp3";
+                    newNotification.alertAction = @"查看语音提醒";
+                    // 下面属性仅在提示框状态时的有效，在横幅时没什么效果
+                    newNotification.hasAction = NO;
+                    //newNotification.repeatInterval = NSWeekCalendarUnit;
+                    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:v.remindTime forKey:@"ActivityClock"];
+                    newNotification.userInfo = userInfo;
+                    newNotification.applicationIconBadgeNumber = 1;
+                    [[UIApplication sharedApplication] scheduleLocalNotification:newNotification];
+                }
+                NSLog(@"Post new localNotification:%@", [newNotification fireDate]);
+                [newNotification release];
+            }
+        }
+    }
+    
+    
+   /*
+    // 试图取消以前的通知
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
+    if (date == nil) {
+        return;
+    }
+        // 设置新的通知
+    UILocalNotification* noti = [[[UILocalNotification alloc] init] autorelease];
+    // 设置响应时间
+    noti.fireDate = date;
+    // 设置时区，默认即可
+    noti.timeZone = [NSTimeZone defaultTimeZone];
+    
+    // 重复提醒，这里设置一分钟提醒一次，只有启动应用，才会停止提醒。不设置不激发
+    //  noti.repeatInterval = NSMinuteCalendarUnit;
+    //noti.repeatInterval=0;
+    //  noti.repeatCalendar = nil;
+    
+    // 提示时的显示信息
+    noti.alertBody = notestr;
+    // 下面属性仅在提示框状态时的有效，在横幅时没什么效果
+    noti.hasAction = NO;
+    noti.alertAction = @"关闭";
+    
+    // 这里可以设置从通知启动的启动界面，类似Default.png的作用。
+    //noti.alertLaunchImage = @"lunch.png";
+    
+    // 提醒时播放的声音
+    // 这里用系统默认的声音。也可以自己把声音文件加到工程中来，把文件名设在下面。最后可以播放时间长点，闹钟啊
+    noti.soundName = UILocalNotificationDefaultSoundName;
+    
+    // 这里是桌面上程序右上角的数字图标，设0的话，就没有。类似QQ的未读消息数。
+    noti.applicationIconBadgeNumber = 1;
+
+    noti.userInfo = [NSDictionary dictionaryWithObject:@"value" forKey:@"key"];
+    
+    // 生效
+    [[UIApplication sharedApplication] scheduleLocalNotification:noti];
+
+    */
+    
+ 
+    /*
     dateForCompare=nil;
     
     NSDate *dateNow=[NSDate date];
@@ -174,6 +280,10 @@
         
     }
     [arrayList removeAllObjects];
+    
+     [self resetClock:self.dateForCompare note:note];
+    */
+
 }
 
 
@@ -215,7 +325,7 @@
         // 这里暂时用简单的提示框代替。
         // 也可以做复杂一些，播放想要的铃声。
         UIAlertView* alert = [[[UIAlertView alloc] initWithTitle:@""
-                                                         message:@"时间到"
+                                                         message:REMINDSTRING
                                                         delegate:self
                                                cancelButtonTitle:@"关闭"
                                                otherButtonTitles:nil, nil] autorelease];
@@ -226,6 +336,7 @@
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
     if (buttonIndex == 0) {
+        [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
         [self refreshNotification];
     }
 }
@@ -237,6 +348,16 @@
 
 - (void)resetClock:(NSDate*)date  note:(NSString*)notestr
 {
+  
+    
+    
+    
+    
+    
+    
+    
+    /*
+     
     // 试图取消以前的通知
     [[UIApplication sharedApplication] cancelAllLocalNotifications];
    // [self saveDate:date];
@@ -249,7 +370,7 @@
     
 // 判断是否是当前时间 之前的提醒时间  如果是 则忽略了
 //    NSDate *dateNow=[NSDate date];
-//    
+//
 //    if ( [date  isEqualToDate:[date earlierDate:dateNow]]) {
 //        return;
 //    }
@@ -292,6 +413,15 @@
     
     // 生效
     [[UIApplication sharedApplication] scheduleLocalNotification:noti];
+     
+     */
+    
+    
+    
+    
+    
+    
+    
 }
 
 
