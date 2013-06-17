@@ -12,6 +12,7 @@
 #import "VoiceModel.h"
 #import <ShareSDK/ShareSDK.h>
 
+
 @implementation AppDelegate
 @synthesize arrayList,dateForCompare,note;
 
@@ -31,6 +32,12 @@
     //sharesdk key
         [ShareSDK registerApp:@"3b4fd481d07"];
     
+    NSString *soundPath=[[NSBundle mainBundle] pathForResource:@"皮卡丘的短信铃声_铃声之家cnwav" ofType:@"mp3"];
+    NSURL *soundUrl=[[NSURL alloc] initFileURLWithPath:soundPath];
+    player=[[AVAudioPlayer alloc] initWithContentsOfURL:soundUrl error:nil];
+    [player prepareToPlay];
+    [soundUrl release];
+    
     
     arrayList=[[NSMutableArray alloc] init];
     dateForCompare=[[NSDate alloc] init];
@@ -45,7 +52,8 @@
     note=REMINDSTRING;
     [self cleanNotifications];
     [self refreshNotification];
-
+    
+     
     return YES;
 }
 
@@ -169,7 +177,15 @@
                     
                     newNotification.fireDate = remindDate;
                     newNotification.timeZone = [NSTimeZone defaultTimeZone];
-                    newNotification.alertBody = v.note;
+                    
+                    if ([v.note length]==0) {
+                            newNotification.alertBody = REMINDSTRING;
+                    }
+                    else{
+                       
+                        newNotification.alertBody = v.note;
+                    }
+             
                     newNotification.soundName = @"皮卡丘的短信铃声_铃声之家cnwav.mp3";
                     newNotification.alertAction = @"查看语音提醒";
                     // 下面属性仅在提示框状态时的有效，在横幅时没什么效果
@@ -329,6 +345,19 @@
 - (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification
 {
     if (application.applicationState == UIApplicationStateActive) {
+        //声音
+        
+   
+            [player play];
+        
+        
+        //震动
+        
+        AudioServicesPlaySystemSound ( kSystemSoundID_Vibrate) ;
+        
+
+        
+        
         // 如不加上面的判断，点击通知启动应用后会重复提示
         // 这里暂时用简单的提示框代替。
         // 也可以做复杂一些，播放想要的铃声。
@@ -345,6 +374,7 @@
 {
     if (buttonIndex == 0) {
         [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+        
         [self refreshNotification];
     }
 }
@@ -357,13 +387,6 @@
 - (void)resetClock:(NSDate*)date  note:(NSString*)notestr
 {
   
-    
-    
-    
-    
-    
-    
-    
     /*
      
     // 试图取消以前的通知

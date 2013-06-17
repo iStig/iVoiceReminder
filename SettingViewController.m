@@ -117,13 +117,14 @@
 }
 -(IBAction)appComment:(id)sender{
 
-    
-    NSString *str = [NSString stringWithFormat:@"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=%d",547203890];
+    NSString *str = [NSString stringWithFormat:@"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=%d",651934145];
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
 
 }
 
 -(IBAction)weiboAction:(id)sender{
+ 
+    
 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://weibo.com/u/1762839362?topnav=1&wvr=5"]];
 
 }
